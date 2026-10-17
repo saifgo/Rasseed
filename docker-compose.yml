@@ -33,6 +33,8 @@ services:
       context: ./web
       target: tools
     image: rasseed-tools
+    # Built locally from ./web — never pulled from a registry.
+    pull_policy: build
     command: ["sh", "-c", "node dist/db/migrate.js && node dist/db/seed.js"]
     environment:
       <<: *app-env
@@ -46,6 +48,7 @@ services:
       context: ./web
       target: web
     image: rasseed-web
+    pull_policy: build
     restart: unless-stopped
     environment:
       <<: *app-env
@@ -68,7 +71,11 @@ services:
 
   # Expiries, USSD timeouts, balance polling and queue assignment. Exactly one instance.
   worker:
+    build:
+      context: ./web
+      target: tools
     image: rasseed-tools
+    pull_policy: build
     restart: unless-stopped
     environment:
       <<: *app-env

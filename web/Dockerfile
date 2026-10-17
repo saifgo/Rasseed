@@ -14,7 +14,8 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install
 # ---- build the Next.js app -------------------------------------------------
 FROM deps AS build
 COPY . .
-RUN pnpm build && pnpm build:jobs
+# public/ may be absent from a git checkout (the APK in it is optional).
+RUN mkdir -p public && pnpm build && pnpm build:jobs
 
 # ---- jobs: migrations, seed and the background worker ---------------------
 # Bundled into single files by esbuild (same engine code as the web app), so no node_modules needed.
