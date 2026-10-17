@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Keep in sync with web/src/config/brand.ts -->
+    <string name="app_name">Rasseed Agent</string>
+</resources>

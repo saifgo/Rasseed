@@ -1,0 +1,92 @@
+# Full stack:            docker compose up -d --build
+# Database only (dev):   docker compose up -d db
+# With Cloudflare Tunnel: docker compose --profile tunnel up -d --build
+#
+# Settings come from ./.env (copy .env.example).
+
+x-app-env: &app-env
+  DATABASE_URL: postgres://rasseed:${POSTGRES_PASSWORD:-rasseed}@db:5432/rasseed
+  TZ: Africa/Tunis
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rasseed
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rasseed}
+      POSTGRES_DB: rasseed
+      TZ: Africa/Tunis
+    # Only reachable from this machine (for local development and backups).
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rasseed"]
+      interval: 5s
+      retries: 10
+
+  # One-shot: applies migrations and inserts default operators / payout methods, then exits.
+  migrate:
+    build:
+      context: ./web
+      target: tools
+    image: rasseed-tools
+    command: ["sh", "-c", "node dist/db/migrate.js && node dist/db/seed.js"]
+    environment:
+      <<: *app-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  web:
+    build:
+      context: ./web
+      target: web
+    image: rasseed-web
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+      AUTH_SECRET: ${AUTH_SECRET:?set AUTH_SECRET in .env}
+      AUTH_URL: ${AUTH_URL:-http://localhost:3100}
+      AUTH_TRUST_HOST: "true"
+      AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
+      AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      AUTH_DEV_LOGIN: "false"
+      STORAGE_DIR: /data/storage
+    # The agent phones connect to http://<this-machine-ip>:3100 on the LAN.
+    ports:
+      - "${WEB_PORT:-3100}:3100"
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # Expiries, USSD timeouts, balance polling and queue assignment. Exactly one instance.
+  worker:
+    image: rasseed-tools
+    restart: unless-stopped
+    environment:
+      <<: *app-env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # Optional: exposes the site on your domain over HTTPS without opening router ports.
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    profiles: ["tunnel"]
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      - web
+
+volumes:
+  pgdata:
+  storage:

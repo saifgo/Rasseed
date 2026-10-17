@@ -1,0 +1,108 @@
+"use client";
+
+import { useState } from "react";
+import { useAdminAction } from "@/components/admin/use-admin-action";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardFooter, CardHeader, CardPanel, CardTitle } from "@/components/ui/card";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import type { AppSettings } from "@/lib/settings";
+import { saveSettingsAction, updatePayoutMethodAction } from "../actions";
+
+const labels: Record<keyof AppSettings, { label: string; unit: string; help: string }> = {
+  holdMinutes: { label: "Number hold time", unit: "min", help: "Time the seller has to send the credit." },
+  cooldownSeconds: { label: "Cooldown after a sale", unit: "s", help: "A number is not reused for this long after a sale ends." },
+  queueTimeoutMinutes: { label: "Max queue wait", unit: "min", help: "Queued sales are cancelled after this." },
+  deviceOfflineSeconds: { label: "Phone offline after", unit: "s", help: "No sync for this long = phone and its SIMs are not used." },
+  commandTimeoutSeconds: { label: "USSD timeout", unit: "s", help: "A balance check without a reply is considered failed." },
+  verifyMaxAttempts: { label: "Verification attempts", unit: "×", help: "Balance checks before an SMS/balance mismatch goes to review." },
+  verifyRetrySeconds: { label: "Verification retry delay", unit: "s", help: "Wait between verification balance checks." },
+  pollIntervalSeconds: { label: "Balance polling", unit: "s", help: "How often held numbers are checked (catches credit without SMS)." },
+  smsGraceSeconds: { label: "Wait for SMS", unit: "s", help: "Balance up but no SMS: wait this long, then review." },
+  lateCreditWindowHours: { label: "Late transfer window", unit: "h", help: "Late transfers within this window are linked to the old sale." },
+  maxSimFailures: { label: "SIM failure limit", unit: "×", help: "USSD failures in a row before a SIM is skipped." },
+};
+
+export function SettingsForm({ values, defaults }: { values: AppSettings; defaults: AppSettings }) {
+  const { pending, run } = useAdminAction();
+  const [v, setV] = useState<Record<string, string>>(Object.fromEntries(Object.entries(values).map(([k, n]) => [k, String(n)])));
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Transaction engine</CardTitle>
+        <CardDescription>Changes apply to the next actions; running holds keep their expiry time.</CardDescription>
+      </CardHeader>
+      <CardPanel className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {(Object.keys(labels) as (keyof AppSettings)[]).map((k) => (
+          <Field key={k}>
+            <FieldLabel>
+              {labels[k].label} ({labels[k].unit})
+            </FieldLabel>
+            <Input type="number" min={1} value={v[k]} onChange={(e) => setV((s) => ({ ...s, [k]: e.target.value }))} />
+            <FieldDescription>
+              {labels[k].help} Default {defaults[k]}.
+            </FieldDescription>
+          </Field>
+        ))}
+      </CardPanel>
+      <CardFooter className="justify-end">
+        <Button
+          loading={pending}
+          onClick={() =>
+            run(() => saveSettingsAction(Object.fromEntries(Object.entries(v).map(([k, s]) => [k, Number(s)]))), { success: "Settings saved" })
+          }
+        >
+          Save settings
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+type MethodRow = { code: string; name: string; active: boolean; fee: string };
+
+export function PayoutMethodsForm({ methods }: { methods: MethodRow[] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Payout methods</CardTitle>
+        <CardDescription>The fee is deducted from the seller's payout and locked when a sale starts.</CardDescription>
+      </CardHeader>
+      <CardPanel className="flex flex-col divide-y">
+        {methods.map((m) => (
+          <MethodRowForm key={m.code} method={m} />
+        ))}
+      </CardPanel>
+    </Card>
+  );
+}
+
+function MethodRowForm({ method }: { method: MethodRow }) {
+  const { pending, run } = useAdminAction();
+  const [active, setActive] = useState(method.active);
+  const [fee, setFee] = useState(method.fee);
+  return (
+    <div className="flex flex-wrap items-center gap-4 py-3">
+      <span className="w-40 font-medium">{method.name}</span>
+      <Label className="flex items-center gap-2 text-sm">
+        <Switch checked={active} onCheckedChange={setActive} />
+        Available
+      </Label>
+      <Label className="flex items-center gap-2 text-sm">
+        Fee (DT)
+        <Input type="text" inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} className="w-24" />
+      </Label>
+      <Button
+        size="sm"
+        variant="outline"
+        className="ms-auto"
+        loading={pending}
+        onClick={() => run(() => updatePayoutMethodAction(method.code, { active, fee }), { success: `${method.name} saved` })}
+      >
+        Save
+      </Button>
+    </div>
+  );
+}
