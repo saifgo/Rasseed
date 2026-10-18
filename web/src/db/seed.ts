@@ -1,8 +1,8 @@
 import "dotenv/config";
-import { sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "./index";
 import { operators, payoutMethods } from "./schema";
-import { DEFAULT_BALANCE_REGEX, DEFAULT_CREDIT_SMS_REGEX } from "@/lib/parsers";
+import { DEFAULT_BALANCE_REGEX, DEFAULT_CREDIT_SMS_REGEX, ORANGE_BALANCE_REGEX } from "@/lib/parsers";
 
 // Idempotent: inserts defaults, never overwrites what the admin has changed.
 async function main() {
@@ -29,7 +29,8 @@ async function main() {
         transferUssdTemplate: "*116*{number}*{millimes}#",
         balanceUssdCode: "*101#",
         creditSmsRegex: DEFAULT_CREDIT_SMS_REGEX,
-        balanceRegex: DEFAULT_BALANCE_REGEX,
+        balanceRegex: ORANGE_BALANCE_REGEX,
+        balanceUnit: "dinars",
       },
       {
         code: "tt",
@@ -44,6 +45,13 @@ async function main() {
       },
     ])
     .onConflictDoNothing();
+
+  // Existing installs: replace Orange's generic balance regex (it would read the 30 DT "forfait")
+  // with the real *101# format, unless the admin already customised it.
+  await db
+    .update(operators)
+    .set({ balanceRegex: ORANGE_BALANCE_REGEX, balanceUnit: "dinars" })
+    .where(and(eq(operators.code, "orange"), eq(operators.balanceRegex, DEFAULT_BALANCE_REGEX)));
 
   const phone = (en: string, fr: string, ar: string) => ({ en, fr, ar });
   await db

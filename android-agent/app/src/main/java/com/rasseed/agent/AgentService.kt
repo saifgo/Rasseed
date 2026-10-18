@@ -87,7 +87,13 @@ class AgentService : Service() {
             for (cmd in commands) {
                 if (store.hasResult(cmd.id)) continue
                 val res = if (cmd.type == "ussd_balance") {
-                    Telephony.runUssd(this, cmd.subscriptionId, cmd.ussd)
+                    val silent = Telephony.runUssd(this, cmd.subscriptionId, cmd.ussd)
+                    // Interactive replies (menus, "Page suivante") make the silent API fail on many
+                    // phones: dial the code and read the popup instead.
+                    if (silent.ok || !UssdAccessibilityService.isEnabled(this)) silent
+                    else UssdAccessibilityService.run(this, cmd.subscriptionId, cmd.ussd).let {
+                        if (it.ok) it else it.copy(error = "${silent.error}; dialer: ${it.error}")
+                    }
                 } else {
                     Telephony.UssdResult(false, null, "unsupported_command")
                 }

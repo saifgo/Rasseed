@@ -3,6 +3,7 @@ import { grossPayout, netPayout, parseDinars, parseRate } from "./money";
 import {
   DEFAULT_BALANCE_REGEX,
   DEFAULT_CREDIT_SMS_REGEX,
+  ORANGE_BALANCE_REGEX,
   parseBalance,
   parseCreditSms,
   renderTransferUssd,
@@ -39,6 +40,16 @@ describe("parseBalance", () => {
   it("reads dinars", () => expect(parseBalance("Votre solde est 12.350 DT valable", b)).toBe(12350));
   it("reads millimes", () => expect(parseBalance("Solde: 4500 Millimes", b)).toBe(4500));
   it("rejects replies without amount", () => expect(parseBalance("Service indisponible", b)).toBeNull());
+});
+
+describe("Orange *101# reply", () => {
+  const orange = { balanceRegex: ORANGE_BALANCE_REGEX, balanceUnit: "dinars" as const };
+  const reply =
+    "Votre forfait est de  30 DT. Votre report est de 0 DT. Votre credit recu par transfert est de 0 DT valable jusqu'au --. Votre solde de recharge est de  178.125 DT.\n01:Page suivante";
+  it("ignores the forfait and reads recharge + transfer", () => expect(parseBalance(reply, orange)).toBe(178125));
+  it("adds the transfer bucket", () =>
+    expect(parseBalance(reply.replace("transfert est de 0 DT", "transfert est de 5.5 DT"), orange)).toBe(183625));
+  it("rejects other replies", () => expect(parseBalance("Votre solde est 12 DT", orange)).toBeNull());
 });
 
 describe("money", () => {

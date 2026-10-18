@@ -59,6 +59,15 @@ class MainActivity : Activity() {
 
         root.addView(button("1. Grant SMS & phone permissions") { requestPermissions() })
         root.addView(button("2. Allow running in background (battery)") { requestBatteryExemption() })
+        root.addView(button("3. Enable balance reading (Accessibility)") {
+            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+        })
+        root.addView(TextView(this).apply {
+            text = "Needed when the operator's balance code shows a popup/menu (e.g. Orange *101#). " +
+                "If Android says the setting is restricted: App info → ⋮ → Allow restricted settings, then try again. " +
+                "Also: no screen lock PIN, and keep the phone charging."
+            textSize = 12f
+        })
 
         pairSection = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         serverInput = EditText(this).apply {
@@ -70,7 +79,7 @@ class MainActivity : Activity() {
             hint = "6-digit pairing code from Admin → Numbers & phones"
             inputType = InputType.TYPE_CLASS_NUMBER
         }
-        pairSection.addView(label("3. Pair with the server"))
+        pairSection.addView(label("4. Pair with the server"))
         pairSection.addView(serverInput)
         pairSection.addView(codeInput)
         pairSection.addView(button("Pair") { pair() })
@@ -159,6 +168,7 @@ class MainActivity : Activity() {
         status.text = buildString {
             appendLine("Permissions:   ${if (Telephony.hasPermissions(this@MainActivity)) "OK" else "MISSING"}")
             appendLine("Battery opt.:  ${if (pm.isIgnoringBatteryOptimizations(packageName)) "disabled (good)" else "ON — tap step 2"}")
+            appendLine("Accessibility: ${if (UssdAccessibilityService.isEnabled(this@MainActivity)) "ON (good)" else "OFF — tap step 3"}")
             appendLine("Paired:        ${if (prefs.paired) "yes (${prefs.deviceName})" else "no"}")
             appendLine("Server:        ${prefs.serverUrl}")
             appendLine("Last sync:     ${if (prefs.lastSyncAt > 0) DateFormat.getTimeInstance().format(Date(prefs.lastSyncAt)) else "never"}")

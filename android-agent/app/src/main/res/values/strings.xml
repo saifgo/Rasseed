@@ -2,4 +2,5 @@
 <resources>
     <!-- Keep in sync with web/src/config/brand.ts -->
     <string name="app_name">Rasseed Agent</string>
+    <string name="accessibility_description">Reads the operator balance popup (USSD) on this phone and closes it, so the server can confirm incoming credit. It only reacts while the agent is checking a balance.</string>
 </resources>
