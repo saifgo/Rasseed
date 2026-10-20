@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { signOut } from "@/auth";
 import { LocaleSwitcher } from "@/components/app/locale-switcher";
 import { Logo } from "@/components/app/logo";
+import { SellerBottomNav, SellerTopNav } from "@/components/app/seller-nav";
 import { UserMenu } from "@/components/app/user-menu";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
@@ -11,7 +12,6 @@ import { getCurrentUser, isStaff } from "@/lib/session";
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   const t = await getTranslations();
-  const locale = (await getLocale()) as keyof typeof brand.tagline;
 
   async function signOutAction() {
     "use server";
@@ -25,19 +25,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <Link href="/" aria-label={brand.name}>
             <Logo />
           </Link>
-          {user && (
-            <nav className="hidden items-center gap-1 sm:flex">
-              <Button variant="ghost" size="sm" render={<Link href="/sell" />}>
-                {t("nav.sell")}
-              </Button>
-              <Button variant="ghost" size="sm" render={<Link href="/sales" />}>
-                {t("nav.mySales")}
-              </Button>
-              <Button variant="ghost" size="sm" render={<Link href="/wallet" />}>
-                {t("nav.wallet")}
-              </Button>
-            </nav>
-          )}
+          {user && <SellerTopNav />}
           <div className="ms-auto flex items-center gap-1">
             <LocaleSwitcher />
             {user ? (
@@ -56,13 +44,13 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           </div>
         </div>
       </header>
-      <main className="flex-1">{children}</main>
-      <footer className="border-t">
+      <main className="flex-1 caret-emerald-600 selection:bg-emerald-600/20 selection:text-foreground">{children}</main>
+      {user && <SellerBottomNav />}
+      <footer className={user ? "border-t pb-20 sm:pb-0" : "border-t"}>
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-muted-foreground text-sm">
           <span>
             © {new Date().getFullYear()} {brand.name}
           </span>
-          <span>{brand.tagline[locale]}</span>
         </div>
       </footer>
     </>

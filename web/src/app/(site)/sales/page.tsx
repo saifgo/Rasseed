@@ -1,14 +1,11 @@
-import { PlusIcon, ReceiptTextIcon } from "lucide-react";
+import { ArrowRightIcon, HandCoinsIcon, ReceiptTextIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { Dt } from "@/components/app/money";
-import { OperatorName } from "@/components/app/operator-badge";
+import { OperatorLogo } from "@/components/app/operator-badge";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import { Frame } from "@/components/ui/frame";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { grossPayout } from "@/lib/money";
 import { listUserSales } from "@/lib/queries";
 import { requireUser } from "@/lib/session";
@@ -23,72 +20,57 @@ export default async function SalesPage() {
   const rows = await listUserSales(user.id);
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading font-semibold text-2xl tracking-tight">{t("sales.title")}</h1>
-          <p className="text-muted-foreground">{t("sales.subtitle")}</p>
-        </div>
-        <Button render={<Link href="/sell" />}>
-          <PlusIcon aria-hidden="true" />
-          {t("sale.newSale")}
-        </Button>
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-heading font-bold text-3xl tracking-tight">{t("sales.title")}</h1>
+        {rows.length > 0 && (
+          <Button variant="go" size="lg" render={<Link href="/sell" />}>
+            <HandCoinsIcon aria-hidden="true" />
+            {t("sale.newSale")}
+          </Button>
+        )}
       </div>
 
       {rows.length === 0 ? (
-        <Empty className="rounded-xl border">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ReceiptTextIcon aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>{t("sales.empty")}</EmptyTitle>
-            <EmptyDescription>{t("sales.emptyText")}</EmptyDescription>
-          </EmptyHeader>
-          <EmptyContent>
-            <Button render={<Link href="/sell" />}>{t("nav.sell")}</Button>
-          </EmptyContent>
-        </Empty>
+        <div className="flex flex-col items-center gap-4 py-12 text-center">
+          <ReceiptTextIcon aria-hidden="true" className="size-10 text-muted-foreground/60" />
+          <div className="flex flex-col gap-1">
+            <h2 className="font-semibold text-xl">{t("sales.empty")}</h2>
+            <p className="text-muted-foreground">{t("sales.emptyText")}</p>
+          </div>
+          <Button variant="go" className="h-14 w-full text-lg sm:h-14 sm:w-auto sm:px-8" render={<Link href="/sell" />}>
+            <HandCoinsIcon aria-hidden="true" className="size-5" />
+            {t("nav.sell")}
+          </Button>
+        </div>
       ) : (
-        <Frame>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("sales.ref")}</TableHead>
-                <TableHead>{t("sales.operator")}</TableHead>
-                <TableHead className="text-end">{t("sales.amount")}</TableHead>
-                <TableHead className="text-end">{t("sales.credited")}</TableHead>
-                <TableHead>{t("sales.status")}</TableHead>
-                <TableHead>{t("sales.date")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rows.map(({ tx, op }) => (
-                <TableRow key={tx.id}>
-                  <TableCell>
-                    <Link href={`/sales/${tx.id}`} className="font-mono font-medium underline-offset-4 hover:underline">
-                      {tx.ref}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <OperatorName name={op.name} color={op.color} />
-                  </TableCell>
-                  <TableCell className="text-end">
-                    <Dt millimes={tx.finalMillimes ?? tx.declaredMillimes} />
-                  </TableCell>
-                  <TableCell className="text-end">
-                    <Dt millimes={tx.payoutNetMillimes ?? grossPayout(tx.declaredMillimes, tx.rateBps)} />
-                  </TableCell>
-                  <TableCell>
+        <ul className="flex flex-col divide-y overflow-hidden rounded-2xl border bg-card">
+          {rows.map(({ tx, op }) => (
+            <li key={tx.id}>
+              <Link
+                href={`/sales/${tx.id}`}
+                className="flex items-center gap-4 p-4 transition-colors hover:bg-accent/60"
+              >
+                <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-12 rounded-xl" />
+                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <Dt compact millimes={tx.finalMillimes ?? tx.declaredMillimes} className="font-semibold text-lg" />
+                    <ArrowRightIcon aria-hidden="true" className="size-4 self-center text-muted-foreground rtl:rotate-180" />
+                    <Dt compact
+                      millimes={tx.payoutNetMillimes ?? grossPayout(tx.declaredMillimes, tx.rateBps)}
+                      className="font-bold text-emerald-700 text-lg dark:text-emerald-400"
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={tx.status} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {format.dateTime(tx.createdAt, { dateStyle: "medium", timeStyle: "short" })}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Frame>
+                    <span className="text-muted-foreground text-xs">{format.dateTime(tx.createdAt, { dateStyle: "medium", timeStyle: "short" })}</span>
+                  </div>
+                </div>
+                <ArrowRightIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground rtl:rotate-180" />
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

@@ -40,3 +40,11 @@ export function formatDinars(millimes: number, locale = "fr-TN"): string {
 export function formatRate(rateBps: number): string {
   return `${(rateBps / 100).toFixed(rateBps % 100 === 0 ? 0 : 2)}%`;
 }
+
+/** Seller-friendly amount: "10" for whole dinars (never "10,000", which reads as ten thousand), "2,500" otherwise. */
+export function formatDt(millimes: number, locale = "fr-TN"): string {
+  if (millimes % MILLIMES_PER_DINAR === 0) {
+    return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(millimes / MILLIMES_PER_DINAR);
+  }
+  return formatDinars(millimes, locale);
+}
