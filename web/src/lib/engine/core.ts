@@ -5,7 +5,6 @@ import {
   credits,
   deviceCommands,
   operators,
-  payouts,
   sims,
   transactionEvents,
   transactions,
@@ -13,6 +12,7 @@ import {
 } from "@/db/schema";
 import { grossPayout } from "@/lib/money";
 import type { AppSettings } from "@/lib/settings";
+import { addEntry } from "./wallet";
 
 export class EngineError extends Error {
   constructor(public code: string) {
@@ -87,7 +87,7 @@ export async function releaseSim(db: DbTx, simId: string | null, settings: AppSe
     .where(eq(sims.id, simId));
 }
 
-/** Completes the seller side: locks the final amount, creates the payout and frees the number. */
+/** Completes the seller side: locks the final amount, credits the seller's balance and frees the number. */
 export async function finalize(
   db: DbTx,
   tx: Tx,
@@ -97,32 +97,19 @@ export async function finalize(
   reason: string,
 ) {
   const gross = grossPayout(finalMillimes, tx.rateBps);
-  const net = Math.max(0, gross - tx.payoutFeeMillimes);
   await updateTx(db, tx.id, {
     status: "confirmed",
     finalMillimes,
     payoutGrossMillimes: gross,
-    payoutNetMillimes: net,
+    payoutNetMillimes: gross,
     completedAt: new Date(),
     reviewReason: null,
   });
-  await db
-    .insert(payouts)
-    .values({
-      txId: tx.id,
-      userId: tx.userId,
-      methodCode: tx.payoutMethodCode,
-      details: tx.payoutDetails,
-      grossMillimes: gross,
-      feeMillimes: tx.payoutFeeMillimes,
-      netMillimes: net,
-    })
-    .onConflictDoUpdate({
-      target: payouts.txId,
-      set: { grossMillimes: gross, netMillimes: net },
-    });
+  if (gross > 0) {
+    await addEntry(db, { userId: tx.userId, kind: "sale", amountMillimes: gross, txId: tx.id });
+  }
   await releaseSim(db, tx.simId, settings);
-  await logEvent(db, tx.id, "confirmed", actor, { finalMillimes, grossMillimes: gross, netMillimes: net, reason });
+  await logEvent(db, tx.id, "confirmed", actor, { finalMillimes, grossMillimes: gross, netMillimes: gross, reason });
 }
 
 export async function sendToReview(db: DbTx, tx: Tx, reason: string, data: Record<string, unknown> = {}) {

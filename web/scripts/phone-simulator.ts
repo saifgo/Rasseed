@@ -21,7 +21,12 @@ export class PhoneSimulator {
   log: (msg: string) => void = () => {};
   /** When false, balance commands fail (simulates USSD errors). */
   ussdWorks = true;
-  balanceFormat = (m: number) => `Votre solde est de ${(m / 1000).toFixed(3)} DT. Valable jusqu'au 31/12/2026`;
+  /** Mimics each operator's real balance reply. Orange (*101#) lists several buckets; only recharge + transfer count. */
+  balanceFormat = (m: number, ussd: string) =>
+    ussd === "*101#"
+      ? `Votre forfait est de  30 DT. Votre report est de 0 DT. Votre credit recu par transfert est de 0 DT valable jusqu'au --. Votre solde de recharge est de  ${(m / 1000).toFixed(3)} DT.
+01:Page suivante`
+      : `Votre solde est de ${(m / 1000).toFixed(3)} DT. Valable jusqu'au 31/12/2026`;
 
   constructor(
     public server: string,
@@ -61,7 +66,7 @@ export class PhoneSimulator {
         continue;
       }
       this.log(`USSD ${cmd.ussd} on slot ${sim.slotIndex} -> ${sim.balanceMillimes}`);
-      await this.post("/api/device/result", { id: cmd.id, ok: true, response: this.balanceFormat(sim.balanceMillimes) });
+      await this.post("/api/device/result", { id: cmd.id, ok: true, response: this.balanceFormat(sim.balanceMillimes, cmd.ussd) });
     }
     return r.commands.length as number;
   }

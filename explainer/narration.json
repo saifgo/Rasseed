@@ -1,0 +1,46 @@
+[
+  {
+    "id": "intro",
+    "text": "Rasseed turns phone credit into cash. Sellers transfer credit from Ooredoo, Orange or Tunisie Telecom to one of your SIM cards, and get paid in dinars at the day's rate. Here is how it works."
+  },
+  {
+    "id": "start",
+    "text": "Step one. The seller picks the operator, the amount, their sender number, and signs in with Google. The rate is locked right away, and the exact payout is shown before anything starts."
+  },
+  {
+    "id": "reserve",
+    "text": "Step two. A free SIM of that operator is reserved only for this sale. Before the number is revealed, the phone reads the SIM balance over USSD. That reading is the baseline. If every SIM is busy, the seller waits in a queue and sees their position."
+  },
+  {
+    "id": "send",
+    "text": "Step three. The seller has fifteen minutes to send the credit, using the operator's own transfer code shown on screen."
+  },
+  {
+    "id": "confirm",
+    "text": "Step four. Every transfer is confirmed twice. The operator's SMS lands on the phone. The server checks it came from the seller's number. Then the phone reads the balance again. The credit counts only when the balance difference equals the amount in the SMS."
+  },
+  {
+    "id": "outcomes",
+    "text": "If the full amount arrives, the sale is confirmed. If less arrives, the seller can send the rest, or accept what was received. If nothing arrives, the sale expires. And anything suspicious, like a fake SMS, a balance change without an SMS, or a swapped SIM, goes to the review queue, where the admin decides."
+  },
+  {
+    "id": "wallet",
+    "text": "A confirmed sale credits the seller's wallet in cash, at the locked rate. The seller then requests a withdrawal by D17, Flouci, or postal money order. The admin sends the money, marks it paid, and attaches a proof the seller sees live."
+  },
+  {
+    "id": "architecture",
+    "text": "Under the hood, a Next.js app serves the seller site, the admin console and the device API. A worker handles expiries, timeouts, balance polling and the queue. PostgreSQL stores everything. On each phone, a small Android agent reads SMS and runs USSD codes. All parsing happens on the server, so formats can be changed from the admin without touching the phones. The whole stack ships with Docker Compose."
+  },
+  {
+    "id": "admin",
+    "text": "The admin console covers the review queue, sales, numbers and phones, operators and rates, withdrawals, and users. Three roles keep it tidy: seller, manager for day to day operations, and admin for setup and user management."
+  },
+  {
+    "id": "safety",
+    "text": "Extra safety rails: one active sale per sender number, a cooldown before a number is reused, balance polling while a number is held, a per-SIM ledger that flags any unexplained change, and an audit timeline on every sale."
+  },
+  {
+    "id": "outro",
+    "text": "Rasseed. Phone credit to cash, confirmed twice. Available in Arabic, French and English."
+  }
+]

@@ -56,7 +56,7 @@ export default async function SalesPage() {
                 <TableHead>{t("sales.ref")}</TableHead>
                 <TableHead>{t("sales.operator")}</TableHead>
                 <TableHead className="text-end">{t("sales.amount")}</TableHead>
-                <TableHead className="text-end">{t("sales.payout")}</TableHead>
+                <TableHead className="text-end">{t("sales.credited")}</TableHead>
                 <TableHead>{t("sales.status")}</TableHead>
                 <TableHead>{t("sales.date")}</TableHead>
               </TableRow>
@@ -76,12 +76,7 @@ export default async function SalesPage() {
                     <Dt millimes={tx.finalMillimes ?? tx.declaredMillimes} />
                   </TableCell>
                   <TableCell className="text-end">
-                    <Dt
-                      millimes={
-                        tx.payoutNetMillimes ??
-                        Math.max(0, grossPayout(tx.declaredMillimes, tx.rateBps) - tx.payoutFeeMillimes)
-                      }
-                    />
+                    <Dt millimes={tx.payoutNetMillimes ?? grossPayout(tx.declaredMillimes, tx.rateBps)} />
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={tx.status} />

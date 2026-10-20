@@ -15,7 +15,10 @@ import {
   smsMessages,
   transactions,
   users,
+  walletEntries,
+  withdrawals,
   type TxStatus,
+  type WithdrawalStatus,
 } from "@/db/schema";
 import { getSettings } from "@/lib/settings";
 
@@ -24,7 +27,7 @@ export async function getAdminCounts() {
   const onlineSince = new Date(Date.now() - settings.deviceOfflineSeconds * 1000);
   const [[review], [pay], [cred], [simAlerts]] = await Promise.all([
     db.select({ n: count() }).from(transactions).where(eq(transactions.status, "review")),
-    db.select({ n: count() }).from(payouts).where(eq(payouts.status, "pending")),
+    db.select({ n: count() }).from(withdrawals).where(eq(withdrawals.status, "pending")),
     db.select({ n: count() }).from(credits).where(inArray(credits.status, ["late", "unmatched"])),
     db
       .select({ n: count() })
@@ -37,14 +40,14 @@ export async function getAdminCounts() {
         ),
       ),
   ]);
-  return { review: review.n, payouts: pay.n, credits: cred.n, numbersAlert: simAlerts.n };
+  return { review: review.n, withdrawals: pay.n, credits: cred.n, numbersAlert: simAlerts.n };
 }
 
 export async function getOverview() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
-  const [[pending], [today], [active], balances] = await Promise.all([
-    db.select({ n: count(), total: sum(payouts.netMillimes) }).from(payouts).where(eq(payouts.status, "pending")),
+  const [[pending], [today], [active], balances, [owed]] = await Promise.all([
+    db.select({ n: count(), total: sum(withdrawals.netMillimes) }).from(withdrawals).where(eq(withdrawals.status, "pending")),
     db
       .select({ n: count(), credit: sum(transactions.finalMillimes), payout: sum(transactions.payoutNetMillimes) })
       .from(transactions)
@@ -55,17 +58,21 @@ export async function getOverview() {
       .from(sims)
       .where(isNotNull(sims.operatorCode))
       .groupBy(sims.operatorCode),
+    db.select({ total: sum(walletEntries.amountMillimes) }).from(walletEntries),
   ]);
   return {
-    pendingPayouts: { count: pending.n, totalMillimes: Number(pending.total ?? 0) },
+    pendingWithdrawals: { count: pending.n, totalMillimes: Number(pending.total ?? 0) },
+    // Sum of all seller balances: money the business owes (pending withdrawals excluded).
+    owedMillimes: Number(owed.total ?? 0),
     today: { count: today.n, creditMillimes: Number(today.credit ?? 0), payoutMillimes: Number(today.payout ?? 0) },
     activeSales: active.n,
     balances: balances.map((b) => ({ operatorCode: b.operatorCode!, totalMillimes: Number(b.total ?? 0), sims: b.n })),
   };
 }
 
-export async function listSales(filter: { status?: TxStatus | "active"; q?: string; limit?: number }) {
+export async function listSales(filter: { status?: TxStatus | "active"; q?: string; userId?: string; limit?: number }) {
   const conds = [];
+  if (filter.userId) conds.push(eq(transactions.userId, filter.userId));
   if (filter.status === "active") conds.push(inArray(transactions.status, ACTIVE_TX_STATUSES));
   else if (filter.status) conds.push(eq(transactions.status, filter.status));
   if (filter.q) {
@@ -120,17 +127,75 @@ export async function getSaleAudit(txId: string) {
   return { tx, user, sim, credits: txCredits, commands };
 }
 
-export async function listPayouts(status: "pending" | "paid") {
+export async function listWithdrawals(status: WithdrawalStatus) {
   return db
-    .select({ payout: payouts, tx: transactions, op: operators, method: payoutMethods, user: { email: users.email, name: users.name } })
+    .select({ w: withdrawals, method: payoutMethods, user: { id: users.id, email: users.email, name: users.name } })
+    .from(withdrawals)
+    .innerJoin(payoutMethods, eq(payoutMethods.code, withdrawals.methodCode))
+    .innerJoin(users, eq(users.id, withdrawals.userId))
+    .where(eq(withdrawals.status, status))
+    .orderBy(status === "pending" ? asc(withdrawals.createdAt) : desc(withdrawals.createdAt))
+    .limit(300);
+}
+
+/** Per-sale payouts from before the account balance. Read-only history. */
+export async function listLegacyPayouts() {
+  return db
+    .select({ payout: payouts, tx: transactions, method: payoutMethods, user: { email: users.email, name: users.name } })
     .from(payouts)
     .innerJoin(transactions, eq(transactions.id, payouts.txId))
-    .innerJoin(operators, eq(operators.code, transactions.operatorCode))
     .innerJoin(payoutMethods, eq(payoutMethods.code, payouts.methodCode))
     .innerJoin(users, eq(users.id, payouts.userId))
-    .where(eq(payouts.status, status))
-    .orderBy(status === "pending" ? asc(payouts.createdAt) : desc(payouts.paidAt))
+    .orderBy(desc(payouts.createdAt))
     .limit(300);
+}
+
+export async function listUsers(q?: string) {
+  const balance = db
+    .select({ userId: walletEntries.userId, total: sum(walletEntries.amountMillimes).as("total") })
+    .from(walletEntries)
+    .groupBy(walletEntries.userId)
+    .as("balance");
+  const salesAgg = db
+    .select({ userId: transactions.userId, n: count().as("n") })
+    .from(transactions)
+    .groupBy(transactions.userId)
+    .as("sales_agg");
+  const cond = q ? or(ilike(users.email, `%${q.trim()}%`), ilike(users.name, `%${q.trim()}%`)) : undefined;
+  const rows = await db
+    .select({ user: users, balance: balance.total, sales: salesAgg.n })
+    .from(users)
+    .leftJoin(balance, eq(balance.userId, users.id))
+    .leftJoin(salesAgg, eq(salesAgg.userId, users.id))
+    .where(cond)
+    .orderBy(desc(users.createdAt))
+    .limit(300);
+  return rows.map((r) => ({ user: r.user, balanceMillimes: Number(r.balance ?? 0), sales: Number(r.sales ?? 0) }));
+}
+
+export async function getUserDetail(userId: string) {
+  const [user] = await db.select().from(users).where(eq(users.id, userId));
+  if (!user) return null;
+  const [entries, userWithdrawals, [bal]] = await Promise.all([
+    db
+      .select({ e: walletEntries, tx: { ref: transactions.ref }, w: { ref: withdrawals.ref }, by: { email: users.email } })
+      .from(walletEntries)
+      .leftJoin(transactions, eq(transactions.id, walletEntries.txId))
+      .leftJoin(withdrawals, eq(withdrawals.id, walletEntries.withdrawalId))
+      .leftJoin(users, eq(users.id, walletEntries.createdBy))
+      .where(eq(walletEntries.userId, userId))
+      .orderBy(desc(walletEntries.createdAt))
+      .limit(200),
+    db
+      .select({ w: withdrawals, method: payoutMethods })
+      .from(withdrawals)
+      .innerJoin(payoutMethods, eq(payoutMethods.code, withdrawals.methodCode))
+      .where(eq(withdrawals.userId, userId))
+      .orderBy(desc(withdrawals.createdAt))
+      .limit(100),
+    db.select({ total: sum(walletEntries.amountMillimes) }).from(walletEntries).where(eq(walletEntries.userId, userId)),
+  ]);
+  return { user, entries, withdrawals: userWithdrawals, balanceMillimes: Number(bal.total ?? 0) };
 }
 
 export async function listOpenCredits() {

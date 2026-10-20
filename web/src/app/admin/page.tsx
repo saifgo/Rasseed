@@ -27,7 +27,7 @@ export default async function AdminOverview() {
   return (
     <>
       <AutoRefresh seconds={5} />
-      <PageHeader title="Overview" description="Live view of sales, payouts and phones." />
+      <PageHeader title="Overview" description="Live view of sales, withdrawals, balances and phones." />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Active sales" value={overview.activeSales} hint="Queued, waiting for transfer or verifying" />
@@ -45,16 +45,24 @@ export default async function AdminOverview() {
           }
         />
         <StatCard
-          label="Payouts to send"
-          value={<Dt millimes={overview.pendingPayouts.totalMillimes} />}
-          hint={`${overview.pendingPayouts.count} pending`}
+          label="Withdrawals to send"
+          value={<Dt millimes={overview.pendingWithdrawals.totalMillimes} />}
+          hint={
+            overview.pendingWithdrawals.count > 0 ? (
+              <Link className="underline" href="/admin/withdrawals">
+                {overview.pendingWithdrawals.count} pending
+              </Link>
+            ) : (
+              "Nothing to send"
+            )
+          }
         />
         <StatCard
-          label="Completed today"
-          value={<Dt millimes={overview.today.creditMillimes} />}
+          label="Seller balances"
+          value={<Dt millimes={overview.owedMillimes} />}
           hint={
             <>
-              {overview.today.count} sales · payout <Dt millimes={overview.today.payoutMillimes} />
+              Money owed to sellers · today {overview.today.count} sales, <Dt millimes={overview.today.creditMillimes} /> credit
             </>
           }
         />

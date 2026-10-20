@@ -4,12 +4,10 @@ import {
   ACTIVE_TX_STATUSES,
   devices,
   operators,
-  payoutMethods,
-  savedPayoutDetails,
   sims,
   transactions,
 } from "@/db/schema";
-import { netPayout } from "@/lib/money";
+import { grossPayout } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
 import { EngineError, enqueueBalanceCheck, finalize, lockTx, logEvent, releaseSim, updateTx } from "./core";
@@ -24,8 +22,6 @@ export type CreateSaleInput = {
   operatorCode: string;
   amountMillimes: number;
   senderMsisdn: string;
-  payoutMethodCode: string;
-  payoutDetails: Record<string, string>;
 };
 
 export async function createSale(userId: string, input: CreateSaleInput) {
@@ -35,16 +31,7 @@ export async function createSale(userId: string, input: CreateSaleInput) {
   const sender = normalizeMsisdn(input.senderMsisdn);
   if (!sender) throw new EngineError("invalid_sender");
 
-  const [method] = await db.select().from(payoutMethods).where(eq(payoutMethods.code, input.payoutMethodCode));
-  if (!method || !method.active) throw new EngineError("payout_method_unavailable");
-  const details: Record<string, string> = {};
-  for (const f of method.fields) {
-    const v = (input.payoutDetails[f.key] ?? "").trim();
-    if (f.required && !v) throw new EngineError("payout_details_missing");
-    if (v && f.type === "phone" && !normalizeMsisdn(v)) throw new EngineError("payout_phone_invalid");
-    if (v) details[f.key] = f.type === "phone" ? normalizeMsisdn(v)! : v.slice(0, 200);
-  }
-  if (netPayout(input.amountMillimes, op.rateBps, method.feeMillimes) <= 0) throw new EngineError("payout_below_fee");
+  if (grossPayout(input.amountMillimes, op.rateBps) <= 0) throw new EngineError("invalid_amount");
 
   const txId = await db.transaction(async (t) => {
     // Serialize sales per sender number so two sales can never wait on the same sender at once:
@@ -65,24 +52,13 @@ export async function createSale(userId: string, input: CreateSaleInput) {
         declaredMillimes: input.amountMillimes,
         senderMsisdn: sender,
         rateBps: op.rateBps,
-        payoutMethodCode: method.code,
-        payoutDetails: details,
-        payoutFeeMillimes: method.feeMillimes,
         status: "queued",
       })
       .returning({ id: transactions.id });
     await logEvent(t, row.id, "created", "seller", {
       declaredMillimes: input.amountMillimes,
       rateBps: op.rateBps,
-      feeMillimes: method.feeMillimes,
     });
-    await t
-      .insert(savedPayoutDetails)
-      .values({ userId, methodCode: method.code, details })
-      .onConflictDoUpdate({
-        target: [savedPayoutDetails.userId, savedPayoutDetails.methodCode],
-        set: { details, updatedAt: new Date() },
-      });
     return row.id;
   });
 

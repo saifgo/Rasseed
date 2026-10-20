@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardPanel, CardTitle } from "@/components/ui/card";
 import { Frame } from "@/components/ui/frame";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { requireAdmin } from "@/lib/session";
 import { getOperatorsAdmin } from "@/lib/admin-queries";
 import { formatRate } from "@/lib/money";
 import { OperatorEditor, RateEditor } from "./operator-forms";
@@ -11,6 +12,7 @@ import { OperatorEditor, RateEditor } from "./operator-forms";
 export const metadata = { title: "Operators & rates" };
 
 export default async function OperatorsPage() {
+  await requireAdmin();
   const { operators, history, recentReplies, recentSms } = await getOperatorsAdmin();
   return (
     <>

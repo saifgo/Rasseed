@@ -8,6 +8,13 @@
       "when": 1792243201960,
       "tag": "0000_glossy_baron_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792431654706,
+      "tag": "0001_wallet_and_roles",
+      "breakpoints": true
     }
   ]
 }

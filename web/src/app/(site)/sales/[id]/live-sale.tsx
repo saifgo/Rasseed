@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangleIcon,
   ArrowLeftIcon,
+  WalletIcon,
   BanIcon,
   CheckIcon,
   CircleCheckBigIcon,
@@ -46,7 +47,7 @@ import type { SaleView } from "@/lib/queries";
 import { cancelSaleAction, choosePartialAction } from "../../sell/actions";
 
 type View = NonNullable<SaleView>;
-const LIVE: View["status"][] = ["queued", "assigning", "awaiting_transfer", "verifying", "partial", "review", "confirmed"];
+const LIVE: View["status"][] = ["queued", "assigning", "awaiting_transfer", "verifying", "partial", "review"];
 
 export function LiveSale({ initial }: { initial: View }) {
   const t = useTranslations("sale");
@@ -68,7 +69,7 @@ export function LiveSale({ initial }: { initial: View }) {
     refetchInterval: (q) => {
       const s = q.state.data?.status;
       if (!s || !LIVE.includes(s)) return false;
-      return s === "confirmed" || s === "review" ? 15_000 : 2_000;
+      return s === "review" ? 15_000 : 2_000;
     },
   });
 
@@ -81,9 +82,10 @@ export function LiveSale({ initial }: { initial: View }) {
     });
   }
 
-  const methodName = sale.method.name[locale] ?? sale.method.name.en;
+  // Legacy sales (before the account balance) carry their own payout method.
+  const methodName = sale.method ? (sale.method.name[locale] ?? sale.method.name.en) : "";
   const dt = (m: number) => formatDinars(m);
-  const estimatedNet = Math.max(0, grossPayout(sale.declaredMillimes, sale.rateBps) - sale.feeMillimes);
+  const estimatedNet = grossPayout(sale.declaredMillimes, sale.rateBps);
   const showTransfer =
     sale.assignedMsisdn &&
     (sale.status === "awaiting_transfer" || sale.status === "verifying" || (sale.status === "partial" && sale.partialChoice === "topup"));
@@ -182,9 +184,20 @@ export function LiveSale({ initial }: { initial: View }) {
               {t("reviewText")}
             </StateCard>
           )}
-          {sale.status === "confirmed" && (
+          {sale.status === "confirmed" && sale.method && (
             <StateCard icon={<CircleCheckBigIcon />} title={t("successTitle")} tone="success">
-              {t("successText", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutNetMillimes ?? 0), method: methodName })}
+              {t("successTextLegacy", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutNetMillimes ?? 0), method: methodName })}
+            </StateCard>
+          )}
+          {sale.status === "confirmed" && !sale.method && (
+            <StateCard icon={<CircleCheckBigIcon />} title={t("successTitle")} tone="success">
+              <span className="flex flex-col gap-3">
+                <span>{t("successText", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutGrossMillimes ?? 0) })}</span>
+                <Button className="self-start" render={<Link href="/wallet" />}>
+                  <WalletIcon aria-hidden="true" />
+                  {t("goToWallet")}
+                </Button>
+              </span>
             </StateCard>
           )}
           {sale.status === "paid" && (
@@ -245,9 +258,7 @@ export function LiveSale({ initial }: { initial: View }) {
             <CardTitle className="text-2xl">
               <Dt millimes={sale.payoutNetMillimes ?? estimatedNet} />
             </CardTitle>
-            <CardDescription>
-              {t("payout")} · {methodName}
-            </CardDescription>
+            <CardDescription>{sale.method ? `${t("payout")} · ${methodName}` : t("creditedToBalance")}</CardDescription>
           </CardHeader>
           <CardPanel className="flex flex-col gap-3 text-sm">
             <Detail label={t("declared")}>
@@ -257,13 +268,17 @@ export function LiveSale({ initial }: { initial: View }) {
               <Dt millimes={sale.finalMillimes ?? sale.confirmedMillimes} />
             </Detail>
             <Detail label={t("rate")}>{formatRate(sale.rateBps)}</Detail>
-            <Separator />
-            <Detail label={t("method")}>{methodName}</Detail>
-            {Object.entries(sale.payoutDetails).map(([k, v]) => (
-              <Detail key={k} label={sale.method.fields.find((f) => f.key === k)?.label[locale] ?? k}>
-                <span dir="auto">{k === "phone" ? formatMsisdn(v) : v}</span>
-              </Detail>
-            ))}
+            {sale.method && (
+              <>
+                <Separator />
+                <Detail label={t("method")}>{methodName}</Detail>
+                {Object.entries(sale.payoutDetails).map(([k, v]) => (
+                  <Detail key={k} label={sale.method?.fields.find((f) => f.key === k)?.label[locale] ?? k}>
+                    <span dir="auto">{k === "phone" ? formatMsisdn(v) : v}</span>
+                  </Detail>
+                ))}
+              </>
+            )}
             <Separator />
             <Detail label={t("sender")}>
               <span dir="ltr">{formatMsisdn(sale.senderMsisdn)}</span>

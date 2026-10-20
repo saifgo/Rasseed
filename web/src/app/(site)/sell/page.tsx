@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { getSavedPayoutDetails, listOperators, listPayoutMethods } from "@/lib/queries";
+import { db } from "@/db";
+import { getBalance } from "@/lib/engine/wallet";
+import { listOperators } from "@/lib/queries";
 import { requireUser } from "@/lib/session";
 import { SellForm } from "./sell-form";
 
@@ -10,7 +12,7 @@ export const metadata: Metadata = { title: "Sell" };
 export default async function SellPage() {
   const user = await requireUser();
   const t = await getTranslations("sell");
-  const [ops, methods, saved] = await Promise.all([listOperators(), listPayoutMethods(), getSavedPayoutDetails(user.id)]);
+  const [ops, balance] = await Promise.all([listOperators(), getBalance(db, user.id)]);
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-10">
       <div className="flex flex-col gap-1">
@@ -19,8 +21,7 @@ export default async function SellPage() {
       </div>
       <SellForm
         operators={ops.map((o) => ({ code: o.code, name: o.name, color: o.color, rateBps: o.rateBps, active: o.active }))}
-        methods={methods.map((m) => ({ code: m.code, name: m.name, feeMillimes: m.feeMillimes, fields: m.fields }))}
-        saved={saved}
+        balanceMillimes={balance}
       />
     </div>
   );

@@ -23,6 +23,8 @@ export const DEFAULT_SETTINGS = {
   lateCreditWindowHours: 24,
   /** USSD failures in a row before a SIM is skipped for new assignments. */
   maxSimFailures: 3,
+  /** Smallest withdrawal a seller can request, in millimes (placeholder: 5 DT — adjust in Settings). */
+  minWithdrawalMillimes: 5000,
 };
 
 export type AppSettings = typeof DEFAULT_SETTINGS;

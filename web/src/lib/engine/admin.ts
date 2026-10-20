@@ -1,11 +1,12 @@
 import { and, eq, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { credits, operators, payouts, rateHistory, sims, transactions } from "@/db/schema";
+import { credits, operators, rateHistory, sims, transactions } from "@/db/schema";
 import { grossPayout } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
 import { EngineError, enqueueBalanceCheck, finalize, lockSim, lockTx, logEvent, releaseSim, updateTx } from "./core";
 import { assignQueued } from "./sales";
+import { addEntry } from "./wallet";
 
 /** Admin decision for a sale in review: confirm a (possibly corrected) amount, or reject. */
 export async function resolveReview(
@@ -35,7 +36,7 @@ export async function resolveReview(
   await assignQueued();
 }
 
-/** Applies a late or unmatched credit to a sale: raises the final amount and the pending payout. */
+/** Applies a late or unmatched credit to a sale: raises the final amount and credits the difference to the balance. */
 export async function applyCredit(adminId: string, creditId: string, txRef: string) {
   const settings = await getSettings();
   await db.transaction(async (t) => {
@@ -46,13 +47,11 @@ export async function applyCredit(adminId: string, creditId: string, txRef: stri
     const tx = (await lockTx(t, txRow.id))!;
 
     if (tx.status === "confirmed") {
-      const [payout] = await t.select().from(payouts).where(eq(payouts.txId, tx.id)).for("update");
-      if (!payout || payout.status !== "pending") throw new EngineError("payout_already_paid");
       const finalMillimes = (tx.finalMillimes ?? 0) + credit.amountMillimes;
       const gross = grossPayout(finalMillimes, tx.rateBps);
-      const net = Math.max(0, gross - tx.payoutFeeMillimes);
-      await updateTx(t, tx.id, { finalMillimes, payoutGrossMillimes: gross, payoutNetMillimes: net });
-      await t.update(payouts).set({ grossMillimes: gross, netMillimes: net }).where(eq(payouts.id, payout.id));
+      const delta = gross - (tx.payoutGrossMillimes ?? 0);
+      await updateTx(t, tx.id, { finalMillimes, payoutGrossMillimes: gross, payoutNetMillimes: gross });
+      if (delta > 0) await addEntry(t, { userId: tx.userId, kind: "sale", amountMillimes: delta, txId: tx.id, createdBy: adminId });
     } else if (["expired", "cancelled"].includes(tx.status)) {
       await finalize(t, tx, credit.amountMillimes, settings, "admin", "late_credit");
     } else {
@@ -70,37 +69,6 @@ export async function rejectCredit(adminId: string, creditId: string, note: stri
   const [credit] = await db.select().from(credits).where(eq(credits.id, creditId));
   if (!credit || !["late", "unmatched"].includes(credit.status)) throw new EngineError("invalid_state");
   await db.update(credits).set({ status: "rejected", resolvedBy: adminId, note }).where(eq(credits.id, creditId));
-}
-
-export async function markPaid(
-  adminId: string,
-  payoutId: string,
-  input: { reference?: string; note?: string; proofPath?: string; proofMime?: string },
-) {
-  await db.transaction(async (t) => {
-    const [payout] = await t.select().from(payouts).where(eq(payouts.id, payoutId)).for("update");
-    if (!payout) throw new EngineError("not_found");
-    if (payout.status === "paid") throw new EngineError("payout_already_paid");
-    await t
-      .update(payouts)
-      .set({
-        status: "paid",
-        paidAt: new Date(),
-        paidBy: adminId,
-        reference: input.reference || null,
-        note: input.note || null,
-        proofPath: input.proofPath ?? null,
-        proofMime: input.proofMime ?? null,
-      })
-      .where(eq(payouts.id, payout.id));
-    await updateTx(t, payout.txId, { status: "paid" });
-    await logEvent(t, payout.txId, "paid", "admin", { netMillimes: payout.netMillimes, reference: input.reference || null });
-  });
-}
-
-/** Attaches (or replaces) the proof on an already-paid payout. */
-export async function attachProof(payoutId: string, proofPath: string, proofMime: string) {
-  await db.update(payouts).set({ proofPath, proofMime }).where(eq(payouts.id, payoutId));
 }
 
 export async function setRate(adminId: string, operatorCode: string, rateBps: number) {

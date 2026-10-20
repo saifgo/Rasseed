@@ -5,13 +5,14 @@
  */
 import "dotenv/config";
 import assert from "node:assert/strict";
-import { eq, inArray, like } from "drizzle-orm";
+import { and, eq, inArray, like } from "drizzle-orm";
 import { db } from "@/db";
-import { devices, payouts, settings, sims, transactions, users } from "@/db/schema";
-import { applyCredit, configureSim, markPaid, resolveReview } from "@/lib/engine/admin";
+import { devices, settings, sims, transactions, users, withdrawals } from "@/db/schema";
+import { applyCredit, configureSim, resolveReview } from "@/lib/engine/admin";
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
 import { choosePartial, createSale } from "@/lib/engine/sales";
+import { adjustBalance, getBalance, markWithdrawalPaid, rejectWithdrawal, requestWithdrawal } from "@/lib/engine/wallet";
 import { saveSettings } from "@/lib/settings";
 import { PhoneSimulator } from "./phone-simulator";
 
@@ -53,7 +54,7 @@ let pausedSims: string[] = [];
 async function main() {
   pausedSims = (await db.update(sims).set({ status: "disabled" }).where(eq(sims.status, "active")).returning({ id: sims.id })).map((s) => s.id);
   // Fast timings for the test.
-  await saveSettings({ verifyRetrySeconds: 1, verifyMaxAttempts: 3, smsGraceSeconds: 5, pollIntervalSeconds: 3, cooldownSeconds: 1 });
+  await saveSettings({ verifyRetrySeconds: 1, verifyMaxAttempts: 3, smsGraceSeconds: 5, pollIntervalSeconds: 3, cooldownSeconds: 1, minWithdrawalMillimes: 2000 });
 
   const [seller] = await db.insert(users).values({ email: `e2e-${run}@test.local`, name: "E2E Seller" }).returning();
   const [device] = await db.insert(devices).values({ name: `E2E phone ${run}` }).returning();
@@ -72,36 +73,65 @@ async function main() {
   await sleep(1500);
 
   const d17 = { phone: "22123456", name: "Test Seller" };
-  const sale = (operatorCode: string, millimes: number, n: number, method = "d17") =>
-    createSale(seller.id, {
-      operatorCode,
-      amountMillimes: millimes,
-      senderMsisdn: sender(n),
-      payoutMethodCode: method,
-      payoutDetails: method === "mandat" ? { name: "Test Seller", phone: "22123456" } : d17,
-    });
+  const sale = (operatorCode: string, millimes: number, n: number) =>
+    createSale(seller.id, { operatorCode, amountMillimes: millimes, senderMsisdn: sender(n) });
+  const balance = () => getBalance(db, seller.id);
 
-  await scenario("full transfer confirmed by SMS + balance, then paid", async () => {
+  await scenario("full transfer confirmed by SMS + balance is credited to the seller's balance", async () => {
     const id = await sale("ooredoo", 5000, 1);
     const t0 = await waitFor(id, ["awaiting_transfer"]);
     assert.equal(t0.assignedMsisdn, OOREDOO_NO);
     assert.equal(t0.baselineBalanceMillimes, 1500);
+    assert.equal(t0.payoutMethodCode, null, "no payout method per sale anymore");
     await phone.transfer(0, 5000, sender(1));
     const t = await waitFor(id, ["confirmed"]);
     assert.equal(t.finalMillimes, 5000);
-    assert.equal(t.payoutNetMillimes, Math.floor((5000 * t.rateBps) / 10000));
-    const [p] = await db.select().from(payouts).where(eq(payouts.txId, id));
-    // paidBy references users.id: the seller stands in for the admin in this test.
-    await markPaid(seller.id, p.id, { reference: "D17-123" });
-    assert.equal((await tx(id)).status, "paid");
+    const expected = Math.floor((5000 * t.rateBps) / 10000);
+    assert.equal(t.payoutGrossMillimes, expected);
+    assert.equal(await balance(), expected, "balance = cash at the locked rate");
   });
 
-  await scenario("mandate fee is deducted", async () => {
-    const id = await sale("ooredoo", 10000, 2, "mandat");
+  await scenario("second sale adds to the same balance (no fee at sale time)", async () => {
+    const before = await balance();
+    const id = await sale("ooredoo", 10000, 2);
     await waitFor(id, ["awaiting_transfer"]);
     await phone.transfer(0, 10000, sender(2));
     const t = await waitFor(id, ["confirmed"]);
-    assert.equal(t.payoutNetMillimes, Math.floor((10000 * t.rateBps) / 10000) - 5000);
+    assert.equal(await balance(), before + Math.floor((10000 * t.rateBps) / 10000));
+  });
+
+  await scenario("withdrawal: fee once per request, partial amount, rejection refunds, paid stays", async () => {
+    const before = await balance();
+    assert.ok(before >= 6000, `balance ${before}`);
+    // Below the minimum (2 DT in this test) is refused.
+    await assert.rejects(requestWithdrawal(seller.id, { amountMillimes: 1000, methodCode: "d17", details: d17 }), (e: unknown) => e instanceof EngineError && e.code === "below_minimum");
+    // More than the balance is refused.
+    await assert.rejects(requestWithdrawal(seller.id, { amountMillimes: before + 1, methodCode: "d17", details: d17 }), (e: unknown) => e instanceof EngineError && e.code === "insufficient_balance");
+    // Mandate (5 DT fee): 6 DT withdrawn → 1 DT sent, fee charged once.
+    const wid = await requestWithdrawal(seller.id, { amountMillimes: 6000, methodCode: "mandat", details: { name: "Test Seller", phone: "22123456" } });
+    let [w] = await db.select().from(withdrawals).where(eq(withdrawals.id, wid));
+    assert.equal(w.status, "pending");
+    assert.equal(w.feeMillimes, 5000);
+    assert.equal(w.netMillimes, 1000);
+    assert.equal(await balance(), before - 6000, "amount leaves the balance when requested");
+    // Reject → full amount back.
+    await rejectWithdrawal(seller.id, wid, "wrong name");
+    [w] = await db.select().from(withdrawals).where(eq(withdrawals.id, wid));
+    assert.equal(w.status, "rejected");
+    assert.equal(await balance(), before, "rejection refunds the balance");
+    await assert.rejects(rejectWithdrawal(seller.id, wid, "again"), (e: unknown) => e instanceof EngineError && e.code === "invalid_state");
+    // Partial D17 withdrawal (no fee), marked paid.
+    const wid2 = await requestWithdrawal(seller.id, { amountMillimes: 2000, methodCode: "d17", details: d17 });
+    await markWithdrawalPaid(seller.id, wid2, { reference: "D17-123" });
+    [w] = await db.select().from(withdrawals).where(eq(withdrawals.id, wid2));
+    assert.equal(w.status, "paid");
+    assert.equal(w.netMillimes, 2000);
+    assert.equal(await balance(), before - 2000);
+    // Manual adjustment with a note; removing more than the balance is refused.
+    await adjustBalance(seller.id, seller.id, 500, "bonus");
+    assert.equal(await balance(), before - 1500);
+    await assert.rejects(adjustBalance(seller.id, seller.id, -(before + 10_000), "oops"), (e: unknown) => e instanceof EngineError && e.code === "insufficient_balance");
+    await assert.rejects(adjustBalance(seller.id, seller.id, 100, "  "), (e: unknown) => e instanceof EngineError && e.code === "reason_required");
   });
 
   await scenario("partial transfer → seller accepts the received amount", async () => {
@@ -192,10 +222,12 @@ async function main() {
     const { credits } = await import("@/db/schema");
     const [late] = await db.select().from(credits).where(eq(credits.txId, id));
     assert.equal(late?.status, "late");
+    const before = await balance();
     await applyCredit(seller.id, late.id, (await tx(id)).ref);
     const done = await tx(id);
     assert.equal(done.status, "confirmed");
     assert.equal(done.finalMillimes, 2000);
+    assert.equal(await balance(), before + Math.floor((2000 * done.rateBps) / 10000), "late credit lands on the balance");
   });
 
   await scenario("queue: second sale waits for the busy number", async () => {
@@ -238,9 +270,22 @@ main()
   })
   .finally(async () => {
     if (pausedSims.length) await db.update(sims).set({ status: "active" }).where(inArray(sims.id, pausedSims));
-    await db.delete(settings).where(inArray(settings.key, ["verifyRetrySeconds", "verifyMaxAttempts", "smsGraceSeconds", "pollIntervalSeconds", "cooldownSeconds"]));
+    await db.delete(settings).where(inArray(settings.key, ["verifyRetrySeconds", "verifyMaxAttempts", "smsGraceSeconds", "pollIntervalSeconds", "cooldownSeconds", "minWithdrawalMillimes"]));
+    // Leftover sales of the test seller must not sit in the queue and grab the next run's SIMs.
+    await db
+      .update(transactions)
+      .set({ status: "cancelled", completedAt: new Date() })
+      .where(
+        and(
+          inArray(transactions.status, ["queued", "assigning", "awaiting_transfer", "verifying", "partial", "review"]),
+          inArray(transactions.userId, db.select({ id: users.id }).from(users).where(like(users.email, "e2e-%@test.local"))),
+        ),
+      );
     // Disable the test device so its SIMs never receive real sales.
     await db.update(devices).set({ enabled: false }).where(like(devices.name, "E2E phone%"));
-    await db.update(sims).set({ status: "disabled" }).where(inArray(sims.deviceId, db.select({ id: devices.id }).from(devices).where(like(devices.name, "E2E phone%"))));
+    await db
+      .update(sims)
+      .set({ status: "disabled", heldByTxId: null })
+      .where(inArray(sims.deviceId, db.select({ id: devices.id }).from(devices).where(like(devices.name, "E2E phone%"))));
     process.exit();
   });

@@ -1,0 +1,79 @@
+[
+  {
+    "id": "intro",
+    "audio": 12.84,
+    "start": 0.0,
+    "narrationAt": 0.6,
+    "duration": 14.44
+  },
+  {
+    "id": "start",
+    "audio": 11.376,
+    "start": 14.44,
+    "narrationAt": 0.6,
+    "duration": 12.975999999999999
+  },
+  {
+    "id": "reserve",
+    "audio": 15.864,
+    "start": 27.415999999999997,
+    "narrationAt": 0.6,
+    "duration": 17.464000000000002
+  },
+  {
+    "id": "send",
+    "audio": 7.032,
+    "start": 44.879999999999995,
+    "narrationAt": 0.6,
+    "duration": 8.632
+  },
+  {
+    "id": "confirm",
+    "audio": 15.624,
+    "start": 53.51199999999999,
+    "narrationAt": 0.6,
+    "duration": 17.224
+  },
+  {
+    "id": "outcomes",
+    "audio": 20.616,
+    "start": 70.73599999999999,
+    "narrationAt": 0.6,
+    "duration": 22.216
+  },
+  {
+    "id": "wallet",
+    "audio": 15.384,
+    "start": 92.952,
+    "narrationAt": 0.6,
+    "duration": 16.984
+  },
+  {
+    "id": "architecture",
+    "audio": 27.504,
+    "start": 109.936,
+    "narrationAt": 0.6,
+    "duration": 29.104000000000003
+  },
+  {
+    "id": "admin",
+    "audio": 15.36,
+    "start": 139.04000000000002,
+    "narrationAt": 0.6,
+    "duration": 16.96
+  },
+  {
+    "id": "safety",
+    "audio": 14.304,
+    "start": 156.00000000000003,
+    "narrationAt": 0.6,
+    "duration": 15.904
+  },
+  {
+    "id": "outro",
+    "audio": 6.72,
+    "start": 171.90400000000002,
+    "narrationAt": 0.6,
+    "duration": 8.32
+  }
+]

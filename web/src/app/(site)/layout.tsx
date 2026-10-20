@@ -6,7 +6,7 @@ import { Logo } from "@/components/app/logo";
 import { UserMenu } from "@/components/app/user-menu";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, isStaff } from "@/lib/session";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
@@ -33,6 +33,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
               <Button variant="ghost" size="sm" render={<Link href="/sales" />}>
                 {t("nav.mySales")}
               </Button>
+              <Button variant="ghost" size="sm" render={<Link href="/wallet" />}>
+                {t("nav.wallet")}
+              </Button>
             </nav>
           )}
           <div className="ms-auto flex items-center gap-1">
@@ -42,7 +45,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
                 name={user.name}
                 email={user.email}
                 image={user.image}
-                isAdmin={user.role === "admin"}
+                isAdmin={isStaff(user)}
                 signOutAction={signOutAction}
               />
             ) : (

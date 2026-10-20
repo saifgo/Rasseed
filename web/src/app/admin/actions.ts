@@ -3,12 +3,10 @@
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { devices, operators, payoutMethods } from "@/db/schema";
+import { devices, operators, payoutMethods, USER_ROLES, users, type UserRole } from "@/db/schema";
 import {
   applyCredit,
-  attachProof,
   configureSim,
-  markPaid,
   rejectCredit,
   requestBalanceCheck,
   resetSimFailures,
@@ -17,17 +15,18 @@ import {
 } from "@/lib/engine/admin";
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
+import { adjustBalance, attachWithdrawalProof, markWithdrawalPaid, rejectWithdrawal } from "@/lib/engine/wallet";
 import { parseDinars, parseRate } from "@/lib/money";
 import { parseBalance, parseCreditSms } from "@/lib/parsers";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, isAdmin, isStaff, type CurrentUser } from "@/lib/session";
 import { saveSettings, type AppSettings } from "@/lib/settings";
 import { saveProof } from "@/lib/storage";
 
 export type AdminResult<T = null> = { ok: true; data: T } | { ok: false; error: string };
 
-async function admin<T>(fn: (adminId: string) => Promise<T>): Promise<AdminResult<T>> {
+async function guarded<T>(allowed: (u: CurrentUser) => boolean, fn: (userId: string) => Promise<T>): Promise<AdminResult<T>> {
   const user = await getCurrentUser();
-  if (!user || user.role !== "admin") return { ok: false, error: "forbidden" };
+  if (!user || !allowed(user)) return { ok: false, error: "forbidden" };
   try {
     const data = await fn(user.id);
     revalidatePath("/admin", "layout");
@@ -40,10 +39,15 @@ async function admin<T>(fn: (adminId: string) => Promise<T>): Promise<AdminResul
   }
 }
 
+/** Operations: admins and managers. */
+const staff = <T,>(fn: (userId: string) => Promise<T>) => guarded(isStaff, fn);
+/** Setup and user management: admins only. */
+const admin = <T,>(fn: (userId: string) => Promise<T>) => guarded(isAdmin, fn);
+
 // --- Sales -------------------------------------------------------------------
 
 export async function confirmReviewAction(txId: string, amountDinars: string, note: string) {
-  return admin(async (id) => {
+  return staff(async (id) => {
     const amount = parseDinars(amountDinars);
     if (!amount) throw new EngineError("invalid_amount");
     await resolveReview(id, txId, { action: "confirm", amountMillimes: amount, note });
@@ -52,20 +56,20 @@ export async function confirmReviewAction(txId: string, amountDinars: string, no
 }
 
 export async function rejectReviewAction(txId: string, note: string) {
-  return admin(async (id) => {
+  return staff(async (id) => {
     await resolveReview(id, txId, { action: "reject", note });
     return null;
   });
 }
 
-// --- Payouts -----------------------------------------------------------------
+// --- Withdrawals -------------------------------------------------------------
 
-export async function markPaidAction(formData: FormData) {
-  return admin(async (id) => {
-    const payoutId = String(formData.get("payoutId") ?? "");
+export async function markWithdrawalPaidAction(formData: FormData) {
+  return staff(async (id) => {
+    const withdrawalId = String(formData.get("withdrawalId") ?? "");
     const file = formData.get("proof");
     const proof = file instanceof File && file.size > 0 ? await saveProof(file) : undefined;
-    await markPaid(id, payoutId, {
+    await markWithdrawalPaid(id, withdrawalId, {
       reference: String(formData.get("reference") ?? "").trim().slice(0, 200),
       note: String(formData.get("note") ?? "").trim().slice(0, 1000),
       ...proof,
@@ -74,12 +78,47 @@ export async function markPaidAction(formData: FormData) {
   });
 }
 
-export async function attachProofAction(formData: FormData) {
-  return admin(async () => {
+export async function rejectWithdrawalAction(withdrawalId: string, reason: string) {
+  return staff(async (id) => {
+    await rejectWithdrawal(id, withdrawalId, reason);
+    return null;
+  });
+}
+
+export async function attachWithdrawalProofAction(formData: FormData) {
+  return staff(async () => {
     const file = formData.get("proof");
     if (!(file instanceof File) || file.size === 0) throw new EngineError("file_missing");
     const proof = await saveProof(file);
-    await attachProof(String(formData.get("payoutId") ?? ""), proof.proofPath, proof.proofMime);
+    await attachWithdrawalProof(String(formData.get("withdrawalId") ?? ""), proof.proofPath, proof.proofMime);
+    return null;
+  });
+}
+
+// --- Users & balances --------------------------------------------------------
+
+export async function adjustBalanceAction(userId: string, direction: "credit" | "debit", amountDinars: string, note: string) {
+  return staff(async (id) => {
+    const amount = parseDinars(amountDinars);
+    if (!amount) throw new EngineError("invalid_amount");
+    await adjustBalance(id, userId, direction === "debit" ? -amount : amount, note);
+    return null;
+  });
+}
+
+export async function setUserRoleAction(userId: string, role: UserRole) {
+  return admin(async (adminId) => {
+    if (!USER_ROLES.includes(role)) throw new EngineError("invalid_role");
+    if (userId === adminId) throw new EngineError("cannot_change_self");
+    await db.update(users).set({ role }).where(eq(users.id, userId));
+    return null;
+  });
+}
+
+export async function setUserBlockedAction(userId: string, blocked: boolean) {
+  return admin(async (adminId) => {
+    if (userId === adminId) throw new EngineError("cannot_change_self");
+    await db.update(users).set({ blocked }).where(eq(users.id, userId));
     return null;
   });
 }
@@ -87,14 +126,14 @@ export async function attachProofAction(formData: FormData) {
 // --- Credits -----------------------------------------------------------------
 
 export async function applyCreditAction(creditId: string, txRef: string) {
-  return admin(async (id) => {
+  return staff(async (id) => {
     await applyCredit(id, creditId, txRef);
     return null;
   });
 }
 
 export async function rejectCreditAction(creditId: string, note: string) {
-  return admin(async (id) => {
+  return staff(async (id) => {
     await rejectCredit(id, creditId, note);
     return null;
   });

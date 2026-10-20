@@ -23,11 +23,19 @@ const labels: Record<keyof AppSettings, { label: string; unit: string; help: str
   smsGraceSeconds: { label: "Wait for SMS", unit: "s", help: "Balance up but no SMS: wait this long, then review." },
   lateCreditWindowHours: { label: "Late transfer window", unit: "h", help: "Late transfers within this window are linked to the old sale." },
   maxSimFailures: { label: "SIM failure limit", unit: "×", help: "USSD failures in a row before a SIM is skipped." },
+  minWithdrawalMillimes: { label: "Minimum withdrawal", unit: "DT", help: "Smallest amount a seller can withdraw from their balance." },
 };
+
+// Shown and edited in dinars; stored in millimes.
+const DINAR_KEYS: (keyof AppSettings)[] = ["minWithdrawalMillimes"];
+const toInput = (k: keyof AppSettings, n: number) => (DINAR_KEYS.includes(k) ? (n / 1000).toFixed(3) : String(n));
+const fromInput = (k: keyof AppSettings, s: string) => (DINAR_KEYS.includes(k) ? Math.round(Number(s.replace(",", ".")) * 1000) : Number(s));
 
 export function SettingsForm({ values, defaults }: { values: AppSettings; defaults: AppSettings }) {
   const { pending, run } = useAdminAction();
-  const [v, setV] = useState<Record<string, string>>(Object.fromEntries(Object.entries(values).map(([k, n]) => [k, String(n)])));
+  const [v, setV] = useState<Record<string, string>>(
+    Object.fromEntries(Object.entries(values).map(([k, n]) => [k, toInput(k as keyof AppSettings, n)])),
+  );
   return (
     <Card>
       <CardHeader>
@@ -40,9 +48,15 @@ export function SettingsForm({ values, defaults }: { values: AppSettings; defaul
             <FieldLabel>
               {labels[k].label} ({labels[k].unit})
             </FieldLabel>
-            <Input type="number" min={1} value={v[k]} onChange={(e) => setV((s) => ({ ...s, [k]: e.target.value }))} />
+            <Input
+              type={DINAR_KEYS.includes(k) ? "text" : "number"}
+              inputMode="decimal"
+              min={1}
+              value={v[k]}
+              onChange={(e) => setV((s) => ({ ...s, [k]: e.target.value }))}
+            />
             <FieldDescription>
-              {labels[k].help} Default {defaults[k]}.
+              {labels[k].help} Default {toInput(k, defaults[k])}.
             </FieldDescription>
           </Field>
         ))}
@@ -51,7 +65,9 @@ export function SettingsForm({ values, defaults }: { values: AppSettings; defaul
         <Button
           loading={pending}
           onClick={() =>
-            run(() => saveSettingsAction(Object.fromEntries(Object.entries(v).map(([k, s]) => [k, Number(s)]))), { success: "Settings saved" })
+            run(() => saveSettingsAction(Object.fromEntries(Object.entries(v).map(([k, s]) => [k, fromInput(k as keyof AppSettings, s)]))), {
+              success: "Settings saved",
+            })
           }
         >
           Save settings
@@ -68,7 +84,7 @@ export function PayoutMethodsForm({ methods }: { methods: MethodRow[] }) {
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Payout methods</CardTitle>
-        <CardDescription>The fee is deducted from the seller's payout and locked when a sale starts.</CardDescription>
+        <CardDescription>Methods sellers can choose when withdrawing. The fee is deducted once per withdrawal.</CardDescription>
       </CardHeader>
       <CardPanel className="flex flex-col divide-y">
         {methods.map((m) => (

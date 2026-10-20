@@ -2,8 +2,9 @@
 
 # Rasseed — phone credit → cash
 
-Sellers send phone credit (Ooredoo, Orange, Tunisie Telecom) to one of your SIMs and get paid
-`amount × daily rate` by D17, Flouci or postal money order. Every transfer is confirmed **twice**: by the
+Sellers send phone credit (Ooredoo, Orange, Tunisie Telecom) to one of your SIMs. Each confirmed transfer adds
+`amount × daily rate` to the seller's **account balance**; the seller withdraws the balance whenever they want
+(in full or in part) by D17, Flouci or postal money order. Every transfer is confirmed **twice**: by the
 operator's SMS *and* by the SIM balance read over USSD.
 
 The brand name lives in one place: `web/src/config/brand.ts` (and `android-agent/app/src/main/res/values/strings.xml`).
@@ -17,8 +18,8 @@ rechargemarketplace/
 
 ## How a sale works
 
-1. The seller picks operator, amount, sender number and payout method. The **rate and fee are locked** and the
-   payout is shown before starting.
+1. The seller picks operator, amount and sender number. The **rate is locked** and the amount that will be added
+   to their balance is shown before starting.
 2. A free SIM of that operator is reserved **only for this sale**. Before showing the number, the phone reads the
    SIM balance (*baseline*). If that fails, the sale goes back to the queue — a number is never shown without it.
    If all numbers are busy the seller waits in a queue and sees their position.
@@ -32,8 +33,29 @@ rechargemarketplace/
    - nothing → expired; a later transfer from the same sender is linked as a *late credit* for the admin;
    - SMS without balance change (fake SMS), balance change without SMS, SIM swapped, USSD failing → **review queue**.
      The number stays reserved until the admin decides.
-6. The admin sends the money, marks the payout **paid**, optionally with a reference and a proof file. The seller
-   sees it live.
+6. The cash value at the locked rate is **added to the seller's balance** (no fee at this point).
+
+## Balance & withdrawals
+
+- The balance is an append-only ledger (`wallet_entries`): sale credits, withdrawals, refunds and manual adjustments.
+- On **My balance** the seller requests a withdrawal: any amount up to the balance (minimum set in Admin → Settings),
+  choosing the method and details each time. The method fee (e.g. mandate 5 DT) is charged **once per withdrawal**.
+  The amount leaves the balance immediately; several requests can be pending at once; sellers cannot cancel a request.
+- Staff (Admin → Withdrawals) **mark it paid** (reference, note, proof) or **reject** it with a reason, which refunds the
+  full amount to the balance.
+- Staff can **adjust** any balance (bonus / correction) with a mandatory note shown in the seller's statement
+  (Admin → Sellers & balances).
+
+## Roles
+
+| Role | Can |
+|---|---|
+| `seller` | Sell, see balance, request withdrawals |
+| `manager` | Everything in *Operations*: review queue, withdrawals, sales, unmatched credits, sellers & balance adjustments |
+| `admin` | Managers' rights + *Setup* (numbers & phones, operators & rates, settings) + assigning roles and blocking users |
+
+The e-mails in `ADMIN_EMAILS` become admins when they sign in (bootstrap). After that, admins manage roles in
+Admin → Sellers & balances. An admin cannot change their own role or block themselves.
 
 Other safety rails: one active sale per sender number, a cooldown before a number is reused, balance polling while a
 number is held, a per-SIM balance ledger flagging any unexplained change, and an audit timeline on every sale.
@@ -53,7 +75,7 @@ docker compose logs -f web worker
 | Service | Role |
 |---|---|
 | `db` | PostgreSQL 17, data in the `pgdata` volume, reachable only from this machine on `127.0.0.1:5433` |
-| `migrate` | Applies migrations + default operators/payout methods on every `up`, then exits |
+| `migrate` | Applies migrations + default operators/payout methods on every `up`, then exits. Upgrading from the per-sale payout version: confirmed sales whose payout was still pending are converted into balance credits (gross amount); paid ones stay as history under Withdrawals → *Old per-sale payouts* |
 | `web` | Seller site, admin console and the API the phones call (port `WEB_PORT`, default 3100) |
 | `worker` | Expiries, USSD timeouts, balance polling, queue assignment — run exactly one |
 | `cloudflared` | Optional (`--profile tunnel`): publishes the site on your domain over HTTPS |
@@ -82,7 +104,7 @@ pnpm dev                             # http://localhost:3100
 pnpm worker                          # second terminal: expiries, timeouts, balance polling
 ```
 
-Sign in with an e-mail listed in `ADMIN_EMAILS` to get the admin console at `/admin`.
+Sign in with an e-mail listed in `ADMIN_EMAILS` to get the admin console at `/admin` (managers get the operations pages only).
 For local testing set `AUTH_DEV_LOGIN=true` to get a password-less login form (never in production).
 
 ### Try it without phones
@@ -98,7 +120,7 @@ Configure its two SIMs in the admin, start a sale on the site, then type in the 
 
 ```bash
 pnpm test        # parsers & money (unit)
-pnpm test:e2e    # 12 end-to-end scenarios against the running server + worker (dev or Docker)
+pnpm test:e2e    # 13 end-to-end scenarios (sales, balance, withdrawals) against the running server + worker
 ```
 
 ## Environment (`web/.env` for development; `.env` at the root for Docker)
@@ -142,3 +164,4 @@ These are editable in **Admin → Operators & rates** and must be checked with r
 - **Transfer codes shown to sellers** — Ooredoo `*120*{number}#` (amount entered in the menu),
   Orange `*116*{number}*{millimes}#`, TT `*133*{millimes}*{number}#`.
 - **Rates** start at 80% as a placeholder.
+- **Minimum withdrawal** starts at 5 DT as a placeholder (Admin → Settings).

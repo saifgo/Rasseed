@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardDescription, CardHeader, CardPanel, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { requireAdmin } from "@/lib/session";
 import { getOnlineSince, listDevicesWithSims } from "@/lib/admin-queries";
 import { formatMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
@@ -18,6 +19,7 @@ import { AddPhoneButton, DeviceActions, SimActions } from "./number-actions";
 export const metadata = { title: "Numbers & phones" };
 
 export default async function NumbersPage() {
+  await requireAdmin();
   const [{ devices, operators }, onlineSince, settings, h] = await Promise.all([
     listDevicesWithSims(),
     getOnlineSince(),

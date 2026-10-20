@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/db";
-import { users } from "@/db/schema";
+import { STAFF_ROLES, users } from "@/db/schema";
 
 export type CurrentUser = typeof users.$inferSelect;
 
@@ -21,8 +21,19 @@ export async function requireUser() {
   return user;
 }
 
+export const isStaff = (user: CurrentUser | null | undefined) => Boolean(user && STAFF_ROLES.includes(user.role));
+export const isAdmin = (user: CurrentUser | null | undefined) => user?.role === "admin";
+
+/** Admin or manager: may use the operations part of the console. */
+export async function requireStaff() {
+  const user = await requireUser();
+  if (!isStaff(user)) redirect("/");
+  return user;
+}
+
+/** Admin only: setup pages and user management. */
 export async function requireAdmin() {
   const user = await requireUser();
-  if (user.role !== "admin") redirect("/");
+  if (!isAdmin(user)) redirect("/admin");
   return user;
 }

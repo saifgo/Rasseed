@@ -35,7 +35,7 @@ export async function getSaleView(id: string, userId: string | null) {
     .select({ tx: transactions, op: operators, method: payoutMethods, payout: payouts })
     .from(transactions)
     .innerJoin(operators, eq(operators.code, transactions.operatorCode))
-    .innerJoin(payoutMethods, eq(payoutMethods.code, transactions.payoutMethodCode))
+    .leftJoin(payoutMethods, eq(payoutMethods.code, transactions.payoutMethodCode))
     .leftJoin(payouts, eq(payouts.txId, transactions.id))
     .where(userId ? and(eq(transactions.id, id), eq(transactions.userId, userId)) : eq(transactions.id, id));
   if (!row) return null;
@@ -73,8 +73,9 @@ export async function getSaleView(id: string, userId: string | null) {
     feeMillimes: tx.payoutFeeMillimes,
     payoutGrossMillimes: tx.payoutGrossMillimes,
     payoutNetMillimes: tx.payoutNetMillimes,
-    method: { code: method.code, name: method.name, fields: method.fields },
-    payoutDetails: tx.payoutDetails,
+    // Legacy per-sale payout (sales made before the account balance). Null for new sales.
+    method: method ? { code: method.code, name: method.name, fields: method.fields } : null,
+    payoutDetails: tx.payoutDetails ?? {},
     partialChoice: tx.partialChoice,
     reviewReason: userId ? null : tx.reviewReason,
     assignedMsisdn: showNumber ? tx.assignedMsisdn : null,

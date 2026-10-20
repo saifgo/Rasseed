@@ -19,11 +19,11 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { attachProofAction, markPaidAction } from "../actions";
+import { attachWithdrawalProofAction, markWithdrawalPaidAction, rejectWithdrawalAction } from "../actions";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,application/pdf";
 
-export function MarkPaidButton({ payoutId, ref_, netMillimes }: { payoutId: string; ref_: string; netMillimes: number }) {
+export function MarkPaidButton({ withdrawalId, ref_, netMillimes }: { withdrawalId: string; ref_: string; netMillimes: number }) {
   const [open, setOpen] = useState(false);
   const { pending, run } = useAdminAction();
   return (
@@ -42,8 +42,8 @@ export function MarkPaidButton({ payoutId, ref_, netMillimes }: { payoutId: stri
           onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
-            fd.set("payoutId", payoutId);
-            run(() => markPaidAction(fd), { success: "Marked as paid", onSuccess: () => setOpen(false) });
+            fd.set("withdrawalId", withdrawalId);
+            run(() => markWithdrawalPaidAction(fd), { success: "Marked as paid", onSuccess: () => setOpen(false) });
           }}
         >
           <DialogPanel className="flex flex-col gap-4">
@@ -73,7 +73,44 @@ export function MarkPaidButton({ payoutId, ref_, netMillimes }: { payoutId: stri
   );
 }
 
-export function AttachProofButton({ payoutId }: { payoutId: string }) {
+export function RejectButton({ withdrawalId, ref_, grossMillimes }: { withdrawalId: string; ref_: string; grossMillimes: number }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const { pending, run } = useAdminAction();
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger render={<Button size="sm" variant="destructive-outline" />}>Reject</DialogTrigger>
+      <DialogPopup>
+        <DialogHeader>
+          <DialogTitle>Reject {ref_}</DialogTitle>
+          <DialogDescription>
+            <Dt millimes={grossMillimes} className="font-semibold text-foreground" /> go back to the seller's balance. The reason is shown to
+            the seller.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogPanel>
+          <Field name="reason">
+            <FieldLabel>Reason</FieldLabel>
+            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. D17 number does not exist" />
+          </Field>
+        </DialogPanel>
+        <DialogFooter>
+          <DialogClose render={<Button variant="ghost" type="button" />}>Cancel</DialogClose>
+          <Button
+            variant="destructive"
+            loading={pending}
+            disabled={!reason.trim()}
+            onClick={() => run(() => rejectWithdrawalAction(withdrawalId, reason), { success: "Withdrawal rejected", onSuccess: () => setOpen(false) })}
+          >
+            Reject and refund
+          </Button>
+        </DialogFooter>
+      </DialogPopup>
+    </Dialog>
+  );
+}
+
+export function AttachProofButton({ withdrawalId }: { withdrawalId: string }) {
   const [open, setOpen] = useState(false);
   const { pending, run } = useAdminAction();
   return (
@@ -88,8 +125,8 @@ export function AttachProofButton({ payoutId }: { payoutId: string }) {
           onSubmit={(e) => {
             e.preventDefault();
             const fd = new FormData(e.currentTarget);
-            fd.set("payoutId", payoutId);
-            run(() => attachProofAction(fd), { success: "Proof attached", onSuccess: () => setOpen(false) });
+            fd.set("withdrawalId", withdrawalId);
+            run(() => attachWithdrawalProofAction(fd), { success: "Proof attached", onSuccess: () => setOpen(false) });
           }}
         >
           <DialogPanel>

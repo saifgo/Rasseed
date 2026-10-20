@@ -94,17 +94,30 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
 
         <Card>
           <CardHeader>
-            <CardDescription>Payout · {view.method.name.en}</CardDescription>
+            <CardDescription>{view.method ? `Legacy payout · ${view.method.name.en}` : "Credited to the seller's balance"}</CardDescription>
             <CardTitle className="text-2xl">
-              <Dt millimes={tx.payoutNetMillimes} />
+              <Dt millimes={view.method ? tx.payoutNetMillimes : tx.payoutGrossMillimes} />
             </CardTitle>
             <CardDescription>
-              gross <Dt millimes={tx.payoutGrossMillimes} /> − fee <Dt millimes={tx.payoutFeeMillimes} />
+              {view.method ? (
+                <>
+                  gross <Dt millimes={tx.payoutGrossMillimes} /> − fee <Dt millimes={tx.payoutFeeMillimes} />
+                </>
+              ) : (
+                <>
+                  <Dt millimes={tx.finalMillimes ?? 0} /> × {formatRate(tx.rateBps)} · the seller withdraws from their balance
+                </>
+              )}
             </CardDescription>
           </CardHeader>
           <CardPanel className="flex flex-col gap-2 text-sm">
-            {Object.entries(tx.payoutDetails).map(([k, v]) => (
-              <Row key={k} label={view.method.fields.find((f) => f.key === k)?.label.en ?? k}>
+            {!view.method && (
+              <Button size="sm" variant="outline" className="self-start" render={<Link href={`/admin/users/${tx.userId}`} />}>
+                Seller balance & withdrawals
+              </Button>
+            )}
+            {Object.entries(view.payoutDetails).map(([k, v]) => (
+              <Row key={k} label={view.method?.fields.find((f) => f.key === k)?.label.en ?? k}>
                 <span className="select-all font-mono">{v}</span>
               </Row>
             ))}
@@ -120,8 +133,8 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
                   </Button>
                 )}
                 {view.payout.status === "pending" && (
-                  <Button size="sm" render={<Link href="/admin/payouts" />}>
-                    Go to payouts
+                  <Button size="sm" render={<Link href="/admin/withdrawals?tab=legacy" />}>
+                    Go to legacy payouts
                   </Button>
                 )}
               </>

@@ -1,3 +1,4 @@
+import { requireAdmin } from "@/lib/session";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Dt } from "@/components/app/money";
@@ -12,6 +13,7 @@ import { formatMsisdn } from "@/lib/phone";
 export const metadata = { title: "SIM history" };
 
 export default async function SimHistoryPage({ params }: { params: Promise<{ simId: string }> }) {
+  await requireAdmin();
   const { simId } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(simId)) notFound();
   const data = await getSimHistory(simId);

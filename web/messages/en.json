@@ -28,12 +28,13 @@
   "nav": {
     "home": "Home",
     "sell": "Sell credit",
-    "mySales": "My sales"
+    "mySales": "My sales",
+    "wallet": "My balance"
   },
   "home": {
     "badge": "Ooredoo · Orange · Tunisie Telecom",
     "title": "Sell your phone credit, get paid in cash",
-    "subtitle": "Send your credit to one of our numbers, we confirm it automatically and pay you by D17, Flouci or postal money order.",
+    "subtitle": "Send your credit to one of our numbers, we confirm it automatically and add the money to your balance. Withdraw whenever you want by D17, Flouci or postal money order.",
     "cta": "Start selling",
     "ratesTitle": "Today's rates",
     "ratesHint": "For every 1 DT of credit you send, you receive:",
@@ -43,8 +44,8 @@
     "step1Text": "You see exactly how much you will receive before you start.",
     "step2Title": "Send the credit to the number we give you",
     "step2Text": "The number is reserved for you for 15 minutes. Use the transfer code we show.",
-    "step3Title": "We confirm and pay you",
-    "step3Text": "The transfer is verified automatically, then we send your money as soon as possible.",
+    "step3Title": "Your balance grows, withdraw when you want",
+    "step3Text": "Each confirmed transfer is added to your balance. Sell as many times as you like and withdraw everything in one payment.",
     "trustTitle": "Every transfer is double-checked",
     "trustText": "We confirm each transfer with the operator's SMS and the balance of the receiving SIM. Your money is only calculated on what we really received."
   },
@@ -59,7 +60,7 @@
   },
   "sell": {
     "title": "Sell credit",
-    "subtitle": "Fill in the details. The rate is locked when you start.",
+    "subtitle": "Fill in the details. The rate is locked when you start and the money goes to your balance once the transfer is confirmed.",
     "operator": "Operator",
     "operatorUnavailable": "Unavailable",
     "amount": "Amount of credit to send",
@@ -74,13 +75,15 @@
     "rate": "Rate",
     "gross": "Value at rate",
     "feeLine": "Payout fee",
-    "youReceive": "You receive",
+    "youReceive": "Added to your balance",
     "start": "Start the sale",
     "starting": "Reserving a number…",
     "rateLockNote": "The rate shown is locked when you press Start.",
     "invalidAmount": "Enter a valid amount",
     "invalidPhone": "Enter an 8-digit number",
-    "required": "Required"
+    "required": "Required",
+    "currentBalance": "Current balance",
+    "balanceNote": "Once the transfer is confirmed, the amount is added to your balance. You can sell several times and withdraw everything in one go from the Balance page."
   },
   "sale": {
     "title": "Sale {ref}",
@@ -115,7 +118,7 @@
     "reviewTitle": "Under review",
     "reviewText": "Something needs a manual check. Our team will review your transfer shortly — no action is needed from you.",
     "successTitle": "Transfer confirmed!",
-    "successText": "We received {amount} DT of credit. We will send you {net} DT by {method} as soon as possible.",
+    "successText": "We received {amount} DT of credit. {net} DT have been added to your balance.",
     "paidTitle": "Paid",
     "paidText": "We sent you {net} DT by {method}.",
     "proof": "Payment proof",
@@ -132,7 +135,10 @@
     "cancelConfirmText": "Only cancel if you have NOT sent any credit. Credit sent after cancelling may not be recovered automatically.",
     "keep": "Keep the sale",
     "timeline": "Activity",
-    "newSale": "New sale"
+    "newSale": "New sale",
+    "successTextLegacy": "We received {amount} DT of credit. We will send you {net} DT by {method} as soon as possible.",
+    "goToWallet": "Go to my balance",
+    "creditedToBalance": "Added to your balance"
   },
   "sales": {
     "title": "My sales",
@@ -144,7 +150,8 @@
     "amount": "Amount",
     "payout": "Payout",
     "status": "Status",
-    "date": "Date"
+    "date": "Date",
+    "credited": "Added to balance"
   },
   "status": {
     "queued": "In queue",
@@ -153,7 +160,7 @@
     "verifying": "Verifying",
     "partial": "Partially received",
     "review": "Under review",
-    "confirmed": "Confirmed — payment pending",
+    "confirmed": "Confirmed — added to balance",
     "paid": "Paid",
     "expired": "Expired",
     "cancelled": "Cancelled",
@@ -167,7 +174,7 @@
     "partial": "Partially received — {missing} DT missing",
     "topup_chosen": "You chose to send the rest",
     "partial_accepted": "You accepted the received amount",
-    "confirmed": "Sale confirmed — payout {net} DT",
+    "confirmed": "Sale confirmed — {net} DT added to your balance",
     "expired": "Time expired",
     "expired_partial": "Time expired — completed with the received amount",
     "cancelled": "Cancelled",
@@ -191,6 +198,52 @@
     "cannot_cancel": "This sale can no longer be cancelled.",
     "invalid_state": "This action is not possible anymore.",
     "not_found": "Not found.",
-    "unknown": "Something went wrong. Please try again."
+    "unknown": "Something went wrong. Please try again.",
+    "below_minimum": "The amount is below the minimum withdrawal.",
+    "insufficient_balance": "Your balance is not enough for this amount.",
+    "reason_required": "A reason is required."
+  },
+  "wallet": {
+    "title": "My balance",
+    "subtitle": "Money from your confirmed sales. Withdraw it whenever you want.",
+    "sellMore": "Sell credit",
+    "available": "Available balance",
+    "availableHint": "Amount you can withdraw now.",
+    "pending": "Withdrawals in progress",
+    "pendingHint": "Already requested, being sent by our team.",
+    "withdrawTitle": "Withdraw",
+    "withdrawText": "Minimum {min} DT per withdrawal. The fee of the chosen method is deducted once per withdrawal.",
+    "needMinimum": "You need at least {amount} DT on your balance to request a withdrawal.",
+    "noMethods": "No withdrawal method is available right now.",
+    "amount": "Amount to withdraw",
+    "amountHint": "Up to {balance} DT.",
+    "all": "All",
+    "belowMinimum": "Minimum {amount} DT",
+    "aboveBalance": "More than your balance",
+    "fromBalance": "Taken from your balance",
+    "youGet": "You receive",
+    "submit": "Request withdrawal",
+    "requested": "Withdrawal requested. We will send it as soon as possible.",
+    "withdrawals": "My withdrawals",
+    "noWithdrawals": "No withdrawal yet.",
+    "ref": "Ref",
+    "method": "Method",
+    "status": "Status",
+    "date": "Date",
+    "proof": "Payment proof",
+    "statement": "Statement",
+    "noEntries": "Nothing yet. Your confirmed sales will appear here.",
+    "description": "Description",
+    "statuses": {
+      "pending": "Being sent",
+      "paid": "Paid",
+      "rejected": "Refused — refunded to balance"
+    },
+    "kinds": {
+      "sale": "Sale confirmed",
+      "withdrawal": "Withdrawal",
+      "withdrawal_refund": "Withdrawal refused — refund",
+      "adjustment": "Adjustment by our team"
+    }
   }
 }

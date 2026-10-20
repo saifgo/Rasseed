@@ -28,12 +28,13 @@
   "nav": {
     "home": "Accueil",
     "sell": "Vendre du crédit",
-    "mySales": "Mes ventes"
+    "mySales": "Mes ventes",
+    "wallet": "Mon solde"
   },
   "home": {
     "badge": "Ooredoo · Orange · Tunisie Telecom",
     "title": "Vendez votre crédit téléphonique, recevez de l'argent",
-    "subtitle": "Envoyez votre crédit vers l'un de nos numéros, nous le confirmons automatiquement et vous payons par D17, Flouci ou mandat postal.",
+    "subtitle": "Envoyez votre crédit vers l'un de nos numéros, nous le confirmons automatiquement et l'argent est ajouté à votre solde. Retirez quand vous voulez par D17, Flouci ou mandat postal.",
     "cta": "Commencer à vendre",
     "ratesTitle": "Taux du jour",
     "ratesHint": "Pour chaque 1 DT de crédit envoyé, vous recevez :",
@@ -43,8 +44,8 @@
     "step1Text": "Vous voyez exactement combien vous allez recevoir avant de commencer.",
     "step2Title": "Envoyez le crédit au numéro indiqué",
     "step2Text": "Le numéro vous est réservé pendant 15 minutes. Utilisez le code de transfert affiché.",
-    "step3Title": "Nous confirmons et vous payons",
-    "step3Text": "Le transfert est vérifié automatiquement, puis nous vous envoyons votre argent dès que possible.",
+    "step3Title": "Votre solde augmente, retirez quand vous voulez",
+    "step3Text": "Chaque transfert confirmé est ajouté à votre solde. Vendez autant de fois que vous voulez et retirez tout en un seul paiement.",
     "trustTitle": "Chaque transfert est vérifié deux fois",
     "trustText": "Nous confirmons chaque transfert avec le SMS de l'opérateur et le solde de la SIM réceptrice. Votre paiement est calculé uniquement sur ce que nous avons réellement reçu."
   },
@@ -59,7 +60,7 @@
   },
   "sell": {
     "title": "Vendre du crédit",
-    "subtitle": "Remplissez les informations. Le taux est bloqué au démarrage.",
+    "subtitle": "Remplissez les informations. Le taux est fixé au démarrage et l'argent est ajouté à votre solde dès que le transfert est confirmé.",
     "operator": "Opérateur",
     "operatorUnavailable": "Indisponible",
     "amount": "Montant du crédit à envoyer",
@@ -74,13 +75,15 @@
     "rate": "Taux",
     "gross": "Valeur au taux",
     "feeLine": "Frais de paiement",
-    "youReceive": "Vous recevez",
+    "youReceive": "Ajouté à votre solde",
     "start": "Démarrer la vente",
     "starting": "Réservation d'un numéro…",
     "rateLockNote": "Le taux affiché est bloqué quand vous appuyez sur Démarrer.",
     "invalidAmount": "Saisissez un montant valide",
     "invalidPhone": "Saisissez un numéro à 8 chiffres",
-    "required": "Obligatoire"
+    "required": "Obligatoire",
+    "currentBalance": "Solde actuel",
+    "balanceNote": "Dès que le transfert est confirmé, le montant est ajouté à votre solde. Vous pouvez vendre plusieurs fois et tout retirer en une seule fois depuis la page Solde."
   },
   "sale": {
     "title": "Vente {ref}",
@@ -115,7 +118,7 @@
     "reviewTitle": "En cours de vérification",
     "reviewText": "Un contrôle manuel est nécessaire. Notre équipe va vérifier votre transfert rapidement — vous n'avez rien à faire.",
     "successTitle": "Transfert confirmé !",
-    "successText": "Nous avons reçu {amount} DT de crédit. Nous vous enverrons {net} DT par {method} dès que possible.",
+    "successText": "Nous avons reçu {amount} DT de crédit. {net} DT ont été ajoutés à votre solde.",
     "paidTitle": "Payé",
     "paidText": "Nous vous avons envoyé {net} DT par {method}.",
     "proof": "Preuve de paiement",
@@ -132,7 +135,10 @@
     "cancelConfirmText": "N'annulez que si vous n'avez envoyé AUCUN crédit. Un crédit envoyé après l'annulation peut ne pas être récupéré automatiquement.",
     "keep": "Garder la vente",
     "timeline": "Activité",
-    "newSale": "Nouvelle vente"
+    "newSale": "Nouvelle vente",
+    "successTextLegacy": "Nous avons reçu {amount} DT de crédit. Nous vous enverrons {net} DT par {method} dès que possible.",
+    "goToWallet": "Voir mon solde",
+    "creditedToBalance": "Ajouté à votre solde"
   },
   "sales": {
     "title": "Mes ventes",
@@ -144,7 +150,8 @@
     "amount": "Montant",
     "payout": "Paiement",
     "status": "Statut",
-    "date": "Date"
+    "date": "Date",
+    "credited": "Ajouté au solde"
   },
   "status": {
     "queued": "En file d'attente",
@@ -153,7 +160,7 @@
     "verifying": "Vérification",
     "partial": "Reçu partiellement",
     "review": "En vérification",
-    "confirmed": "Confirmée — paiement en attente",
+    "confirmed": "Confirmée — ajoutée au solde",
     "paid": "Payée",
     "expired": "Expirée",
     "cancelled": "Annulée",
@@ -167,7 +174,7 @@
     "partial": "Reçu partiellement — il manque {missing} DT",
     "topup_chosen": "Vous avez choisi d'envoyer le reste",
     "partial_accepted": "Vous avez accepté le montant reçu",
-    "confirmed": "Vente confirmée — paiement de {net} DT",
+    "confirmed": "Vente confirmée — {net} DT ajoutés à votre solde",
     "expired": "Temps écoulé",
     "expired_partial": "Temps écoulé — finalisée avec le montant reçu",
     "cancelled": "Annulée",
@@ -191,6 +198,52 @@
     "cannot_cancel": "Cette vente ne peut plus être annulée.",
     "invalid_state": "Cette action n'est plus possible.",
     "not_found": "Introuvable.",
-    "unknown": "Une erreur est survenue. Veuillez réessayer."
+    "unknown": "Une erreur est survenue. Veuillez réessayer.",
+    "below_minimum": "Le montant est inférieur au retrait minimum.",
+    "insufficient_balance": "Votre solde est insuffisant pour ce montant.",
+    "reason_required": "Un motif est obligatoire."
+  },
+  "wallet": {
+    "title": "Mon solde",
+    "subtitle": "L'argent de vos ventes confirmées. Retirez-le quand vous voulez.",
+    "sellMore": "Vendre du crédit",
+    "available": "Solde disponible",
+    "availableHint": "Montant que vous pouvez retirer maintenant.",
+    "pending": "Retraits en cours",
+    "pendingHint": "Déjà demandés, en cours d'envoi par notre équipe.",
+    "withdrawTitle": "Retirer",
+    "withdrawText": "Minimum {min} DT par retrait. Les frais de la méthode choisie sont déduits une fois par retrait.",
+    "needMinimum": "Il vous faut au moins {amount} DT sur votre solde pour demander un retrait.",
+    "noMethods": "Aucune méthode de retrait n'est disponible pour le moment.",
+    "amount": "Montant à retirer",
+    "amountHint": "Jusqu'à {balance} DT.",
+    "all": "Tout",
+    "belowMinimum": "Minimum {amount} DT",
+    "aboveBalance": "Supérieur à votre solde",
+    "fromBalance": "Retiré de votre solde",
+    "youGet": "Vous recevez",
+    "submit": "Demander le retrait",
+    "requested": "Retrait demandé. Nous l'envoyons dès que possible.",
+    "withdrawals": "Mes retraits",
+    "noWithdrawals": "Aucun retrait pour le moment.",
+    "ref": "Réf",
+    "method": "Méthode",
+    "status": "Statut",
+    "date": "Date",
+    "proof": "Preuve de paiement",
+    "statement": "Historique",
+    "noEntries": "Rien pour le moment. Vos ventes confirmées apparaîtront ici.",
+    "description": "Description",
+    "statuses": {
+      "pending": "En cours d'envoi",
+      "paid": "Payé",
+      "rejected": "Refusé — remboursé sur le solde"
+    },
+    "kinds": {
+      "sale": "Vente confirmée",
+      "withdrawal": "Retrait",
+      "withdrawal_refund": "Retrait refusé — remboursement",
+      "adjustment": "Ajustement par notre équipe"
+    }
   }
 }

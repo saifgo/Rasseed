@@ -32,8 +32,8 @@ export function CreditActions({ creditId, suggestedRef }: { creditId: string; su
           <DialogHeader>
             <DialogTitle>Apply credit to a sale</DialogTitle>
             <DialogDescription>
-              If the sale's payout is still pending, its amount is increased. If the sale expired or was cancelled, it is completed
-              with this credit and a payout is created.
+              If the sale is confirmed, the difference is added to the seller's balance. If the sale expired or was cancelled, it is
+              completed with this credit and the seller's balance is credited.
             </DialogDescription>
           </DialogHeader>
           <DialogPanel>

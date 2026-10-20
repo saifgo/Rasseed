@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowRightIcon, LockIcon } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
+import { ArrowRightIcon, LockIcon, WalletIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Dt } from "@/components/app/money";
 import { OperatorDot } from "@/components/app/operator-badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -16,21 +16,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
-import type { LocalizedText, PayoutField } from "@/db/schema";
-import { formatDinars, formatRate, grossPayout, parseDinars } from "@/lib/money";
+import { formatRate, grossPayout, parseDinars } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { createSaleAction } from "./actions";
 
 type Op = { code: string; name: string; color: string; rateBps: number; active: boolean };
-type Method = { code: string; name: LocalizedText; feeMillimes: number; fields: PayoutField[] };
 
 const cardOption =
   "flex cursor-pointer items-center gap-3 rounded-xl border bg-card p-3.5 transition-colors hover:bg-accent/50 has-data-checked:border-primary/48 has-data-checked:bg-accent/50 has-data-disabled:cursor-not-allowed has-data-disabled:opacity-60";
 
-export function SellForm({ operators, methods, saved }: { operators: Op[]; methods: Method[]; saved: Record<string, Record<string, string>> }) {
+export function SellForm({ operators, balanceMillimes }: { operators: Op[]; balanceMillimes: number }) {
   const t = useTranslations("sell");
   const te = useTranslations("errors");
-  const locale = useLocale() as keyof LocalizedText;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -38,43 +35,26 @@ export function SellForm({ operators, methods, saved }: { operators: Op[]; metho
   const [operatorCode, setOperatorCode] = useState(firstActive);
   const [amount, setAmount] = useState("");
   const [sender, setSender] = useState("");
-  const [methodCode, setMethodCode] = useState(methods[0]?.code ?? "");
-  const [details, setDetails] = useState<Record<string, Record<string, string>>>(saved);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
 
   const op = operators.find((o) => o.code === operatorCode);
-  const method = methods.find((m) => m.code === methodCode);
   const amountMillimes = parseDinars(amount);
   const gross = op && amountMillimes ? grossPayout(amountMillimes, op.rateBps) : 0;
-  const net = method ? Math.max(0, gross - method.feeMillimes) : 0;
-  const methodDetails = useMemo(() => details[methodCode] ?? {}, [details, methodCode]);
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!amountMillimes) e.amount = t("invalidAmount");
+    if (!amountMillimes || gross <= 0) e.amount = t("invalidAmount");
     if (!normalizeMsisdn(sender)) e.sender = t("invalidPhone");
-    for (const f of method?.fields ?? []) {
-      const v = (methodDetails[f.key] ?? "").trim();
-      if (f.required && !v) e[`d.${f.key}`] = t("required");
-      else if (v && f.type === "phone" && !normalizeMsisdn(v)) e[`d.${f.key}`] = t("invalidPhone");
-    }
-    if (amountMillimes && method && net <= 0) e.amount = te("payout_below_fee");
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
   function submit() {
     setFormError(null);
-    if (!validate() || !op || !method || !amountMillimes) return;
+    if (!validate() || !op || !amountMillimes) return;
     startTransition(async () => {
-      const res = await createSaleAction({
-        operatorCode: op.code,
-        amountMillimes,
-        senderMsisdn: sender,
-        payoutMethodCode: method.code,
-        payoutDetails: methodDetails,
-      });
+      const res = await createSaleAction({ operatorCode: op.code, amountMillimes, senderMsisdn: sender });
       if (res.ok) router.push(`/sales/${res.data}`);
       else setFormError(te.has(res.error) ? te(res.error) : te("unknown"));
     });
@@ -141,41 +121,10 @@ export function SellForm({ operators, methods, saved }: { operators: Op[]; metho
           </Field>
         </div>
 
-        <Fieldset>
-          <FieldsetLegend>{t("payoutMethod")}</FieldsetLegend>
-          <RadioGroup value={methodCode} onValueChange={(v) => setMethodCode(String(v))} className="grid gap-3 sm:grid-cols-3">
-            {methods.map((m) => (
-              <Label key={m.code} className={cardOption}>
-                <Radio value={m.code} />
-                <span className="flex flex-1 flex-col gap-0.5">
-                  <span className="font-medium">{m.name[locale] ?? m.name.en}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {m.feeMillimes > 0 ? t("fee", { amount: formatDinars(m.feeMillimes) }) : t("noFee")}
-                  </span>
-                </span>
-              </Label>
-            ))}
-          </RadioGroup>
-          {method && method.fields.length > 0 && (
-            <div className="mt-4 grid gap-6 sm:grid-cols-2">
-              {method.fields.map((f) => (
-                <Field key={`${method.code}.${f.key}`} name={`d.${f.key}`}>
-                  <FieldLabel>{f.label[locale] ?? f.label.en}</FieldLabel>
-                  <Input
-                    type={f.type === "phone" ? "tel" : "text"}
-                    inputMode={f.type === "phone" ? "numeric" : undefined}
-                    dir={f.type === "phone" ? "ltr" : undefined}
-                    value={methodDetails[f.key] ?? ""}
-                    onChange={(e) =>
-                      setDetails((d) => ({ ...d, [method.code]: { ...(d[method.code] ?? {}), [f.key]: e.target.value } }))
-                    }
-                  />
-                  <FieldError />
-                </Field>
-              ))}
-            </div>
-          )}
-        </Fieldset>
+        <Alert variant="info">
+          <WalletIcon />
+          <AlertDescription>{t("balanceNote")}</AlertDescription>
+        </Alert>
       </div>
 
       <Card className="lg:sticky lg:top-20">
@@ -193,17 +142,14 @@ export function SellForm({ operators, methods, saved }: { operators: Op[]; metho
             <Dt millimes={amountMillimes ?? 0} />
           </Row>
           <Row label={t("rate")}>{op ? formatRate(op.rateBps) : "—"}</Row>
-          <Row label={t("gross")}>
-            <Dt millimes={gross} />
-          </Row>
-          <Row label={t("feeLine")}>
-            <Dt millimes={method?.feeMillimes ? -method.feeMillimes : 0} />
-          </Row>
           <Separator />
           <div className="flex items-baseline justify-between gap-4">
             <span className="font-medium">{t("youReceive")}</span>
-            <Dt millimes={net} className="font-semibold text-2xl" />
+            <Dt millimes={gross} className="font-semibold text-2xl" />
           </div>
+          <Row label={t("currentBalance")}>
+            <Dt millimes={balanceMillimes} />
+          </Row>
           <p className="flex items-center gap-1.5 text-muted-foreground text-xs">
             <LockIcon aria-hidden="true" className="size-3.5" />
             {t("rateLockNote")}

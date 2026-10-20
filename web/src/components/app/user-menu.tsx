@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOutIcon, ReceiptTextIcon, ShieldIcon } from "lucide-react";
+import { LogOutIcon, ReceiptTextIcon, ShieldIcon, WalletIcon } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,6 +28,10 @@ export function UserMenu({ name, email, image, isAdmin, signOutAction }: Props) 
           </MenuGroupLabel>
         </MenuGroup>
         <MenuSeparator />
+        <MenuLinkItem render={<Link href="/wallet" />}>
+          <WalletIcon aria-hidden="true" />
+          {t("nav.wallet")}
+        </MenuLinkItem>
         <MenuLinkItem render={<Link href="/sales" />}>
           <ReceiptTextIcon aria-hidden="true" />
           {t("nav.mySales")}
