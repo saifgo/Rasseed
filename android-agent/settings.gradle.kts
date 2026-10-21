@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "rasseed-agent"
+rootProject.name = "sarfli-agent"
 include(":app")

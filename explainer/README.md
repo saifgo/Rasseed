@@ -1,6 +1,6 @@
-# Rasseed explainer video
+# Sarfli explainer video
 
-Self-contained generator for the project explanation video (`out/rasseed-explainer.mp4`, 1920×1080, 30 fps, English voice-over).
+Self-contained generator for the project explanation video (`out/sarfli-explainer.mp4`, 1920×1080, 30 fps, English voice-over).
 
 | File | Role |
 |---|---|

@@ -1,5 +1,5 @@
 // Render index.html frame-by-frame with headless Chromium, then mux with audio/master.wav.
-// Usage: node render.mjs            -> full video to out/rasseed-explainer.mp4
+// Usage: node render.mjs            -> full video to out/sarfli-explainer.mp4
 //        node render.mjs --stills   -> one PNG per scene (plus a few mid-scene shots) into out/stills/
 import { chromium } from "playwright-core";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -52,7 +52,7 @@ if (stills) {
     if (i % 300 === 0) console.log(`frame ${i}/${n}  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
   }
   fs.mkdirSync(path.join(HERE, "out"), { recursive: true });
-  const out = path.join(HERE, "out", "rasseed-explainer.mp4");
+  const out = path.join(HERE, "out", "sarfli-explainer.mp4");
   const r = spawnSync(ffmpeg, [
     "-y", "-loglevel", "error", "-stats",
     "-framerate", String(FPS), "-i", path.join(frames, "f%05d.jpg"),

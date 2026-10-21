@@ -280,5 +280,106 @@
     },
     "reference": "Référence",
     "whereToSend": "Où envoyer l'argent ?"
+  },
+  "landing": {
+    "nav": {
+      "rates": "Prix",
+      "how": "Comment ça marche",
+      "faq": "Questions",
+      "sell": "Vendre mon crédit",
+      "balance": "Mon solde",
+      "signIn": "Se connecter",
+      "menu": "Principal"
+    },
+    "hero": {
+      "line1": "Votre crédit",
+      "line2": "en argent",
+      "sub": "Envoyez votre crédit Ooredoo, Orange ou Tunisie Telecom à Sarfli. Les dinars vont sur votre solde, prêts à être retirés.",
+      "notesAlt": "Un billet tunisien de 10 dinars et un de 5 dinars"
+    },
+    "rates": {
+      "title": "Prix du jour",
+      "intro": "Choisissez votre opérateur et le crédit envoyé. Le ticket montre exactement ce que vous recevez.",
+      "operator": "Opérateur",
+      "amount": "Crédit envoyé",
+      "other": "Autre montant",
+      "ticketTitle": "Crédit {operator}",
+      "forAmount": "c’est ce que vous recevez pour {amount} DT de crédit",
+      "per10": "{amount} DT pour 10 DT",
+      "dial": "Composez {code}",
+      "locked": "Prix bloqué au départ",
+      "window": "{minutes} minutes pour l’envoyer",
+      "withdraw": "Retrait dès {amount} DT",
+      "invalid": "Entrez un montant entre 1 et 500 DT"
+    },
+    "how": {
+      "title": "Comment ça marche",
+      "s1Time": "30 secondes",
+      "s1": "D’abord, choisissez opérateur et montant, et voyez votre prix.",
+      "s2Time": "1 minute",
+      "s2": "Puis composez le code affiché, notre numéro est déjà dedans.",
+      "s3Time": "Environ 2 minutes",
+      "s3": "Ensuite, on compare le SMS de l’opérateur au solde de notre SIM.",
+      "s4Time": "Aussitôt",
+      "s4": "Enfin, les dinars arrivent sur votre solde Sarfli.",
+      "f1Label": "Code à composer",
+      "f1Call": "Appeler",
+      "f1Hold": "Numéro réservé pour vous",
+      "f2From": "Message de {operator}",
+      "f3Label": "Votre solde",
+      "f3Line": "Crédit {operator}, {amount} DT",
+      "f3Withdraw": "Retirer",
+      "c1": "Le code, prêt à appeler",
+      "c2": "Le SMS de l’opérateur qu’on vérifie",
+      "c3": "Votre solde, prêt à retirer"
+    },
+    "rules": {
+      "title": "Nos règles",
+      "lockedT": "Votre prix est bloqué",
+      "locked": "Le prix affiché au départ est celui que vous recevez, même si le prix du jour change.",
+      "twiceT": "Vérifié deux fois",
+      "twice": "Le SMS de l’opérateur et le solde de notre SIM doivent concorder avant qu’on compte votre crédit.",
+      "windowT": "{minutes} minutes pour envoyer",
+      "window": "Le numéro est réservé pour vous seul pendant l’envoi.",
+      "lessT": "Envoyé moins ? Vous choisissez",
+      "less": "Complétez le reste, ou acceptez le prix de ce qui est arrivé.",
+      "lateT": "Le crédit en retard compte",
+      "late": "Un crédit arrivé en retard ou au-delà du montant est payé pour ce qui est vraiment arrivé.",
+      "limitT": "Sans limite",
+      "limit": "Vendez aussi souvent que vous voulez. Chaque vente s’ajoute au même solde."
+    },
+    "works": {
+      "title": "Opérateurs et retraits",
+      "operator": "{amount} DT pour 10 DT de crédit",
+      "free": "Sans frais",
+      "fee": "{amount} DT de frais par retrait",
+      "cash": "Payé en dinars tunisiens",
+      "posteAlt": "File d’attente à un guichet de La Poste à Sayada",
+      "coinsAlt": "Pièces de dinar tunisien sur un tissu rouge"
+    },
+    "faq": {
+      "title": "Questions",
+      "signAlt": "Un panneau jaune de taxiphone en arabe et en français",
+      "q1": "Quel crédit puis-je vendre ?",
+      "a1": "Le crédit prépayé {operators}. Les prix du jour sont sur le ticket plus haut et sont fixés une fois par jour.",
+      "q2": "Comment envoyer le crédit ?",
+      "a2": "Avec le code de transfert de votre opérateur. On affiche le code avec notre numéro déjà dedans, vous touchez et appelez. Les codes sont {codes}.",
+      "q3": "Quand l’argent arrive-t-il sur mon solde ?",
+      "a3": "Dès que le SMS de l’opérateur et notre lecture du solde concordent, en général quelques minutes après l’envoi.",
+      "q4": "Comment retirer ?",
+      "a4": "Depuis votre solde, choisissez {methods}, pour tout montant dès {min} DT. Les frais sont comptés une fois par retrait.",
+      "q5": "Puis-je annuler un retrait ?",
+      "a5": "Non. Une fois demandé, on le traite. Si on ne peut pas le payer, l’argent revient sur votre solde.",
+      "q6": "Pourquoi mon numéro de téléphone ?",
+      "a6": "Le SMS de l’opérateur indique le numéro qui a envoyé le crédit. On le relie à votre vente, donc seul votre crédit compte.",
+      "or": "ou",
+      "free": "{method} (sans frais)",
+      "fee": "{method} ({amount} DT de frais)"
+    },
+    "footer": {
+      "pictures": "Photos",
+      "top": "Haut de page",
+      "rights": "© {year} Sarfli"
+    }
   }
 }

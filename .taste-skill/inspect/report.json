@@ -1,0 +1,3069 @@
+{
+ "url": "http://localhost:3100/",
+ "at": "2026-10-21T11:18:22.968Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 10,
+   "filled": [
+    0.92,
+    1,
+    1,
+    0.86,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "motion": {
+    "elements": 38,
+    "css": 3,
+    "transitions": 34,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 8613,
+     "screens": 9.6,
+     "words": 614,
+     "img": 9,
+     "video": 0,
+     "canvas": 0,
+     "svg": 1,
+     "sections": 6,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 4,
+     "uiAbuse": false,
+     "realPictures": 5,
+     "videoCount": 0,
+     "uiPictures": 4,
+     "pictureSamples": [
+      "image?url=%2F_next%2Fstatic%2Fmedia%2F10-dinars.",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2F5-dinars.1",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Fla-poste.0",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Fcoins.1yq7",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Ftaxiphone."
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Votre crédit en argent Votre crédit en argent",
+     "words": 8,
+     "chars": 45,
+     "lines": 2,
+     "size": 151.2,
+     "vw": 10.5,
+     "font": "roundo",
+     "weight": 500,
+     "tracking": -0.035,
+     "leading": 0.86,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.96,
+     "top": 278,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Votre crédit en argent Votre crédit en argent",
+     "words": 8,
+     "lines": 2,
+     "size": 151.2,
+     "font": "roundo"
+    },
+    "headings": [
+     {
+      "text": "Votre crédit en argent Votre crédit en argent",
+      "words": 8,
+      "chars": 45,
+      "lines": 2,
+      "size": 151.2,
+      "vw": 10.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.035,
+      "leading": 0.86,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 278,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Prix du jour",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 151.2,
+      "vw": 10.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.55,
+      "top": 1634,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Crédit Ooredoo",
+      "words": 2,
+      "chars": 14,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.025,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.51,
+      "top": 1901,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "9,800 DT",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.15,
+      "top": 1977,
+      "tag": "output",
+      "kind": "heading"
+     },
+     {
+      "text": "Comment ça marche",
+      "words": 3,
+      "chars": 17,
+      "lines": 2,
+      "size": 151.2,
+      "vw": 10.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 2630,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "+9,800 DT",
+      "words": 2,
+      "chars": 9,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.27,
+      "top": 3452,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Nos règles",
+      "words": 2,
+      "chars": 10,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 4005,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Votre prix est bloqué",
+      "words": 4,
+      "chars": 21,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4092,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Vérifié deux fois",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4228,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "15 minutes pour envoyer",
+      "words": 4,
+      "chars": 23,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4392,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Envoyé moins ? Vous choisissez",
+      "words": 5,
+      "chars": 30,
+      "lines": 2,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4528,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Le crédit en retard compte",
+      "words": 5,
+      "chars": 26,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4700,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Sans limite",
+      "words": 2,
+      "chars": 11,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4836,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Opérateurs et retraits",
+      "words": 3,
+      "chars": 22,
+      "lines": 1,
+      "size": 64,
+      "vw": 4.4,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.44,
+      "top": 5407,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Questions",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 151.2,
+      "vw": 10.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.47,
+      "top": 6227,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Sarfli",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 624.8,
+      "vw": 43.4,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 0.8,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 7639,
+      "tag": "div",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 16,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 2,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "roundo",
+       "share": 1,
+       "mono": false
+      },
+      {
+       "family": "Inter",
+       "share": 0,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      15,
+      19,
+      26,
+      64,
+      151,
+      625
+     ],
+     "sizeCount": 6,
+     "notLoaded": [],
+     "body": {
+      "font": "roundo",
+      "size": 19,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 17.6
+     },
+     "measureChars": 71,
+     "max": {
+      "size": 624.8,
+      "vw": 43.4,
+      "font": "roundo",
+      "text": "Sarfli"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.07,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f1f1f1",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#0c7866",
+       "top": 450,
+       "hsl": {
+        "h": 170,
+        "s": 0.82,
+        "l": 0.26
+       }
+      },
+      {
+       "color": "#e30613",
+       "top": 1476,
+       "hsl": {
+        "h": 356,
+        "s": 0.95,
+        "l": 0.46
+       }
+      },
+      {
+       "color": "#ffe927",
+       "top": 2472,
+       "hsl": {
+        "h": 54,
+        "s": 1,
+        "l": 0.58
+       }
+      },
+      {
+       "color": "#191919",
+       "top": 3843,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.1
+       }
+      },
+      {
+       "color": "#1e4bd7",
+       "top": 5887,
+       "hsl": {
+        "h": 225,
+        "s": 0.76,
+        "l": 0.48
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.69
+      },
+      {
+       "color": "#191919",
+       "share": 0.17
+      },
+      {
+       "color": "#111111",
+       "share": 0.1
+      },
+      {
+       "color": "#555555",
+       "share": 0.02
+      },
+      {
+       "color": "#0c7866",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#191919",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.1
+      },
+      "fg": "#f1f1f1"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 4,
+     "inHero": 3,
+     "radius": 0,
+     "height": 28,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Français",
+      "Vendre mon crédit",
+      "Vendre mon crédit"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 4,
+     "boxRadius": 16,
+     "squareMedia": 5,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 6,
+     "fixed": true,
+     "height": 68,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "inter fallback",
+     "roundo",
+     "roundo fallback"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 8613,
+    "margins": {
+     "left": 32,
+     "right": 32
+    },
+    "sections": [
+     {
+      "sel": "section.lp-hero",
+      "tag": "section",
+      "top": 0,
+      "height": 900,
+      "words": 31,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Votre crédit",
+       "size": 151,
+       "tag": "h1"
+      },
+      "left": 317,
+      "right": 317,
+      "textLeft": 317,
+      "textRight": 317,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-notes",
+      "tag": "div",
+      "top": 900,
+      "height": 576,
+      "words": 0,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": 738,
+      "right": 104,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#rates.lp-rates",
+      "tag": "section",
+      "top": 1476,
+      "height": 996,
+      "words": 78,
+      "media": 0,
+      "middle": 129,
+      "heading": {
+       "text": "Prix du jour",
+       "size": 151,
+       "tag": "h2"
+      },
+      "left": 32,
+      "right": 70,
+      "textLeft": 32,
+      "textRight": 70,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how.lp-how",
+      "tag": "section",
+      "top": 2472,
+      "height": 1372,
+      "words": 101,
+      "media": 0,
+      "middle": 2,
+      "heading": {
+       "text": "Comment ça marche",
+       "size": 151,
+       "tag": "h2"
+      },
+      "left": 32,
+      "right": 36,
+      "textLeft": 32,
+      "textRight": 36,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.lp-rules",
+      "tag": "section",
+      "top": 3843,
+      "height": 1268,
+      "words": 112,
+      "media": 0,
+      "middle": 170,
+      "heading": {
+       "text": "Nos règles",
+       "size": 64,
+       "tag": "h2"
+      },
+      "left": 32,
+      "right": 44,
+      "textLeft": 32,
+      "textRight": 44,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.lp-works",
+      "tag": "section",
+      "top": 5112,
+      "height": 776,
+      "words": 43,
+      "media": 2,
+      "middle": 47,
+      "heading": {
+       "text": "Opérateurs et retraits",
+       "size": 64,
+       "tag": "h2"
+      },
+      "left": 56,
+      "right": 32,
+      "textLeft": 56,
+      "textRight": 121,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__head",
+      "tag": "div",
+      "top": 5887,
+      "height": 540,
+      "words": 1,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Questions",
+       "size": 151,
+       "tag": "h2"
+      },
+      "left": 32,
+      "right": 5,
+      "textLeft": 32,
+      "textRight": 716,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band",
+      "tag": "div",
+      "top": 6427,
+      "height": 169,
+      "words": 25,
+      "media": 0,
+      "middle": 364,
+      "heading": {
+       "text": "Quel crédit puis-je vendre ?",
+       "size": 26,
+       "tag": "h3"
+      },
+      "left": 32,
+      "right": 53,
+      "textLeft": 32,
+      "textRight": 53,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band.lp-faq__band--alt",
+      "tag": "div",
+      "top": 6596,
+      "height": 226,
+      "words": 45,
+      "media": 0,
+      "middle": 341,
+      "heading": {
+       "text": "Comment envoyer le crédit ?",
+       "size": 26,
+       "tag": "h3"
+      },
+      "left": 32,
+      "right": 98,
+      "textLeft": 32,
+      "textRight": 98,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band",
+      "tag": "div",
+      "top": 6822,
+      "height": 169,
+      "words": 28,
+      "media": 0,
+      "middle": 198,
+      "heading": {
+       "text": "Quand l’argent arrive-t-il sur mon solde ?",
+       "size": 26,
+       "tag": "h3"
+      },
+      "left": 32,
+      "right": 79,
+      "textLeft": 32,
+      "textRight": 79,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band.lp-faq__band--alt",
+      "tag": "div",
+      "top": 6991,
+      "height": 198,
+      "words": 28,
+      "media": 0,
+      "middle": 469,
+      "heading": {
+       "text": "Comment retirer ?",
+       "size": 26,
+       "tag": "h3"
+      },
+      "left": 32,
+      "right": 96,
+      "textLeft": 32,
+      "textRight": 96,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band",
+      "tag": "div",
+      "top": 7189,
+      "height": 169,
+      "words": 24,
+      "media": 0,
+      "middle": 374,
+      "heading": {
+       "text": "Puis-je annuler un retrait ?",
+       "size": 26,
+       "tag": "h3"
+      },
+      "left": 32,
+      "right": 91,
+      "textLeft": 32,
+      "textRight": 91,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band.lp-faq__band--alt",
+      "tag": "div",
+      "top": 7358,
+      "height": 169,
+      "words": 28,
+      "media": 0,
+      "middle": 230,
+      "heading": {
+       "text": "Pourquoi mon numéro de téléphone ?",
+       "size": 26,
+       "tag": "h3"
+      },
+      "left": 32,
+      "right": 43,
+      "textLeft": 32,
+      "textRight": 43,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer.lp-foot",
+      "tag": "footer",
+      "top": 7527,
+      "height": 1086,
+      "words": 63,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Sarfli",
+       "size": 625,
+       "tag": "span"
+      },
+      "left": 32,
+      "right": 31,
+      "textLeft": 32,
+      "textRight": 31,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [
+     {
+      "top": 2268,
+      "height": 344
+     },
+     {
+      "top": 3684,
+      "height": 316
+     },
+     {
+      "top": 4924,
+      "height": 368
+     }
+    ],
+    "h1s": [
+     {
+      "text": "Votre crédit en argent Votre crédit en argent",
+      "size": 151,
+      "top": 278,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 32,
+      "n": 16
+     },
+     {
+      "x": 730,
+      "n": 6
+     },
+     {
+      "x": 963,
+      "n": 6
+     },
+     {
+      "x": 56,
+      "n": 2
+     },
+     {
+      "x": 748,
+      "n": 2
+     },
+     {
+      "x": 1094,
+      "n": 2
+     },
+     {
+      "x": 173,
+      "n": 1
+     },
+     {
+      "x": 402,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 36,
+    "bodySize": 19,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.18,
+    "voidBox": {
+     "x": 1140,
+     "y": 120,
+     "w": 300,
+     "h": 780
+    }
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 9,
+   "filled": [
+    0.95,
+    1,
+    1,
+    0.66,
+    1,
+    0.99,
+    1,
+    1,
+    0.99
+   ],
+   "motion": {
+    "elements": 38,
+    "css": 3,
+    "transitions": 34,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 8782,
+     "screens": 8.6,
+     "words": 607,
+     "img": 9,
+     "video": 0,
+     "canvas": 0,
+     "svg": 1,
+     "sections": 6,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 4,
+     "uiAbuse": false,
+     "realPictures": 5,
+     "videoCount": 0,
+     "uiPictures": 4,
+     "pictureSamples": [
+      "image?url=%2F_next%2Fstatic%2Fmedia%2F10-dinars.",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2F5-dinars.1",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Fla-poste.0",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Fcoins.1yq7",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Ftaxiphone."
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Votre crédit en argent Votre crédit en argent",
+     "words": 8,
+     "chars": 45,
+     "lines": 2,
+     "size": 80.6,
+     "vw": 10.5,
+     "font": "roundo",
+     "weight": 500,
+     "tracking": -0.035,
+     "leading": 0.86,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.96,
+     "top": 420,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Votre crédit en argent Votre crédit en argent",
+     "words": 8,
+     "lines": 2,
+     "size": 80.6,
+     "font": "roundo"
+    },
+    "headings": [
+     {
+      "text": "Votre crédit en argent Votre crédit en argent",
+      "words": 8,
+      "chars": 45,
+      "lines": 2,
+      "size": 80.6,
+      "vw": 10.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.035,
+      "leading": 0.86,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 420,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Prix du jour",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 80.6,
+      "vw": 10.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 1444,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Crédit Ooredoo",
+      "words": 2,
+      "chars": 14,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.025,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.56,
+      "top": 1675,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "9,800 DT",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "right",
+      "widthRatio": 0.2,
+      "top": 1830,
+      "tag": "output",
+      "kind": "heading"
+     },
+     {
+      "text": "Comment ça marche",
+      "words": 3,
+      "chars": 17,
+      "lines": 2,
+      "size": 80.6,
+      "vw": 10.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 2423,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "+9,800 DT",
+      "words": 2,
+      "chars": 9,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.56,
+      "top": 3751,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Nos règles",
+      "words": 2,
+      "chars": 10,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 4254,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Votre prix est bloqué",
+      "words": 4,
+      "chars": 21,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4315,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Vérifié deux fois",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4474,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "15 minutes pour envoyer",
+      "words": 4,
+      "chars": 23,
+      "lines": 2,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4632,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Envoyé moins ? Vous choisissez",
+      "words": 5,
+      "chars": 30,
+      "lines": 2,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4754,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Le crédit en retard compte",
+      "words": 5,
+      "chars": 26,
+      "lines": 2,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 4886,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Sans limite",
+      "words": 2,
+      "chars": 11,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.63,
+      "top": 5044,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Opérateurs et retraits",
+      "words": 3,
+      "chars": 22,
+      "lines": 1,
+      "size": 45.4,
+      "vw": 5.9,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.89,
+      "top": 5464,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Questions",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 80.6,
+      "vw": 10.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.47,
+      "top": 6546,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Sarfli",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 333,
+      "vw": 43.4,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 0.8,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.96,
+      "top": 8059,
+      "tag": "div",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 16,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 0,
+     "centered": 2,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "roundo",
+       "share": 1,
+       "mono": false
+      },
+      {
+       "family": "Inter",
+       "share": 0,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      14,
+      18,
+      23,
+      45,
+      81,
+      333
+     ],
+     "sizeCount": 6,
+     "notLoaded": [],
+     "body": {
+      "font": "roundo",
+      "size": 17.9,
+      "leading": 1.5,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 17.6
+     },
+     "measureChars": 40,
+     "max": {
+      "size": 333,
+      "vw": 43.4,
+      "font": "roundo",
+      "text": "Sarfli"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.08,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f1f1f1",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#0c7866",
+       "top": 512,
+       "hsl": {
+        "h": 170,
+        "s": 0.82,
+        "l": 0.26
+       }
+      },
+      {
+       "color": "#e30613",
+       "top": 1348,
+       "hsl": {
+        "h": 356,
+        "s": 0.95,
+        "l": 0.46
+       }
+      },
+      {
+       "color": "#ffe927",
+       "top": 2327,
+       "hsl": {
+        "h": 54,
+        "s": 1,
+        "l": 0.58
+       }
+      },
+      {
+       "color": "#191919",
+       "top": 4070,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.1
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.69
+      },
+      {
+       "color": "#191919",
+       "share": 0.16
+      },
+      {
+       "color": "#111111",
+       "share": 0.1
+      },
+      {
+       "color": "#555555",
+       "share": 0.02
+      },
+      {
+       "color": "#0c7866",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#191919",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.1
+      },
+      "fg": "#f1f1f1"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 4,
+     "inHero": 3,
+     "radius": 0,
+     "height": 28,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Français",
+      "Vendre mon crédit",
+      "Vendre mon crédit"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 4,
+     "boxRadius": 16,
+     "squareMedia": 5,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 6,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 5541
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 2,
+     "fixed": true,
+     "height": 68,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "inter fallback",
+     "roundo",
+     "roundo fallback"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 8782,
+    "margins": {
+     "left": 17,
+     "right": 17
+    },
+    "sections": [
+     {
+      "sel": "section.lp-hero",
+      "tag": "section",
+      "top": 0,
+      "height": 1024,
+      "words": 31,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Votre crédit",
+       "size": 81,
+       "tag": "h1"
+      },
+      "left": 87,
+      "right": 87,
+      "textLeft": 87,
+      "textRight": 87,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-notes",
+      "tag": "div",
+      "top": 1024,
+      "height": 324,
+      "words": 0,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": 393,
+      "right": 56,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#rates.lp-rates",
+      "tag": "section",
+      "top": 1348,
+      "height": 979,
+      "words": 78,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Prix du jour",
+       "size": 81,
+       "tag": "h2"
+      },
+      "left": 17,
+      "right": 47,
+      "textLeft": 17,
+      "textRight": 47,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how.lp-how",
+      "tag": "section",
+      "top": 2327,
+      "height": 1742,
+      "words": 101,
+      "media": 0,
+      "middle": 8,
+      "heading": {
+       "text": "Comment ça marche",
+       "size": 81,
+       "tag": "h2"
+      },
+      "left": 17,
+      "right": 19,
+      "textLeft": 17,
+      "textRight": 19,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.lp-rules",
+      "tag": "section",
+      "top": 4070,
+      "height": 1274,
+      "words": 112,
+      "media": 0,
+      "middle": 75,
+      "heading": {
+       "text": "Nos règles",
+       "size": 45,
+       "tag": "h2"
+      },
+      "left": 17,
+      "right": 18,
+      "textLeft": 17,
+      "textRight": 18,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.lp-works",
+      "tag": "section",
+      "top": 5344,
+      "height": 1036,
+      "words": 43,
+      "media": 2,
+      "middle": 0,
+      "heading": {
+       "text": "Opérateurs et retraits",
+       "size": 45,
+       "tag": "h2"
+      },
+      "left": 17,
+      "right": 17,
+      "textLeft": 41,
+      "textRight": 85,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#questions.lp-faq",
+      "tag": "section",
+      "top": 6379,
+      "height": 1616,
+      "words": 179,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Questions",
+       "size": 81,
+       "tag": "h2"
+      },
+      "left": 17,
+      "right": 2,
+      "textLeft": 17,
+      "textRight": 20,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer.lp-foot",
+      "tag": "footer",
+      "top": 7995,
+      "height": 787,
+      "words": 63,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Sarfli",
+       "size": 333,
+       "tag": "span"
+      },
+      "left": 17,
+      "right": 17,
+      "textLeft": 17,
+      "textRight": 17,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [
+     {
+      "top": 5140,
+      "height": 316
+     }
+    ],
+    "h1s": [
+     {
+      "text": "Votre crédit en argent Votre crédit en argent",
+      "size": 81,
+      "top": 420,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 17,
+      "n": 17
+     },
+     {
+      "x": 390,
+      "n": 6
+     },
+     {
+      "x": 41,
+      "n": 5
+     },
+     {
+      "x": 514,
+      "n": 5
+     },
+     {
+      "x": 412,
+      "n": 3
+     }
+    ],
+    "leftBlocks": 36,
+    "bodySize": 18,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 11,
+   "filled": [
+    0.97,
+    0.99,
+    0.99,
+    1,
+    0.72,
+    0.86,
+    0.99,
+    0.99,
+    0.99,
+    0.99,
+    0.99
+   ],
+   "motion": {
+    "elements": 38,
+    "css": 3,
+    "transitions": 34,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 8672,
+     "screens": 10.3,
+     "words": 606,
+     "img": 9,
+     "video": 0,
+     "canvas": 0,
+     "svg": 1,
+     "sections": 6,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 4,
+     "uiAbuse": false,
+     "realPictures": 5,
+     "videoCount": 0,
+     "uiPictures": 4,
+     "pictureSamples": [
+      "image?url=%2F_next%2Fstatic%2Fmedia%2F10-dinars.",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2F5-dinars.1",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Fla-poste.0",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Fcoins.1yq7",
+      "image?url=%2F_next%2Fstatic%2Fmedia%2Ftaxiphone."
+     ],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Votre crédit en argent Votre crédit en argent",
+     "words": 8,
+     "chars": 45,
+     "lines": 2,
+     "size": 60.5,
+     "vw": 15.5,
+     "font": "roundo",
+     "weight": 500,
+     "tracking": -0.035,
+     "leading": 0.86,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "center",
+     "position": "center",
+     "widthRatio": 0.92,
+     "top": 320,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Votre crédit en argent Votre crédit en argent",
+     "words": 8,
+     "lines": 2,
+     "size": 60.5,
+     "font": "roundo"
+    },
+    "headings": [
+     {
+      "text": "Votre crédit en argent Votre crédit en argent",
+      "words": 8,
+      "chars": 45,
+      "lines": 2,
+      "size": 60.5,
+      "vw": 15.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.035,
+      "leading": 0.86,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 320,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Prix du jour",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 60.5,
+      "vw": 15.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 1308,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Crédit Ooredoo",
+      "words": 2,
+      "chars": 14,
+      "lines": 1,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.025,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.79,
+      "top": 1540,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "9,800 DT",
+      "words": 2,
+      "chars": 8,
+      "lines": 1,
+      "size": 60.5,
+      "vw": 15.5,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "center",
+      "position": "center",
+      "widthRatio": 0.49,
+      "top": 2065,
+      "tag": "output",
+      "kind": "heading"
+     },
+     {
+      "text": "Comment ça marche",
+      "words": 3,
+      "chars": 17,
+      "lines": 2,
+      "size": 60.5,
+      "vw": 15.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 2638,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "30 secondes D’abord, choisissez opérateur et montant, et voyez votre prix.",
+      "words": 11,
+      "chars": 74,
+      "lines": 3,
+      "size": 22,
+      "vw": 5.6,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.15,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 2817,
+      "tag": "li",
+      "kind": "statement"
+     },
+     {
+      "text": "1 minute Puis composez le code affiché, notre numéro est déjà dedans.",
+      "words": 12,
+      "chars": 69,
+      "lines": 3,
+      "size": 22,
+      "vw": 5.6,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.15,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 2978,
+      "tag": "li",
+      "kind": "statement"
+     },
+     {
+      "text": "Environ 2 minutes Ensuite, on compare le SMS de l’opérateur au solde de notre SIM.",
+      "words": 15,
+      "chars": 82,
+      "lines": 3,
+      "size": 22,
+      "vw": 5.6,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.15,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 3167,
+      "tag": "li",
+      "kind": "statement"
+     },
+     {
+      "text": "Aussitôt Enfin, les dinars arrivent sur votre solde Sarfli.",
+      "words": 9,
+      "chars": 59,
+      "lines": 3,
+      "size": 22,
+      "vw": 5.6,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": 0,
+      "leading": 1.15,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 3384,
+      "tag": "li",
+      "kind": "statement"
+     },
+     {
+      "text": "+9,800 DT",
+      "words": 2,
+      "chars": 9,
+      "lines": 1,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.79,
+      "top": 4244,
+      "tag": "span",
+      "kind": "heading"
+     },
+     {
+      "text": "Nos règles",
+      "words": 2,
+      "chars": 10,
+      "lines": 1,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 4658,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Votre prix est bloqué",
+      "words": 4,
+      "chars": 21,
+      "lines": 1,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 4691,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Vérifié deux fois",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 4803,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "15 minutes pour envoyer",
+      "words": 4,
+      "chars": 23,
+      "lines": 2,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 4941,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Envoyé moins ? Vous choisissez",
+      "words": 5,
+      "chars": 30,
+      "lines": 2,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 5086,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Le crédit en retard compte",
+      "words": 5,
+      "chars": 26,
+      "lines": 2,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 5232,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Sans limite",
+      "words": 2,
+      "chars": 11,
+      "lines": 1,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 5403,
+      "tag": "h3",
+      "kind": "heading"
+     },
+     {
+      "text": "Opérateurs et retraits",
+      "words": 3,
+      "chars": 22,
+      "lines": 1,
+      "size": 33.3,
+      "vw": 8.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.84,
+      "top": 5798,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Questions",
+      "words": 1,
+      "chars": 9,
+      "lines": 1,
+      "size": 60.5,
+      "vw": 15.5,
+      "font": "roundo",
+      "weight": 500,
+      "tracking": -0.03,
+      "leading": 0.95,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 6413,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Sarfli",
+      "words": 1,
+      "chars": 6,
+      "lines": 1,
+      "size": 162.4,
+      "vw": 41.6,
+      "font": "roundo",
+      "weight": 600,
+      "tracking": -0.045,
+      "leading": 0.8,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 7934,
+      "tag": "div",
+      "kind": "heading"
+     }
+    ],
+    "headingSummary": {
+     "count": 20,
+     "maxLines": 3,
+     "over2Lines": 0,
+     "statements": 4,
+     "centered": 2,
+     "medianWords": 3,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "roundo",
+       "share": 1,
+       "mono": false
+      },
+      {
+       "family": "Inter",
+       "share": 0,
+       "mono": false
+      }
+     ],
+     "familyCount": 2,
+     "sizes": [
+      14,
+      17,
+      20,
+      33,
+      61,
+      162
+     ],
+     "sizeCount": 6,
+     "notLoaded": [],
+     "body": {
+      "font": "roundo",
+      "size": 17,
+      "leading": 1.35,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": null
+     },
+     "measureChars": 42,
+     "max": {
+      "size": 162.4,
+      "vw": 41.6,
+      "font": "roundo",
+      "text": "Sarfli"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0.01,
+     "centerShare": 0.07,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [
+      {
+       "color": "#f1f1f1",
+       "top": 0,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.95
+       }
+      },
+      {
+       "color": "#0c7866",
+       "top": 388,
+       "hsl": {
+        "h": 170,
+        "s": 0.82,
+        "l": 0.26
+       }
+      },
+      {
+       "color": "#e30613",
+       "top": 1212,
+       "hsl": {
+        "h": 356,
+        "s": 0.95,
+        "l": 0.46
+       }
+      },
+      {
+       "color": "#ffe927",
+       "top": 2542,
+       "hsl": {
+        "h": 54,
+        "s": 1,
+        "l": 0.58
+       }
+      },
+      {
+       "color": "#191919",
+       "top": 4562,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.1
+       }
+      },
+      {
+       "color": "#1e4bd7",
+       "top": 6317,
+       "hsl": {
+        "h": 225,
+        "s": 0.76,
+        "l": 0.48
+       }
+      },
+      {
+       "color": "#262626",
+       "top": 6869,
+       "hsl": {
+        "h": 0,
+        "s": 0,
+        "l": 0.15
+       }
+      }
+     ],
+     "textColors": [
+      {
+       "color": "#ffffff",
+       "share": 0.7
+      },
+      {
+       "color": "#191919",
+       "share": 0.16
+      },
+      {
+       "color": "#111111",
+       "share": 0.1
+      },
+      {
+       "color": "#555555",
+       "share": 0.02
+      },
+      {
+       "color": "#0c7866",
+       "share": 0.01
+      }
+     ],
+     "button": {
+      "bg": "#191919",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.1
+      },
+      "fg": "#f1f1f1"
+     },
+     "lowContrast": []
+    },
+    "buttons": {
+     "count": 3,
+     "inHero": 2,
+     "radius": 0,
+     "height": 44,
+     "withShadow": 0,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Vendre mon crédit",
+      "Vendre mon crédit"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 0,
+     "shadowOverlay": 0,
+     "shadowSamples": [],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 0,
+     "hairlineSamples": [],
+     "outlinedBoxes": 0,
+     "dashed": 0,
+     "blurred": 0,
+     "roundedBoxes": 3,
+     "boxRadius": 16,
+     "squareMedia": 3,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": [
+      {
+       "count": 6,
+       "iconTopped": false,
+       "rounded": false,
+       "top": 5855
+      }
+     ]
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 2,
+     "fixed": true,
+     "height": 60,
+     "floatingPill": false,
+     "blur": false
+    },
+    "fontsLoaded": [
+     "inter",
+     "inter fallback",
+     "roundo",
+     "roundo fallback"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 8672,
+    "margins": {
+     "left": 16,
+     "right": 16
+    },
+    "sections": [
+     {
+      "sel": "section.lp-hero",
+      "tag": "section",
+      "top": 0,
+      "height": 844,
+      "words": 31,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Votre crédit",
+       "size": 60,
+       "tag": "h1"
+      },
+      "left": 34,
+      "right": 34,
+      "textLeft": 34,
+      "textRight": 34,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-notes",
+      "tag": "div",
+      "top": 844,
+      "height": 368,
+      "words": 0,
+      "media": 1,
+      "middle": 0,
+      "heading": null,
+      "left": 119,
+      "right": 12,
+      "textLeft": null,
+      "textRight": null,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#rates.lp-rates",
+      "tag": "section",
+      "top": 1212,
+      "height": 1330,
+      "words": 78,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Prix du jour",
+       "size": 60,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 36,
+      "textLeft": 16,
+      "textRight": 36,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section#how.lp-how",
+      "tag": "section",
+      "top": 2542,
+      "height": 2019,
+      "words": 101,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Comment ça marche",
+       "size": 60,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 60,
+      "textLeft": 16,
+      "textRight": 60,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.lp-rules",
+      "tag": "section",
+      "top": 4562,
+      "height": 1050,
+      "words": 112,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Nos règles",
+       "size": 33,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 20,
+      "textLeft": 16,
+      "textRight": 20,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "section.lp-works",
+      "tag": "section",
+      "top": 5611,
+      "height": 706,
+      "words": 43,
+      "media": 2,
+      "middle": 0,
+      "heading": {
+       "text": "Opérateurs et retraits",
+       "size": 33,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 16,
+      "textLeft": 32,
+      "textRight": 35,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__head",
+      "tag": "div",
+      "top": 6317,
+      "height": 387,
+      "words": 1,
+      "media": 1,
+      "middle": 0,
+      "heading": {
+       "text": "Questions",
+       "size": 60,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 97,
+      "textLeft": 16,
+      "textRight": 97,
+      "fullBleed": true,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band",
+      "tag": "div",
+      "top": 6704,
+      "height": 165,
+      "words": 25,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Quel crédit puis-je vendre ?",
+       "size": 20,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 28,
+      "textLeft": 16,
+      "textRight": 28,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band.lp-faq__band--alt",
+      "tag": "div",
+      "top": 6869,
+      "height": 267,
+      "words": 45,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Comment envoyer le crédit ?",
+       "size": 20,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 47,
+      "textLeft": 16,
+      "textRight": 47,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band",
+      "tag": "div",
+      "top": 7136,
+      "height": 189,
+      "words": 28,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Quand l’argent arrive-t-il sur mon solde ?",
+       "size": 20,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 57,
+      "textLeft": 16,
+      "textRight": 57,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band.lp-faq__band--alt",
+      "tag": "div",
+      "top": 7325,
+      "height": 190,
+      "words": 28,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Comment retirer ?",
+       "size": 20,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 19,
+      "textLeft": 16,
+      "textRight": 19,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band",
+      "tag": "div",
+      "top": 7516,
+      "height": 165,
+      "words": 24,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Puis-je annuler un retrait ?",
+       "size": 20,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 50,
+      "textLeft": 16,
+      "textRight": 50,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "div.lp-faq__band.lp-faq__band--alt",
+      "tag": "div",
+      "top": 7680,
+      "height": 189,
+      "words": 28,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Pourquoi mon numéro de téléphone ?",
+       "size": 20,
+       "tag": "h3"
+      },
+      "left": 16,
+      "right": 22,
+      "textLeft": 16,
+      "textRight": 22,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": true,
+      "pinned": false
+     },
+     {
+      "sel": "footer.lp-foot",
+      "tag": "footer",
+      "top": 7870,
+      "height": 802,
+      "words": 63,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Sarfli",
+       "size": 162,
+       "tag": "span"
+      },
+      "left": 16,
+      "right": 16,
+      "textLeft": 16,
+      "textRight": 16,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [
+     {
+      "top": 5484,
+      "height": 308
+     }
+    ],
+    "h1s": [
+     {
+      "text": "Votre crédit en argent Votre crédit en argent",
+      "size": 60,
+      "top": 320,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 28
+     },
+     {
+      "x": 32,
+      "n": 4
+     },
+     {
+      "x": 215,
+      "n": 2
+     },
+     {
+      "x": 50,
+      "n": 1
+     },
+     {
+      "x": 233,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 36,
+    "bodySize": 17,
+    "stage": false,
+    "explains": false,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\desktop-page-01.jpg",
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\desktop-page-02.jpg",
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\desktop-page-03.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\tablet-page-01.jpg",
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\tablet-page-02.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\mobile-page-01.jpg",
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\inspect\\mobile-page-02.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

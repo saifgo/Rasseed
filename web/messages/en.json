@@ -280,5 +280,106 @@
     },
     "reference": "Reference",
     "whereToSend": "Where should we send it?"
+  },
+  "landing": {
+    "nav": {
+      "rates": "Rates",
+      "how": "How it works",
+      "faq": "Questions",
+      "sell": "Sell my credit",
+      "balance": "My balance",
+      "signIn": "Sign in",
+      "menu": "Main"
+    },
+    "hero": {
+      "line1": "Phone credit",
+      "line2": "into cash",
+      "sub": "Send your spare Ooredoo, Orange or Tunisie Telecom credit to Sarfli. The dinars go to your balance, ready to withdraw.",
+      "notesAlt": "A 10 dinar and a 5 dinar Tunisian banknote"
+    },
+    "rates": {
+      "title": "Today’s rates",
+      "intro": "Pick your operator and how much credit you send. The ticket shows exactly what you get.",
+      "operator": "Operator",
+      "amount": "Credit you send",
+      "other": "Other amount",
+      "ticketTitle": "{operator} credit",
+      "forAmount": "is what you get for {amount} DT of credit",
+      "per10": "{amount} DT for 10 DT",
+      "dial": "Dial {code}",
+      "locked": "Rate locked when you start",
+      "window": "{minutes} minutes to send it",
+      "withdraw": "Withdraw from {amount} DT",
+      "invalid": "Enter an amount between 1 and 500 DT"
+    },
+    "how": {
+      "title": "How it works",
+      "s1Time": "30 seconds",
+      "s1": "First, choose your operator and amount and see your price.",
+      "s2Time": "1 minute",
+      "s2": "Then dial the code we show you, with our number already in it.",
+      "s3Time": "About 2 minutes",
+      "s3": "Next, we check the operator’s SMS against our SIM balance.",
+      "s4Time": "At once",
+      "s4": "Finally, the dinars appear in your Sarfli balance.",
+      "f1Label": "Code to dial",
+      "f1Call": "Call",
+      "f1Hold": "Number reserved for you",
+      "f2From": "Message from {operator}",
+      "f3Label": "Your balance",
+      "f3Line": "{operator} credit, {amount} DT",
+      "f3Withdraw": "Withdraw",
+      "c1": "The code, ready to call",
+      "c2": "The operator’s SMS we check",
+      "c3": "Your balance, ready to withdraw"
+    },
+    "rules": {
+      "title": "Our rules",
+      "lockedT": "Your rate is locked",
+      "locked": "The price shown when you start is the price you get, even if the daily rate changes.",
+      "twiceT": "Checked twice",
+      "twice": "The operator’s SMS and our SIM balance must agree before we count your credit.",
+      "windowT": "{minutes} minutes to send",
+      "window": "The number is reserved for you alone while you send.",
+      "lessT": "Sent less? You choose",
+      "less": "Top up the rest, or accept the price for what arrived.",
+      "lateT": "Late credit still counts",
+      "late": "Credit that arrives late or above the amount is paid for what really arrived.",
+      "limitT": "No limit",
+      "limit": "Sell as often as you want. Every sale adds to the same balance."
+    },
+    "works": {
+      "title": "Your operator, your wallet",
+      "operator": "{amount} DT for 10 DT of credit",
+      "free": "No fee",
+      "fee": "{amount} DT fee per withdrawal",
+      "cash": "Paid in Tunisian dinars",
+      "posteAlt": "People queueing at a La Poste counter in Sayada",
+      "coinsAlt": "Tunisian dinar coins on a red cloth"
+    },
+    "faq": {
+      "title": "Questions",
+      "signAlt": "A yellow taxiphone sign in Arabic and French",
+      "q1": "Which credit can I sell?",
+      "a1": "Prepaid credit from {operators}. Today’s rates are in the ticket above and are set once a day.",
+      "q2": "How do I send the credit?",
+      "a2": "With your operator’s own transfer code. We show the code with our number already in it, you tap it and call. The codes are {codes}.",
+      "q3": "When is the money in my balance?",
+      "a3": "As soon as the operator’s SMS and our balance check agree, usually a few minutes after you send.",
+      "q4": "How do I withdraw?",
+      "a4": "From your balance, choose {methods}, for any amount from {min} DT. The fee is charged once per withdrawal.",
+      "q5": "Can I cancel a withdrawal?",
+      "a5": "No. Once you ask for it, we process it. If we cannot pay it, the money goes back to your balance.",
+      "q6": "Why do you need my phone number?",
+      "a6": "The operator’s SMS names the number that sent the credit. We match it to your sale, so only your credit counts.",
+      "or": "or",
+      "free": "{method} (no fee)",
+      "fee": "{method} ({amount} DT fee)"
+    },
+    "footer": {
+      "pictures": "Pictures",
+      "top": "Back to top",
+      "rights": "© {year} Sarfli"
+    }
   }
 }

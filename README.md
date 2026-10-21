@@ -1,6 +1,6 @@
 <img src="assets/icon.svg" width="64" height="64" alt="">
 
-# Rasseed — phone credit → cash
+# Sarfli — phone credit → cash
 
 Sellers send phone credit (Ooredoo, Orange, Tunisie Telecom) to one of your SIMs. Each confirmed transfer adds
 `amount × daily rate` to the seller's **account balance**; the seller withdraws the balance whenever they want
@@ -138,7 +138,7 @@ pnpm test:e2e    # 13 end-to-end scenarios (sales, balance, withdrawals) against
 ## The agent phones
 
 Build: `cd android-agent && ./gradlew assembleRelease` → `app/build/outputs/apk/release/app-release.apk`
-(copy it to `web/public/downloads/rasseed-agent.apk` before `docker compose up --build` so phones can download it from `http://<server>:3100/downloads/rasseed-agent.apk`).
+(copy it to `web/public/downloads/sarfli-agent.apk` before `docker compose up --build` so phones can download it from `http://<server>:3100/downloads/sarfli-agent.apk`).
 The release APK is signed with the debug key for side-loading — use your own keystore for wider distribution.
 
 Per phone (Android 8+, dual-SIM supported — both SIMs join the pool):

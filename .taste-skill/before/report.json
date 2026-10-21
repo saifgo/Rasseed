@@ -1,0 +1,1610 @@
+{
+ "url": "http://localhost:3100/",
+ "at": "2026-10-21T10:13:25.857Z",
+ "allow": [],
+ "viewports": [
+  {
+   "width": 1440,
+   "height": 900,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.18,
+    0.2
+   ],
+   "motion": {
+    "elements": 1,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "page": {
+     "height": 1361,
+     "screens": 1.5,
+     "words": 110,
+     "img": 3,
+     "video": 0,
+     "canvas": 0,
+     "svg": 10,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Transformez votre crédit en argent",
+     "words": 5,
+     "chars": 34,
+     "lines": 2,
+     "size": 60,
+     "vw": 4.2,
+     "font": "Inter",
+     "weight": 700,
+     "tracking": -0.025,
+     "leading": 1,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.47,
+     "top": 137,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Transformez votre crédit en argent",
+     "words": 5,
+     "lines": 2,
+     "size": 60,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Transformez votre crédit en argent",
+      "words": 5,
+      "chars": 34,
+      "lines": 2,
+      "size": 60,
+      "vw": 4.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": -0.025,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.47,
+      "top": 137,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "9,800DT",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.09,
+      "top": 592,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "9DT",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.04,
+      "top": 689,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "9,500DT",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 30,
+      "vw": 2.1,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.09,
+      "top": 786,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "1",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 2.5,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.16,
+      "top": 981,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 2.5,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.16,
+      "top": 981,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "3",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 2.5,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.16,
+      "top": 981,
+      "tag": "span",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 7,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 6,
+     "centered": 0,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      14,
+      16,
+      18,
+      24,
+      26,
+      30,
+      36,
+      60
+     ],
+     "sizeCount": 8,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 18,
+      "leading": 1.56,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.6
+     },
+     "measureChars": 64,
+     "max": {
+      "size": 60,
+      "vw": 4.2,
+      "font": "Inter",
+      "text": "Transformez votre crédit en argent"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.01,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#686868",
+       "share": 0.6
+      },
+      {
+       "color": "#262626",
+       "share": 0.33
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.05
+      },
+      {
+       "color": "#fafafa",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#262626",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.15
+      },
+      "fg": "#fafafa"
+     },
+     "lowContrast": [
+      {
+       "text": "Vendre",
+       "ratio": 2.6,
+       "need": 4.5,
+       "size": 14,
+       "fg": "#ffffff",
+       "bg": "#ff7900"
+      },
+      {
+       "text": "Vendre mon crédit",
+       "ratio": 3.7,
+       "need": 4.5,
+       "size": 18,
+       "fg": "#ffffff",
+       "bg": "#009966"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 3,
+     "inHero": 3,
+     "radius": 10,
+     "height": 28,
+     "withShadow": 2,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Français",
+      "Se connecter",
+      "Vendre mon crédit"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 1,
+     "shadowSamples": [
+      "a.relative.inline-flex → oklab(0.999994 0.0000455678 0.0000200868 / 0.2) 0px 1px 0px 0px inset, rgba(0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 5,
+     "hairlineSamples": [
+      "header.sticky.top-0 1440px",
+      "li 734px",
+      "li 734px",
+      "p.flex.items-start 736px",
+      "footer.border-t 1440px"
+     ],
+     "outlinedBoxes": 1,
+     "dashed": 0,
+     "blurred": 1,
+     "roundedBoxes": 1,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 2,
+     "fixed": true,
+     "height": 57,
+     "floatingPill": false,
+     "blur": true
+    },
+    "fontsLoaded": [
+     "inter"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 1440,
+     "h": 900
+    },
+    "pageH": 1361,
+    "margins": {
+     "left": 260,
+     "right": 337
+    },
+    "sections": [],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Transformez votre crédit en argent",
+      "size": 60,
+      "top": 137,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 352,
+      "n": 4
+     },
+     {
+      "x": 606,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 5,
+    "bodySize": 16,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0.22,
+    "voidBox": {
+     "x": 1080,
+     "y": 120,
+     "w": 360,
+     "h": 780
+    }
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 768,
+   "height": 1024,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.29,
+    0.28
+   ],
+   "motion": {
+    "elements": 1,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "page": {
+     "height": 1361,
+     "screens": 1.3,
+     "words": 110,
+     "img": 3,
+     "video": 0,
+     "canvas": 0,
+     "svg": 10,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Transformez votre crédit en argent",
+     "words": 5,
+     "chars": 34,
+     "lines": 2,
+     "size": 60,
+     "vw": 7.8,
+     "font": "Inter",
+     "weight": 700,
+     "tracking": -0.025,
+     "leading": 1,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.88,
+     "top": 137,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Transformez votre crédit en argent",
+     "words": 5,
+     "lines": 2,
+     "size": 60,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Transformez votre crédit en argent",
+      "words": 5,
+      "chars": 34,
+      "lines": 2,
+      "size": 60,
+      "vw": 7.8,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": -0.025,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.88,
+      "top": 137,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "9,800DT",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.16,
+      "top": 592,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "9DT",
+      "words": 1,
+      "chars": 3,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.08,
+      "top": 689,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "9,500DT",
+      "words": 1,
+      "chars": 7,
+      "lines": 1,
+      "size": 30,
+      "vw": 3.9,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.2,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.16,
+      "top": 786,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "1",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 4.7,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.3,
+      "top": 981,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 4.7,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.3,
+      "top": 981,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "3",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 4.7,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "right",
+      "widthRatio": 0.3,
+      "top": 981,
+      "tag": "span",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 7,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 6,
+     "centered": 0,
+     "medianWords": 1,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      14,
+      16,
+      18,
+      24,
+      26,
+      30,
+      36,
+      60
+     ],
+     "sizeCount": 8,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 18,
+      "leading": 1.56,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.6
+     },
+     "measureChars": 64,
+     "max": {
+      "size": 60,
+      "vw": 7.8,
+      "font": "Inter",
+      "text": "Transformez votre crédit en argent"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0.01,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#686868",
+       "share": 0.6
+      },
+      {
+       "color": "#262626",
+       "share": 0.33
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.05
+      },
+      {
+       "color": "#fafafa",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#262626",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.15
+      },
+      "fg": "#fafafa"
+     },
+     "lowContrast": [
+      {
+       "text": "Vendre",
+       "ratio": 2.6,
+       "need": 4.5,
+       "size": 14,
+       "fg": "#ffffff",
+       "bg": "#ff7900"
+      },
+      {
+       "text": "Vendre mon crédit",
+       "ratio": 3.7,
+       "need": 4.5,
+       "size": 18,
+       "fg": "#ffffff",
+       "bg": "#009966"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 3,
+     "inHero": 3,
+     "radius": 10,
+     "height": 28,
+     "withShadow": 2,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Français",
+      "Se connecter",
+      "Vendre mon crédit"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 1,
+     "shadowSamples": [
+      "a.relative.inline-flex → oklab(0.999994 0.0000455678 0.0000200868 / 0.2) 0px 1px 0px 0px inset, rgba(0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 5,
+     "hairlineSamples": [
+      "header.sticky.top-0 768px",
+      "li 734px",
+      "li 734px",
+      "p.flex.items-start 736px",
+      "footer.border-t 768px"
+     ],
+     "outlinedBoxes": 1,
+     "dashed": 0,
+     "blurred": 1,
+     "roundedBoxes": 1,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 2,
+     "fixed": true,
+     "height": 57,
+     "floatingPill": false,
+     "blur": true
+    },
+    "fontsLoaded": [
+     "inter"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 768,
+     "h": 1024
+    },
+    "pageH": 1361,
+    "margins": {
+     "left": 16,
+     "right": 23
+    },
+    "sections": [
+     {
+      "sel": "section.flex.flex-col",
+      "tag": "section",
+      "top": 137,
+      "height": 280,
+      "words": 19,
+      "media": 0,
+      "middle": 0,
+      "heading": null,
+      "left": 16,
+      "right": 178,
+      "textLeft": 16,
+      "textRight": 178,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.flex.flex-col",
+      "tag": "section",
+      "top": 481,
+      "height": 372,
+      "words": 24,
+      "media": 0,
+      "middle": 133,
+      "heading": {
+       "text": "9,800",
+       "size": 30,
+       "tag": "span"
+      },
+      "left": 16,
+      "right": 75,
+      "textLeft": 16,
+      "textRight": 75,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.flex.flex-col",
+      "tag": "section",
+      "top": 917,
+      "height": 295,
+      "words": 56,
+      "media": 0,
+      "middle": 9,
+      "heading": {
+       "text": "Comment ça marche",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 21,
+      "textLeft": 16,
+      "textRight": 21,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Transformez votre crédit en argent",
+      "size": 60,
+      "top": 137,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 4
+     },
+     {
+      "x": 270,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 5,
+    "bodySize": 16,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  },
+  {
+   "width": 390,
+   "height": 844,
+   "load": "load",
+   "screens": 2,
+   "filled": [
+    0.36,
+    0.43
+   ],
+   "motion": {
+    "elements": 1,
+    "css": 0,
+    "transitions": 0,
+    "scripted": 1,
+    "videos": 0,
+    "playingVideos": 0
+   },
+   "metrics": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "page": {
+     "height": 1453,
+     "screens": 1.7,
+     "words": 106,
+     "img": 3,
+     "video": 0,
+     "canvas": 0,
+     "svg": 10,
+     "sections": 3,
+     "horizontalOverflow": 0,
+     "overflowCulprits": [],
+     "uiFragments": 0,
+     "uiAbuse": false,
+     "realPictures": 0,
+     "videoCount": 0,
+     "uiPictures": 0,
+     "pictureSamples": [],
+     "blendText": 0,
+     "sideScrollers": 0,
+     "brokenImages": [],
+     "emoji": [],
+     "videosNoPoster": 0
+    },
+    "hero": {
+     "text": "Transformez votre crédit en argent",
+     "words": 5,
+     "chars": 34,
+     "lines": 2,
+     "size": 36,
+     "vw": 9.2,
+     "font": "Inter",
+     "weight": 700,
+     "tracking": -0.025,
+     "leading": 1.11,
+     "upper": false,
+     "italic": false,
+     "mono": false,
+     "align": "left",
+     "position": "center",
+     "widthRatio": 0.92,
+     "top": 105,
+     "tag": "h1",
+     "kind": "heading"
+    },
+    "h1": {
+     "text": "Transformez votre crédit en argent",
+     "words": 5,
+     "lines": 2,
+     "size": 36,
+     "font": "Inter"
+    },
+    "headings": [
+     {
+      "text": "Transformez votre crédit en argent",
+      "words": 5,
+      "chars": 34,
+      "lines": 2,
+      "size": 36,
+      "vw": 9.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": -0.025,
+      "leading": 1.11,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 105,
+      "tag": "h1",
+      "kind": "heading"
+     },
+     {
+      "text": "Prix du jour",
+      "words": 3,
+      "chars": 12,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 437,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "Ooredoo 9,800DT",
+      "words": 2,
+      "chars": 15,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.91,
+      "top": 518,
+      "tag": "li",
+      "kind": "statement"
+     },
+     {
+      "text": "Orange 9DT",
+      "words": 2,
+      "chars": 10,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.91,
+      "top": 607,
+      "tag": "li",
+      "kind": "statement"
+     },
+     {
+      "text": "Tunisie Telecom 9,500DT",
+      "words": 3,
+      "chars": 23,
+      "lines": 2,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.91,
+      "top": 696,
+      "tag": "li",
+      "kind": "statement"
+     },
+     {
+      "text": "Comment ça marche",
+      "words": 3,
+      "chars": 17,
+      "lines": 1,
+      "size": 24,
+      "vw": 6.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1.33,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "center",
+      "widthRatio": 0.92,
+      "top": 849,
+      "tag": "h2",
+      "kind": "heading"
+     },
+     {
+      "text": "1",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 9.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.06,
+      "top": 913,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "2",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 9.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.06,
+      "top": 1022,
+      "tag": "span",
+      "kind": "statement"
+     },
+     {
+      "text": "3",
+      "words": 1,
+      "chars": 1,
+      "lines": 1,
+      "size": 36,
+      "vw": 9.2,
+      "font": "Inter",
+      "weight": 700,
+      "tracking": 0,
+      "leading": 1,
+      "upper": false,
+      "italic": false,
+      "mono": false,
+      "align": "left",
+      "position": "left",
+      "widthRatio": 0.06,
+      "top": 1131,
+      "tag": "span",
+      "kind": "statement"
+     }
+    ],
+    "headingSummary": {
+     "count": 9,
+     "maxLines": 2,
+     "over2Lines": 0,
+     "statements": 6,
+     "centered": 0,
+     "medianWords": 2,
+     "mixedFontHeadings": 0
+    },
+    "type": {
+     "families": [
+      {
+       "family": "Inter",
+       "share": 1,
+       "mono": false
+      }
+     ],
+     "familyCount": 1,
+     "sizes": [
+      14,
+      16,
+      18,
+      20,
+      24,
+      36
+     ],
+     "sizeCount": 6,
+     "notLoaded": [],
+     "body": {
+      "font": "Inter",
+      "size": 18,
+      "leading": 1.56,
+      "weight": 400,
+      "tracking": 0,
+      "contrast": 5.6
+     },
+     "measureChars": 40,
+     "max": {
+      "size": 36,
+      "vw": 9.2,
+      "font": "Inter",
+      "text": "Transformez votre crédit en argent"
+     },
+     "monoShare": 0,
+     "monoProseShare": 0,
+     "monoFamilies": [],
+     "monoSamples": [],
+     "microLabels": 0,
+     "microLabelShare": 0,
+     "microSamples": [],
+     "upperShare": 0,
+     "centerShare": 0,
+     "smallText": 0
+    },
+    "eyebrows": [],
+    "numbered": [],
+    "color": {
+     "bodyBg": "#ffffff",
+     "bodyBgHsl": {
+      "h": 0,
+      "s": 0,
+      "l": 1
+     },
+     "dark": false,
+     "sectionBgs": [],
+     "textColors": [
+      {
+       "color": "#686868",
+       "share": 0.63
+      },
+      {
+       "color": "#262626",
+       "share": 0.33
+      },
+      {
+       "color": "#ffffff",
+       "share": 0.03
+      },
+      {
+       "color": "#fafafa",
+       "share": 0.02
+      }
+     ],
+     "button": {
+      "bg": "#262626",
+      "hsl": {
+       "h": 0,
+       "s": 0,
+       "l": 0.15
+      },
+      "fg": "#fafafa"
+     },
+     "lowContrast": [
+      {
+       "text": "Vendre mon crédit",
+       "ratio": 3.7,
+       "need": 4.5,
+       "size": 18,
+       "fg": "#ffffff",
+       "bg": "#009966"
+      }
+     ]
+    },
+    "buttons": {
+     "count": 2,
+     "inHero": 2,
+     "radius": 10,
+     "height": 32,
+     "withShadow": 2,
+     "withGradient": 0,
+     "mono": 0,
+     "upper": 0,
+     "heroLabels": [
+      "Se connecter",
+      "Vendre mon crédit"
+     ]
+    },
+    "surfaces": {
+     "shadowStatic": 1,
+     "shadowOverlay": 1,
+     "shadowSamples": [
+      "a.relative.inline-flex → oklab(0.999994 0.0000455678 0.0000200868 / 0.2) 0px 1px 0px 0px inset, rgba(0, 0"
+     ],
+     "gradients": 0,
+     "scrims": 0,
+     "gradientSamples": [],
+     "gradientText": 0,
+     "hairlines": 5,
+     "hairlineSamples": [
+      "header.sticky.top-0 390px",
+      "li 356px",
+      "li 356px",
+      "p.flex.items-start 358px",
+      "footer.border-t 390px"
+     ],
+     "outlinedBoxes": 1,
+     "dashed": 0,
+     "blurred": 1,
+     "roundedBoxes": 1,
+     "boxRadius": 18,
+     "squareMedia": 0,
+     "roundedMedia": 0,
+     "mediaRadius": 0,
+     "textShadow": 0,
+     "cardRows": []
+    },
+    "heroMedia": [],
+    "nav": {
+     "links": 2,
+     "fixed": true,
+     "height": 57,
+     "floatingPill": false,
+     "blur": true
+    },
+    "fontsLoaded": [
+     "inter"
+    ]
+   },
+   "layout": {
+    "viewport": {
+     "w": 390,
+     "h": 844
+    },
+    "pageH": 1453,
+    "margins": {
+     "left": 16,
+     "right": 27
+    },
+    "sections": [
+     {
+      "sel": "section.flex.flex-col",
+      "tag": "section",
+      "top": 105,
+      "height": 268,
+      "words": 24,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Transformez votre crédit en argent",
+       "size": 36,
+       "tag": "h1"
+      },
+      "left": 16,
+      "right": 31,
+      "textLeft": 16,
+      "textRight": 31,
+      "fullBleed": false,
+      "footer": false,
+      "hero": true,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.flex.flex-col",
+      "tag": "section",
+      "top": 437,
+      "height": 348,
+      "words": 21,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Prix du jour",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 34,
+      "textLeft": 16,
+      "textRight": 34,
+      "fullBleed": false,
+      "footer": false,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     },
+     {
+      "sel": "section.flex.flex-col",
+      "tag": "section",
+      "top": 849,
+      "height": 487,
+      "words": 56,
+      "media": 0,
+      "middle": 0,
+      "heading": {
+       "text": "Comment ça marche",
+       "size": 24,
+       "tag": "h2"
+      },
+      "left": 16,
+      "right": 27,
+      "textLeft": 16,
+      "textRight": 27,
+      "fullBleed": false,
+      "footer": true,
+      "hero": false,
+      "continues": false,
+      "pinned": false
+     }
+    ],
+    "gaps": [],
+    "h1s": [
+     {
+      "text": "Transformez votre crédit en argent",
+      "size": 36,
+      "top": 105,
+      "firstScreen": true
+     }
+    ],
+    "edgeText": [],
+    "edges": [
+     {
+      "x": 16,
+      "n": 4
+     },
+     {
+      "x": 48,
+      "n": 1
+     }
+    ],
+    "leftBlocks": 5,
+    "bodySize": 16,
+    "stage": false,
+    "explains": true,
+    "slivers": [],
+    "voidShare": 0,
+    "voidBox": null
+   },
+   "app": null,
+   "consoleErrors": []
+  }
+ ],
+ "findings": [
+  {
+   "level": "FAIL",
+   "id": "shadow",
+   "width": 1440,
+   "message": "1 box-shadow(s) on elements at rest: a.relative.inline-flex → oklab(0.999994 0.0000455678 0.0000200868 / 0.2) 0px 1px 0px 0px inset, rgba(0, 0",
+   "fix": "Remove. Separate surfaces with a tone step or space. Shadows are for things that really float (menus, dialogs, sticky bars).",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "button-fx",
+   "width": 1440,
+   "message": "Buttons with shadow/glow.",
+   "fix": "Flat fill, one colour.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "hairline",
+   "width": 1440,
+   "message": "5 thin rule(s)/divider line(s): header.sticky.top-0 1440px | li 734px | li 734px | p.flex.items-start 736px",
+   "fix": "Delete. Separate with space, a tone change, or scale. Lines are only for real tables and form fields.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "outlined-box",
+   "width": 1440,
+   "message": "1 box(es) drawn with a 1px outline.",
+   "fix": "Prefer a filled surface or no box.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "contrast",
+   "width": 1440,
+   "message": "Low-contrast text: \"Vendre\" 2.6:1 needs 4.5:1; \"Vendre mon crédit\" 3.7:1 needs 4.5:1",
+   "fix": "Darken or lighten the text colour.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "WARN",
+   "id": "grey-body",
+   "width": 1440,
+   "message": "The running text is a soft grey on its ground (5.6:1).",
+   "fix": "Set body copy in the full ink (7:1 or more). Keep the muted ink for secondary notes; pages read thin and unfinished when everything is grey.",
+   "alsoAt": [
+    768,
+    390
+   ]
+  },
+  {
+   "level": "FAIL",
+   "id": "few-pictures",
+   "width": 1440,
+   "message": "Only 0 picture(s) on the page (0 photographs, footage or raster images, 0 interface fragments). Drawings in SVG do not count.",
+   "fix": "Find real pictures of the subject's world with scripts/assets.mjs (photographs, archival images, maps, engravings, footage), download them to assets/ and give them room: a hero picture, one per section that has a subject, a full-width band. At least four, usually six to twelve."
+  },
+  {
+   "level": "WARN",
+   "id": "no-footage",
+   "width": 1440,
+   "message": "No video anywhere on the page.",
+   "fix": "Look for one honest clip with scripts/assets.mjs --video (the place, the material, the process) and use it as a muted loop with a poster frame. Defend its absence only if no clip fits the subject."
+  },
+  {
+   "level": "FAIL",
+   "id": "focal-point",
+   "width": 1440,
+   "message": "The first screen has no dominant element: the largest type is 60px (4.2vw) and no single picture holds a third of the viewport.",
+   "fix": "Make one thing lead: the headline at display size, or one large picture. A grid of many small pictures is not one thing; in blind tests jurors marked a first screen without a headline down every time. On the strongest studied sites the largest type has a median of 8.4vw."
+  },
+  {
+   "level": "FAIL",
+   "id": "off-centre",
+   "width": 1440,
+   "message": "The page sits off-centre: its content comes to 260px from the left edge but only to 337px from the right, at 1440px.",
+   "fix": "Give the page one pair of equal margins. Check the wrapper for a max-width without margin-inline: auto, a grid with an empty last column, or padding on one side only. If one side is meant to hold air, it must still be closed by something that reaches the margin (a picture, the navigation's last item, a figure)."
+  },
+  {
+   "level": "FAIL",
+   "id": "still-page",
+   "width": 1440,
+   "message": "Only 1 element(s) moved while the page loaded and scrolled.",
+   "fix": "Build the motion layer (SKILL.md step 9, references/motion.md): the signature move, an entrance for the parts of every section, feedback on every control, and one moving picture. Transform and opacity only, with a reduced-motion fallback."
+  }
+ ],
+ "images": [
+  {
+   "viewport": "desktop",
+   "width": 1440,
+   "fold": "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\before\\desktop-fold.jpg",
+   "pages": [
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\before\\desktop-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "tablet",
+   "width": 768,
+   "fold": "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\before\\tablet-fold.jpg",
+   "pages": [
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\before\\tablet-page-01.jpg"
+   ],
+   "film": []
+  },
+  {
+   "viewport": "mobile",
+   "width": 390,
+   "fold": "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\before\\mobile-fold.jpg",
+   "pages": [
+    "C:\\Users\\INFOTEC\\.t3\\projects\\rechargemarketplace\\.taste-skill\\before\\mobile-page-01.jpg"
+   ],
+   "film": []
+  }
+ ]
+}

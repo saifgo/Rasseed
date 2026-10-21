@@ -36,7 +36,7 @@ function PairingInfo({ code, serverUrl }: { code: string; serverUrl: string }) {
       <AlertDescription className="flex flex-col gap-2">
         <span className="text-xs">
           Not installed yet? On the phone, open{" "}
-          <span className="select-all font-mono text-foreground">{serverUrl}/downloads/rasseed-agent.apk</span>
+          <span className="select-all font-mono text-foreground">{serverUrl}/downloads/sarfli-agent.apk</span>
         </span>
         <span>
           Server: <span className="select-all font-mono text-foreground">{serverUrl}</span>
