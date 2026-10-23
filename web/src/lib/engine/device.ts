@@ -143,6 +143,8 @@ export async function syncDevice(device: typeof devices.$inferSelect, input: Syn
   const simRows = due.length
     ? await db.select().from(sims).where(inArray(sims.id, due.map((c) => c.simId)))
     : [];
+  const opCodes = [...new Set(simRows.map((s) => s.operatorCode).filter((c): c is string => !!c))];
+  const opRows = opCodes.length ? await db.select().from(operators).where(inArray(operators.code, opCodes)) : [];
   const commands = due
     .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
     .map((c) => {
@@ -153,6 +155,8 @@ export async function syncDevice(device: typeof devices.$inferSelect, input: Syn
         ussd: c.ussdCode,
         subscriptionId: sim.subscriptionId,
         slotIndex: sim.slotIndex,
+        // Lets the phone tell whether a USSD page holds the balance or it must open the next page ("01").
+        balanceRegex: opRows.find((o) => o.code === sim.operatorCode)?.balanceRegex ?? null,
       };
     });
 

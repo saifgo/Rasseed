@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.telephony.SubscriptionManager
@@ -47,6 +48,10 @@ object Telephony {
     @SuppressLint("MissingPermission")
     fun runUssd(context: Context, subscriptionId: Int, code: String, timeoutSeconds: Long = 40): UssdResult {
         if (!hasPermissions(context)) return UssdResult(false, null, "missing_permission")
+        // sendUssdRequest exists from Android 8.0. On 7.x the caller falls back to the dialer popup.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            return UssdResult(false, null, "silent_ussd_needs_android_8")
+        }
         val tm = context.getSystemService(TelephonyManager::class.java)?.createForSubscriptionId(subscriptionId)
             ?: return UssdResult(false, null, "no_telephony")
         val latch = CountDownLatch(1)

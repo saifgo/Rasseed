@@ -88,11 +88,21 @@ class AgentService : Service() {
                 if (store.hasResult(cmd.id)) continue
                 val res = if (cmd.type == "ussd_balance") {
                     val silent = Telephony.runUssd(this, cmd.subscriptionId, cmd.ussd)
-                    // Interactive replies (menus, "Page suivante") make the silent API fail on many
-                    // phones: dial the code and read the popup instead.
-                    if (silent.ok || !UssdAccessibilityService.isEnabled(this)) silent
-                    else UssdAccessibilityService.run(this, cmd.subscriptionId, cmd.ussd).let {
-                        if (it.ok) it else it.copy(error = "${silent.error}; dialer: ${it.error}")
+                    // The silent API can't answer a menu, so if the balance is on a later page
+                    // ("01:Page suivante") the popup route is needed to type 01.
+                    val needsNextPage = silent.ok && UssdAccessibilityService.nextPageOption(
+                        silent.response.orEmpty(), silent.response.orEmpty(),
+                        UssdAccessibilityService.balancePattern(cmd.balanceRegex),
+                    ) != null
+                    // Interactive replies make the silent API fail on many phones: dial the code
+                    // and read the popup instead.
+                    if ((silent.ok && !needsNextPage) || !UssdAccessibilityService.isEnabled(this)) silent
+                    else UssdAccessibilityService.run(this, cmd.subscriptionId, cmd.ussd, cmd.balanceRegex).let {
+                        when {
+                            it.ok -> it
+                            silent.ok -> silent // keep the first page rather than nothing
+                            else -> it.copy(error = "${silent.error}; dialer: ${it.error}")
+                        }
                     }
                 } else {
                     Telephony.UssdResult(false, null, "unsupported_command")
@@ -130,8 +140,10 @@ class AgentService : Service() {
     }
 
     private fun startForegroundCompat() {
-        val nm = getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(NotificationChannel(CHANNEL, "Agent", NotificationManager.IMPORTANCE_LOW))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getSystemService(NotificationManager::class.java)
+                .createNotificationChannel(NotificationChannel(CHANNEL, "Agent", NotificationManager.IMPORTANCE_LOW))
+        }
         val n = buildNotification("Starting…")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
@@ -155,7 +167,13 @@ class AgentService : Service() {
         val open = PendingIntent.getActivity(
             this, 0, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE,
         )
-        return Notification.Builder(this, CHANNEL)
+        val builder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Notification.Builder(this, CHANNEL)
+        } else {
+            @Suppress("DEPRECATION")
+            Notification.Builder(this).setPriority(Notification.PRIORITY_LOW)
+        }
+        return builder
             .setContentTitle(getString(R.string.app_name))
             .setContentText(text)
             .setSmallIcon(R.drawable.ic_stat)

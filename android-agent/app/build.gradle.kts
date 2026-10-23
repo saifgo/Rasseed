@@ -9,11 +9,12 @@ android {
 
     defaultConfig {
         applicationId = "com.rasseed.agent"
-        // sendUssdRequest + per-subscription TelephonyManager need Android 8.0+
-        minSdk = 26
+        // Android 7.1 (SDK 25) and up. The silent USSD API needs 8.0+, so on 7.x balance
+        // checks always go through the accessibility dialer fallback.
+        minSdk = 25
         targetSdk = 36
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
     }
 
     buildTypes {

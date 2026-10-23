@@ -120,7 +120,7 @@ Configure its two SIMs in the admin, start a sale on the site, then type in the 
 
 ```bash
 pnpm test        # parsers & money (unit)
-pnpm test:e2e    # 13 end-to-end scenarios (sales, balance, withdrawals) against the running server + worker
+pnpm test:e2e    # 14 end-to-end scenarios (sales, balance, withdrawals) against the running server + worker
 ```
 
 ## Environment (`web/.env` for development; `.env` at the root for Docker)
@@ -141,7 +141,16 @@ Build: `cd android-agent && ./gradlew assembleRelease` → `app/build/outputs/ap
 (copy it to `web/public/downloads/sarfli-agent.apk` before `docker compose up --build` so phones can download it from `http://<server>:3100/downloads/sarfli-agent.apk`).
 The release APK is signed with the debug key for side-loading — use your own keystore for wider distribution.
 
-Per phone (Android 8+, dual-SIM supported — both SIMs join the pool):
+Per phone (Android 7.1+ / SDK 25+, dual-SIM supported — both SIMs join the pool).
+On Android 7.x the Accessibility step is required: balance checks can only be read from the dialer popup there.
+It is also needed when the balance isn't on the first USSD page (Orange `*101#` sometimes): if the operator's
+balance regex doesn't match yet and the menu shows `01:Page suivante`, the agent types `01`, sends it, and
+reports all pages joined together (up to 4 pages).
+
+**Quick setup from a Windows PC:** plug the phone in with USB debugging on and run `android-agent\setup-device.bat`.
+It installs the APK, grants permissions, enables the balance reader, disables battery optimisation, checks the SIM is
+registered, and on Sunmi terminals turns the phone & SMS function back on (`is_open_phone_sms`, without it every call/USSD
+is cancelled). Re-run it if a Sunmi terminal stops dialling after a reboot.
 1. Install the APK, open it, tap **Grant permissions** (SMS, phone) and **Allow running in background**.
    On Xiaomi/Huawei/Oppo also enable *Autostart* and set battery to *No restrictions* for the app.
 2. Admin → Numbers & phones → **Add phone** → type the server URL and the 6-digit code in the app.

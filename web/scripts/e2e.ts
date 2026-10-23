@@ -11,7 +11,7 @@ import { devices, settings, sims, transactions, users, withdrawals } from "@/db/
 import { applyCredit, configureSim, resolveReview } from "@/lib/engine/admin";
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
-import { choosePartial, createSale } from "@/lib/engine/sales";
+import { cancelSale, choosePartial, createSale } from "@/lib/engine/sales";
 import { adjustBalance, getBalance, markWithdrawalPaid, rejectWithdrawal, requestWithdrawal } from "@/lib/engine/wallet";
 import { saveSettings } from "@/lib/settings";
 import { PhoneSimulator } from "./phone-simulator";
@@ -57,6 +57,8 @@ async function main() {
   await saveSettings({ verifyRetrySeconds: 1, verifyMaxAttempts: 3, smsGraceSeconds: 5, pollIntervalSeconds: 3, cooldownSeconds: 1, minWithdrawalMillimes: 2000 });
 
   const [seller] = await db.insert(users).values({ email: `e2e-${run}@test.local`, name: "E2E Seller" }).returning();
+  // A second seller, for scenarios that need two sales running at once (one sale per seller).
+  const [seller2] = await db.insert(users).values({ email: `e2e-${run}-b@test.local`, name: "E2E Seller B" }).returning();
   const [device] = await db.insert(devices).values({ name: `E2E phone ${run}` }).returning();
   const phone = new PhoneSimulator(SERVER, [
     { slotIndex: 0, subscriptionId: 9000 + (run % 900), carrierName: "Ooredoo TN", balanceMillimes: 1500 },
@@ -73,8 +75,8 @@ async function main() {
   await sleep(1500);
 
   const d17 = { phone: "22123456", name: "Test Seller" };
-  const sale = (operatorCode: string, millimes: number, n: number) =>
-    createSale(seller.id, { operatorCode, amountMillimes: millimes, senderMsisdn: sender(n) });
+  const sale = (operatorCode: string, millimes: number, n: number, sellerId = seller.id) =>
+    createSale(sellerId, { operatorCode, amountMillimes: millimes, senderMsisdn: sender(n) });
   const balance = () => getBalance(db, seller.id);
 
   await scenario("full transfer confirmed by SMS + balance is credited to the seller's balance", async () => {
@@ -169,10 +171,21 @@ async function main() {
   await scenario("same sender cannot run two sales at once", async () => {
     await sleep(1200);
     const id = await sale("ooredoo", 1000, 6);
-    await assert.rejects(sale("orange", 1000, 6), (e: unknown) => e instanceof EngineError && e.code === "sender_busy");
+    await assert.rejects(sale("orange", 1000, 6, seller2.id), (e: unknown) => e instanceof EngineError && e.code === "sender_busy");
     await waitFor(id, ["awaiting_transfer"]);
     await phone.transfer(0, 1000, sender(6));
     await waitFor(id, ["confirmed"]);
+  });
+
+  await scenario("a seller with an ongoing sale must cancel or finish it first", async () => {
+    await sleep(1200);
+    const id = await sale("ooredoo", 1000, 14);
+    await assert.rejects(sale("orange", 1000, 15), (e: unknown) => e instanceof EngineError && e.code === "sale_in_progress");
+    await waitFor(id, ["awaiting_transfer"]);
+    await cancelSale(seller.id, id);
+    const next = await sale("orange", 1000, 15);
+    await waitFor(next, ["awaiting_transfer"]);
+    await cancelSale(seller.id, next);
   });
 
   await scenario("fake SMS (balance unchanged) goes to review, never confirmed", async () => {
@@ -234,7 +247,7 @@ async function main() {
     await sleep(1200);
     const a = await sale("ooredoo", 1000, 11);
     await waitFor(a, ["awaiting_transfer"]);
-    const b = await sale("ooredoo", 1000, 12);
+    const b = await sale("ooredoo", 1000, 12, seller2.id);
     assert.equal((await tx(b)).status, "queued");
     await phone.transfer(0, 1000, sender(11));
     await waitFor(a, ["confirmed"]);

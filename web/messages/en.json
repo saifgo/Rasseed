@@ -109,7 +109,10 @@
     "q3": "Which number will send the {operator} credit?",
     "q3Hint": "The phone number that has the credit. 8 digits.",
     "q4": "Check and start",
-    "fromNumber": "From the number"
+    "fromNumber": "From the number",
+    "ongoingTitle": "You have a sale in progress",
+    "ongoingText": "Finish it or cancel it before starting a new sale.",
+    "ongoingOpen": "Open my sale"
   },
   "sale": {
     "title": "Sale {ref}",
@@ -234,7 +237,8 @@
     "unknown": "Something went wrong. Please try again.",
     "below_minimum": "The amount is below the minimum withdrawal.",
     "insufficient_balance": "Your balance is not enough for this amount.",
-    "reason_required": "A reason is required."
+    "reason_required": "A reason is required.",
+    "sale_in_progress": "You already have a sale in progress. Cancel it or finish it before starting a new one."
   },
   "wallet": {
     "title": "My balance",

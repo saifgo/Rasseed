@@ -7,6 +7,7 @@ import { AutoRefresh } from "@/components/admin/auto-refresh";
 import { PageHeader } from "@/components/admin/page-header";
 import { TimeAgo } from "@/components/admin/time-ago";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardHeader, CardPanel, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,9 +19,10 @@ import { AddPhoneButton, DeviceActions, SimActions } from "./number-actions";
 
 export const metadata = { title: "Numbers & phones" };
 
-export default async function NumbersPage() {
+export default async function NumbersPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   await requireAdmin();
-  const [{ devices, operators }, onlineSince, settings, h] = await Promise.all([
+  const showDisabled = (await searchParams).tab === "disabled";
+  const [{ devices: allDevices, operators }, onlineSince, settings, h] = await Promise.all([
     listDevicesWithSims(),
     getOnlineSince(),
     getSettings(),
@@ -28,6 +30,8 @@ export default async function NumbersPage() {
   ]);
   const serverUrl = `${h.get("x-forwarded-proto") ?? "http"}://${h.get("host")}`;
   const opList = operators.map((o) => ({ code: o.code, name: o.name }));
+  const disabledCount = allDevices.filter((d) => !d.enabled).length;
+  const devices = allDevices.filter((d) => d.enabled !== showDisabled);
 
   return (
     <>
@@ -35,17 +39,33 @@ export default async function NumbersPage() {
       <PageHeader
         title="Numbers & phones"
         description="Each Android phone runs the agent app. Its SIMs appear here automatically; set the operator and number, then activate."
-        actions={<AddPhoneButton serverUrl={serverUrl} />}
+        actions={
+          <div className="flex flex-wrap items-center gap-1">
+            <Button size="sm" variant={showDisabled ? "ghost" : "secondary"} render={<Link href="/admin/numbers" />}>
+              Phones
+            </Button>
+            <Button size="sm" variant={showDisabled ? "secondary" : "ghost"} render={<Link href="/admin/numbers?tab=disabled" />}>
+              Disabled{disabledCount > 0 && ` (${disabledCount})`}
+            </Button>
+            <AddPhoneButton serverUrl={serverUrl} />
+          </div>
+        }
       />
 
-      {devices.length === 0 && (
+      {devices.length === 0 && showDisabled && <div className="rounded-xl border p-10 text-center text-muted-foreground text-sm">No disabled phones.</div>}
+
+      {devices.length === 0 && !showDisabled && (
         <Empty className="rounded-xl border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <SmartphoneIcon aria-hidden="true" />
             </EmptyMedia>
-            <EmptyTitle>No phone yet</EmptyTitle>
-            <EmptyDescription>Add a phone, then type the pairing code in the agent app on it.</EmptyDescription>
+            <EmptyTitle>{disabledCount > 0 ? "No active phone" : "No phone yet"}</EmptyTitle>
+            <EmptyDescription>
+              {disabledCount > 0
+                ? "All phones are disabled. Re-enable one from the Disabled tab, or add a new phone."
+                : "Add a phone, then type the pairing code in the agent app on it."}
+            </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
             <AddPhoneButton serverUrl={serverUrl} />

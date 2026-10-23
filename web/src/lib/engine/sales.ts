@@ -34,6 +34,16 @@ export async function createSale(userId: string, input: CreateSaleInput) {
   if (grossPayout(input.amountMillimes, op.rateBps) <= 0) throw new EngineError("invalid_amount");
 
   const txId = await db.transaction(async (t) => {
+    // One ongoing sale per seller: they must cancel or finish it before starting another.
+    // Lock order (user, then sender) is fixed so concurrent requests cannot deadlock.
+    await t.execute(sql`select pg_advisory_xact_lock(hashtext(${"user-sale:" + userId}))`);
+    const ongoing = await t
+      .select({ id: transactions.id })
+      .from(transactions)
+      .where(and(eq(transactions.userId, userId), inArray(transactions.status, ACTIVE_TX_STATUSES)))
+      .limit(1);
+    if (ongoing.length > 0) throw new EngineError("sale_in_progress");
+
     // Serialize sales per sender number so two sales can never wait on the same sender at once:
     // the sender number is what ties an operator SMS to a sale.
     await t.execute(sql`select pg_advisory_xact_lock(hashtext(${"sender:" + sender}))`);

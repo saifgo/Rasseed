@@ -1,7 +1,8 @@
 import "server-only";
-import { and, asc, count, desc, eq, lt } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, lt } from "drizzle-orm";
 import { db } from "@/db";
 import {
+  ACTIVE_TX_STATUSES,
   operators,
   payoutMethods,
   payouts,
@@ -120,4 +121,16 @@ export async function listUserSales(userId: string) {
     .where(eq(transactions.userId, userId))
     .orderBy(desc(transactions.createdAt))
     .limit(100);
+}
+
+/** The seller's ongoing sale, if any. Only one may be active at a time. */
+export async function getOngoingSale(userId: string) {
+  const [row] = await db
+    .select({ tx: transactions, op: operators })
+    .from(transactions)
+    .innerJoin(operators, eq(operators.code, transactions.operatorCode))
+    .where(and(eq(transactions.userId, userId), inArray(transactions.status, ACTIVE_TX_STATUSES)))
+    .orderBy(desc(transactions.createdAt))
+    .limit(1);
+  return row ?? null;
 }

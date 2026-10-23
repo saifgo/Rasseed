@@ -63,7 +63,8 @@ class MainActivity : Activity() {
             startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
         })
         root.addView(TextView(this).apply {
-            text = "Needed when the operator's balance code shows a popup/menu (e.g. Orange *101#). " +
+            text = (if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) "REQUIRED on this phone (Android 7): balance checks only work with it. " else "") +
+                "Needed when the operator's balance code shows a popup/menu (e.g. Orange *101#). " +
                 "If Android says the setting is restricted: App info → ⋮ → Allow restricted settings, then try again. " +
                 "Also: no screen lock PIN, and keep the phone charging."
             textSize = 12f

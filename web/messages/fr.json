@@ -109,7 +109,10 @@
     "q3": "Quel numéro va envoyer le crédit {operator} ?",
     "q3Hint": "Le numéro qui a le crédit. 8 chiffres.",
     "q4": "Vérifiez et commencez",
-    "fromNumber": "Depuis le numéro"
+    "fromNumber": "Depuis le numéro",
+    "ongoingTitle": "Vous avez une vente en cours",
+    "ongoingText": "Terminez-la ou annulez-la avant de commencer une nouvelle vente.",
+    "ongoingOpen": "Ouvrir ma vente"
   },
   "sale": {
     "title": "Vente {ref}",
@@ -234,7 +237,8 @@
     "unknown": "Une erreur est survenue. Veuillez réessayer.",
     "below_minimum": "Le montant est inférieur au retrait minimum.",
     "insufficient_balance": "Votre solde est insuffisant pour ce montant.",
-    "reason_required": "Un motif est obligatoire."
+    "reason_required": "Un motif est obligatoire.",
+    "sale_in_progress": "Vous avez déjà une vente en cours. Annulez-la ou terminez-la avant d'en commencer une nouvelle."
   },
   "wallet": {
     "title": "Mon solde",

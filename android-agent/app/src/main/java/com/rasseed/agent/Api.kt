@@ -8,7 +8,15 @@ import java.net.URL
 
 class ApiException(val status: Int, message: String) : IOException(message)
 
-data class Command(val id: String, val type: String, val ussd: String, val subscriptionId: Int, val slotIndex: Int)
+data class Command(
+    val id: String,
+    val type: String,
+    val ussd: String,
+    val subscriptionId: Int,
+    val slotIndex: Int,
+    /** Operator's balance pattern; null on older servers. */
+    val balanceRegex: String? = null,
+)
 
 /** Minimal JSON-over-HTTP client for the server's /api/device endpoints. */
 class Api(private val baseUrl: String, private val token: String?) {
@@ -51,7 +59,10 @@ class Api(private val baseUrl: String, private val token: String?) {
         val arr = post("/api/device/sync", body).optJSONArray("commands") ?: JSONArray()
         return (0 until arr.length()).map {
             val c = arr.getJSONObject(it)
-            Command(c.getString("id"), c.getString("type"), c.getString("ussd"), c.getInt("subscriptionId"), c.getInt("slotIndex"))
+            Command(
+                c.getString("id"), c.getString("type"), c.getString("ussd"), c.getInt("subscriptionId"), c.getInt("slotIndex"),
+                if (c.isNull("balanceRegex")) null else c.optString("balanceRegex").ifEmpty { null },
+            )
         }
     }
 
