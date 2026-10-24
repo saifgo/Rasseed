@@ -7,6 +7,7 @@ import { LandingMotion } from "@/components/landing/landing-motion";
 import { NUMBER_MASK } from "@/components/landing/number-mask";
 import { RateTicket, type TicketOperator } from "@/components/landing/rate-ticket";
 import { OperatorLogo } from "@/components/app/operator-badge";
+import { InstallLink } from "@/components/pwa/install-button";
 import { brand } from "@/config/brand";
 import { formatDt, grossPayout } from "@/lib/money";
 import { listOperators, listPayoutMethods } from "@/lib/queries";
@@ -142,9 +143,12 @@ export default async function HomePage() {
           </div>
           <div className="lp-hero__foot">
             <p className="lp-hero__sub">{t("hero.sub")}</p>
-            <Link href={sellHref} className="lp-btn lp-btn--paper lp-hero__cta">
-              {t("nav.sell")}
-            </Link>
+            <div className="lp-hero__actions">
+              <Link href={sellHref} className="lp-btn lp-btn--paper lp-hero__cta">
+                {t("nav.sell")}
+              </Link>
+              <InstallLink className="lp-link lp-hero__install" />
+            </div>
           </div>
         </section>
 

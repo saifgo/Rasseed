@@ -5,6 +5,7 @@ import { LocaleSwitcher } from "@/components/app/locale-switcher";
 import { Logo } from "@/components/app/logo";
 import { SellerBottomNav, SellerTopNav } from "@/components/app/seller-nav";
 import { UserMenu } from "@/components/app/user-menu";
+import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { getCurrentUser, isStaff } from "@/lib/session";
@@ -27,6 +28,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           </Link>
           {user && <SellerTopNav />}
           <div className="ms-auto flex items-center gap-1">
+            <InstallButton />
             <LocaleSwitcher />
             {user ? (
               <UserMenu
