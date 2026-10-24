@@ -1,8 +1,14 @@
 import "dotenv/config";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "./index";
 import { operators, payoutMethods } from "./schema";
-import { DEFAULT_BALANCE_REGEX, DEFAULT_CREDIT_SMS_REGEX, ORANGE_BALANCE_REGEX } from "@/lib/parsers";
+import {
+  DEFAULT_BALANCE_REGEX,
+  DEFAULT_CREDIT_SMS_REGEX,
+  DEFAULT_CREDIT_SMS_REGEX_V1,
+  ORANGE_BALANCE_REGEX,
+  ORANGE_BALANCE_REGEX_V1,
+} from "@/lib/parsers";
 
 // Idempotent: inserts defaults, never overwrites what the admin has changed.
 async function main() {
@@ -46,12 +52,24 @@ async function main() {
     ])
     .onConflictDoNothing();
 
-  // Existing installs: replace Orange's generic balance regex (it would read the 30 DT "forfait")
-  // with the real *101# format, unless the admin already customised it.
+  // Existing installs: upgrade Orange from an older default (the generic one would read the 30 DT
+  // "forfait"; V1 misses the "Votre solde est de" format), unless the admin customised it.
   await db
     .update(operators)
     .set({ balanceRegex: ORANGE_BALANCE_REGEX, balanceUnit: "dinars" })
-    .where(and(eq(operators.code, "orange"), eq(operators.balanceRegex, DEFAULT_BALANCE_REGEX)));
+    .where(
+      and(
+        eq(operators.code, "orange"),
+        inArray(operators.balanceRegex, [DEFAULT_BALANCE_REGEX, ORANGE_BALANCE_REGEX_V1]),
+      ),
+    );
+
+  // Existing installs: the old credit SMS default only knew the "Millimes ... du numéro" format,
+  // so Ooredoo's "1 DT de la part de 216..." SMS was ignored. Upgrade unless customised.
+  await db
+    .update(operators)
+    .set({ creditSmsRegex: DEFAULT_CREDIT_SMS_REGEX })
+    .where(eq(operators.creditSmsRegex, DEFAULT_CREDIT_SMS_REGEX_V1));
 
   const phone = (en: string, fr: string, ar: string) => ({ en, fr, ar });
   await db

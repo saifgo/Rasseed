@@ -23,6 +23,24 @@ describe("parseCreditSms", () => {
     expect(r).toEqual({ kind: "credit", credit: { amountMillimes: 25000, senderMsisdn: "23249201" } });
   });
 
+  it("parses the Ooredoo DT format with a 216 prefix", () => {
+    const sms =
+      "Vous avez recu 1 DT de la part de  21623321145.Nouveau: Avec Mobicash rechargez a tout moment votre ligne avec votre carte bancaire sans vous deplacer *122#";
+    expect(parseCreditSms(sms, "Ooredoo", cfg)).toEqual({
+      kind: "credit",
+      credit: { amountMillimes: 1000, senderMsisdn: "23321145" },
+    });
+  });
+
+  it("reads decimal dinars and an 8-digit sender", () => {
+    const r = parseCreditSms("Vous avez recu 2.500 DT de la part de 23321145.", "Ooredoo", cfg);
+    expect(r).toEqual({ kind: "credit", credit: { amountMillimes: 2500, senderMsisdn: "23321145" } });
+  });
+
+  it("rejects a sender with too many digits", () => {
+    expect(parseCreditSms("Vous avez recu 1 DT de la part de 233211451.", "Ooredoo", cfg).kind).toBe("ignored");
+  });
+
   it("ignores unrelated messages", () => {
     expect(parseCreditSms("Bonus 500 Millimes offert", "Ooredoo", cfg).kind).toBe("ignored");
   });
@@ -50,6 +68,15 @@ describe("Orange *101# reply", () => {
   it("adds the transfer bucket", () =>
     expect(parseBalance(reply.replace("transfert est de 0 DT", "transfert est de 5.5 DT"), orange)).toBe(183625));
   it("rejects other replies", () => expect(parseBalance("Votre solde est 12 DT", orange)).toBeNull());
+  it("reads the 'Votre solde est de' format and ignores the bonus", () =>
+    expect(
+      parseBalance(
+        "Choix invalide Votre solde est de 7.163 dt valable jusqu'au 21/01/2027.Votre bonus sur recharge tout operateur est 0 dt valable jusqu'au --. Suivi bonus *101*2# 01:Page suivante 1:Activez ?Navigui 100Mo 0,5dt (1j) 02:Page précédente",
+        orange,
+      ),
+    ).toBe(7163));
+  it("reads format a when it is on a later page", () =>
+    expect(parseBalance("Offres du moment\n01:Page suivante\n" + reply, orange)).toBe(178125));
 });
 
 describe("money", () => {
