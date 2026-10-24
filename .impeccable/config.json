@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "promo/fb-post.html"
+        ],
+        "createdAt": "2026-10-24T15:58:07.285Z",
+        "reason": "agent: static check misses the dark green gradient background; rendered text is white/yellow on ~#075045, well above 4.5:1"
+      }
+    ]
+  }
+}

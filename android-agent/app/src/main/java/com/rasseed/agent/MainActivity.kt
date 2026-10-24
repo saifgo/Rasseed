@@ -169,7 +169,12 @@ class MainActivity : Activity() {
         status.text = buildString {
             appendLine("Permissions:   ${if (Telephony.hasPermissions(this@MainActivity)) "OK" else "MISSING"}")
             appendLine("Battery opt.:  ${if (pm.isIgnoringBatteryOptimizations(packageName)) "disabled (good)" else "ON — tap step 2"}")
-            appendLine("Accessibility: ${if (UssdAccessibilityService.isEnabled(this@MainActivity)) "ON (good)" else "OFF — tap step 3"}")
+            val access = when {
+                !UssdAccessibilityService.isEnabled(this@MainActivity) -> "OFF — tap step 3"
+                !UssdAccessibilityService.isRunning() -> "ON but NOT RUNNING — tap step 3, turn it off then on again"
+                else -> "ON (good)"
+            }
+            appendLine("Accessibility: $access")
             appendLine("Paired:        ${if (prefs.paired) "yes (${prefs.deviceName})" else "no"}")
             appendLine("Server:        ${prefs.serverUrl}")
             appendLine("Last sync:     ${if (prefs.lastSyncAt > 0) DateFormat.getTimeInstance().format(Date(prefs.lastSyncAt)) else "never"}")

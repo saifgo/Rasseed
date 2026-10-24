@@ -145,6 +145,19 @@ class UssdAccessibilityService : AccessibilityService() {
             return NEXT_PAGE.find(lastPage)?.groupValues?.get(1)
         }
 
+        /** True when the service is actually connected, not just switched on in Settings. */
+        fun isRunning() = instance != null
+
+        /**
+         * The connected service, waiting briefly in case Android is still (re)binding it. Null when the
+         * toggle is on but the service never connected (typical after an app update or a battery kill).
+         */
+        private fun awaitInstance(waitMs: Long = 5000): UssdAccessibilityService? {
+            val deadline = System.currentTimeMillis() + waitMs
+            while (instance == null && System.currentTimeMillis() < deadline) Thread.sleep(250)
+            return instance
+        }
+
         fun isEnabled(context: Context): Boolean {
             val enabled = Settings.Secure.getString(context.contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES) ?: return false
             return enabled.split(':').any { it.startsWith(context.packageName + "/") }
@@ -159,7 +172,8 @@ class UssdAccessibilityService : AccessibilityService() {
             balanceRegex: String? = null,
             timeoutSeconds: Long = 60,
         ): Telephony.UssdResult {
-            val service = instance ?: return Telephony.UssdResult(false, null, "accessibility_disabled")
+            val service = awaitInstance()
+                ?: return Telephony.UssdResult(false, null, "accessibility_not_running")
             val handle = phoneAccountFor(context, subscriptionId)
                 ?: return Telephony.UssdResult(false, null, "no_phone_account_for_sim")
             val capture = Capture(balancePattern(balanceRegex))

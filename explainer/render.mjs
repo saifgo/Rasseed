@@ -2,13 +2,17 @@
 // Usage: node render.mjs            -> full video to out/sarfli-explainer.mp4
 //        node render.mjs --stills   -> one PNG per scene (plus a few mid-scene shots) into out/stills/
 import { chromium } from "playwright-core";
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+// --dir <folder>: render another video from that folder (its index.html, durations.json, audio/)
+const dirArg = process.argv.indexOf("--dir");
+const HERE = dirArg > 0 ? path.resolve(ROOT, process.argv[dirArg + 1]) : ROOT;
+const outName = dirArg > 0 ? path.basename(HERE) + ".mp4" : "sarfli-explainer.mp4";
 const FPS = 30;
 const stills = process.argv.includes("--stills");
 const scenes = JSON.parse(fs.readFileSync(path.join(HERE, "durations.json"), "utf8"));
@@ -42,25 +46,29 @@ if (stills) {
   }
   console.log("stills written to", dir);
 } else {
-  const frames = path.join(HERE, "frames");
-  fs.rmSync(frames, { recursive: true, force: true });
-  fs.mkdirSync(frames, { recursive: true });
+  // Frames are piped straight into ffmpeg, so no frame images are written to disk.
+  // --out <file.mp4>: write the video somewhere else (e.g. another drive)
+  const outArg = process.argv.indexOf("--out");
+  const out = outArg > 0 ? path.resolve(process.argv[outArg + 1]) : path.join(HERE, "out", outName);
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  const ff = spawn(ffmpeg, [
+    "-y", "-loglevel", "error",
+    "-f", "image2pipe", "-framerate", String(FPS), "-c:v", "mjpeg", "-i", "-",
+    "-i", path.join(HERE, "audio", "master.wav"),
+    "-c:v", "libx264", "-preset", "veryfast", "-crf", "20", "-threads", "2", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+    "-c:a", "aac", "-b:a", "192k", "-shortest", out,
+  ], { stdio: ["pipe", "inherit", "inherit"] });
+  const done = new Promise((res, rej) => ff.on("close", (c) => (c === 0 ? res() : rej(new Error("ffmpeg failed")))));
   const n = Math.ceil(totalSec * FPS);
   const t0 = Date.now();
   for (let i = 0; i < n; i++) {
-    await shot((i / FPS) * 1000, path.join(frames, `f${String(i).padStart(5, "0")}.jpg`));
+    await page.evaluate((t) => window.render(t), (i / FPS) * 1000);
+    const { data } = await cdp.send("Page.captureScreenshot", { format: "jpeg", quality: 93, captureBeyondViewport: false });
+    if (!ff.stdin.write(Buffer.from(data, "base64"))) await new Promise((r) => ff.stdin.once("drain", r));
     if (i % 300 === 0) console.log(`frame ${i}/${n}  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
   }
-  fs.mkdirSync(path.join(HERE, "out"), { recursive: true });
-  const out = path.join(HERE, "out", "sarfli-explainer.mp4");
-  const r = spawnSync(ffmpeg, [
-    "-y", "-loglevel", "error", "-stats",
-    "-framerate", String(FPS), "-i", path.join(frames, "f%05d.jpg"),
-    "-i", path.join(HERE, "audio", "master.wav"),
-    "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-    "-c:a", "aac", "-b:a", "192k", "-shortest", out,
-  ], { stdio: "inherit" });
-  if (r.status !== 0) throw new Error("ffmpeg failed");
+  ff.stdin.end();
+  await done;
   console.log("video written to", out, `(${(fs.statSync(out).size / 1e6).toFixed(1)} MB, ${totalSec.toFixed(1)}s)`);
 }
 await browser.close();

@@ -2,10 +2,18 @@
 import asyncio, json, os, subprocess, sys, wave
 import imageio_ffmpeg
 
-HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(os.path.abspath(__file__))
+args = sys.argv[1:]
+# --dir <folder>: build another video from that folder's narration.json (default: this folder)
+HERE = ROOT
+if "--dir" in args:
+    i = args.index("--dir")
+    HERE = os.path.abspath(os.path.join(ROOT, args[i + 1]))
+    del args[i:i + 2]
 AUDIO = os.path.join(HERE, "audio")
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
-VOICE = sys.argv[1] if len(sys.argv) > 1 else "en-US-AndrewNeural"
+VOICE = args[0] if args else "en-US-AndrewNeural"
+RATE = args[1] if len(args) > 1 else "+0%"
 PAD_BEFORE = 0.6   # seconds of silence before narration in each scene
 PAD_AFTER = 1.0    # seconds of silence after narration
 MIN_SCENE = 4.0
@@ -18,7 +26,7 @@ async def synth(scene):
     mp3 = os.path.join(AUDIO, f"{scene['id']}.mp3")
     wav = os.path.join(AUDIO, f"{scene['id']}.wav")
     for attempt in range(4):
-        r = subprocess.run([sys.executable, "-m", "edge_tts", "--voice", VOICE, "--text", scene["text"],
+        r = subprocess.run([sys.executable, "-m", "edge_tts", "--voice", VOICE, f"--rate={RATE}", "--text", scene["text"],
                             "--write-media", mp3], capture_output=True, text=True)
         if r.returncode == 0 and os.path.exists(mp3) and os.path.getsize(mp3) > 1000:
             break
