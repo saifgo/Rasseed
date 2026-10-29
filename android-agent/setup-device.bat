@@ -7,7 +7,8 @@ rem    1. turns ON the Sunmi "phone & SMS" switch (without it calls/USSD are can
 rem    2. installs / updates the agent APK (if found)
 rem    3. grants SMS + phone permissions
 rem    4. enables the USSD balance reader (accessibility service)
-rem    5. exempts the agent from battery optimisation
+rem    5. bot mode: never sleeps, screen on while charging, no lock screen,
+rem       no doze / battery saver, agent never put to sleep or killed
 rem    6. checks the SIM is registered on the network, optional USSD test
 rem
 rem  Usage:  setup-device.bat              (one device connected)
@@ -133,12 +134,56 @@ if errorlevel 1 (
     echo       enabled
 )
 
-rem ------------------------------------------------------------- 5. battery
-echo [5/6] Background running
+rem ------------------------------------------------------- 5. bot mode
+echo [5/6] Bot mode ^(never sleep, agent never killed^)
+rem battery: no doze, no app standby, no battery saver
 %A% shell dumpsys deviceidle whitelist +%PKG% >nul 2>&1
+%A% shell dumpsys deviceidle disable >nul 2>&1
 %A% shell cmd appops set %PKG% RUN_IN_BACKGROUND allow >nul 2>&1
-echo       battery optimisation disabled for the agent
+%A% shell cmd appops set %PKG% RUN_ANY_IN_BACKGROUND allow >nul 2>&1
+if %SDK% GEQ 28 %A% shell am set-standby-bucket %PKG% active >nul 2>&1
+%A% shell settings put global app_standby_enabled 0 >nul 2>&1
+%A% shell settings put global adaptive_battery_management_enabled 0 >nul 2>&1
+%A% shell settings put global low_power 0 >nul 2>&1
+%A% shell settings put global low_power_sticky 0 >nul 2>&1
+echo       battery optimisation, doze and app standby off
+rem screen: always on while charging (AC+USB+wireless), never times out, dimmed
+%A% shell settings put global stay_on_while_plugged_in 7
+%A% shell settings put system screen_off_timeout 2147483647
+%A% shell settings put system screen_brightness_mode 0
+%A% shell settings put system screen_brightness 15
+echo       screen stays on while charging ^(dimmed^)
+rem Wi-Fi never sleeps, no surprise system updates / reboots
+%A% shell settings put global wifi_sleep_policy 2 >nul 2>&1
+%A% shell settings put global ota_disable_automatic_update 1 >nul 2>&1
+rem animations off: USSD popups open and close faster for the reader
+%A% shell settings put global window_animation_scale 0
+%A% shell settings put global transition_animation_scale 0
+%A% shell settings put global animator_duration_scale 0
+echo       Wi-Fi always on, auto system updates off, animations off
+rem lock screen: removed, so the agent works after a reboot without anyone unlocking
+%A% shell locksettings set-disable true >nul 2>&1
+call :shellvar "locksettings get-disabled" LOCKOFF
+if /i "%LOCKOFF%"=="true" (
+    echo       lock screen disabled
+) else (
+    echo [WARN] Lock screen still on - the phone probably has a PIN/pattern.
+    echo     Remove it on the device: Settings ^> Security ^> Screen lock ^> None, then run this again.
+)
+%A% shell input keyevent KEYCODE_WAKEUP >nul 2>&1
+%A% shell wm dismiss-keyguard >nul 2>&1
 %A% shell am start -n %PKG%/.MainActivity >nul 2>&1
+rem brand battery killers cannot be changed over adb
+set "KILLER="
+for %%m in (xiaomi redmi poco huawei honor oppo realme vivo oneplus samsung) do (
+    echo %MAKER% | findstr /i /c:"%%m" >nul && set "KILLER=1"
+)
+if defined KILLER (
+    echo [TODO] %MAKER% phones also kill apps on their own. On the device:
+    echo     - Settings ^> Apps ^> Sarfli Agent ^> Battery: "Unrestricted" / "No restrictions"
+    echo     - turn ON "Autostart" / "Auto-launch" for Sarfli Agent if the option exists
+    echo     - in Recent apps, lock the Sarfli Agent card ^(padlock^) so "clear all" skips it
+)
 
 rem ------------------------------------------------------ 6. SIM and network
 echo [6/6] SIM and network
@@ -169,8 +214,8 @@ echo.
 echo ===========================================================================
 echo  Done. Next, in the Sarfli Agent app on the device:
 echo    - pair it: Admin ^> Numbers ^& phones ^> Add phone ^(server URL + 6-digit code^)
-echo    - keep it charging, on Wi-Fi.
-echo  On Sunmi devices, if calls stop working after a reboot, run this file again.
+echo    - keep it charging, on Wi-Fi. The screen stays on only while charging.
+echo  After a reboot, run this file again ^(doze and the Sunmi switch can reset^).
 echo ===========================================================================
 pause
 exit /b 0
@@ -185,6 +230,12 @@ rem :prop NAME VAR  -> reads a system property into VAR
 :prop
 set "%2="
 for /f "usebackq delims=" %%v in (`%A% shell getprop %1`) do set "%2=%%v"
+exit /b 0
+
+rem :shellvar "COMMAND" VAR  -> first line of a device shell command into VAR
+:shellvar
+set "%2="
+for /f "usebackq delims=" %%v in (`%A% shell %~1`) do if not defined %2 set "%2=%%v"
 exit /b 0
 
 rem :setting NAMESPACE KEY VAR

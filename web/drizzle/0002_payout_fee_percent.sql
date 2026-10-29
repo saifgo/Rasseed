@@ -1,0 +1,1 @@
+ALTER TABLE "payout_methods" ADD COLUMN "fee_bps" integer DEFAULT 0 NOT NULL;

@@ -59,7 +59,7 @@ export default async function WalletPage() {
       <WithdrawForm
         balanceMillimes={balance}
         minMillimes={settings.minWithdrawalMillimes}
-        methods={methods.map((m) => ({ code: m.code, name: m.name, feeMillimes: m.feeMillimes, fields: m.fields }))}
+        methods={methods.map((m) => ({ code: m.code, name: m.name, feeMillimes: m.feeMillimes, feeBps: m.feeBps, fields: m.fields }))}
         saved={saved}
       />
 

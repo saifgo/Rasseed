@@ -8,6 +8,7 @@ const messages: Record<string, string> = {
   forbidden: "You are not allowed to do this.",
   invalid_amount: "Enter a valid amount.",
   invalid_rate: "Enter a rate between 0 and 1 (e.g. 0.82) or a percentage (82%).",
+  invalid_fee_percent: "Enter a percentage above 0 and below 100, up to 2 decimals (e.g. 2.5).",
   invalid_state: "This item changed meanwhile — refresh and try again.",
   not_found: "Not found.",
   payout_already_paid: "This payout is already marked as paid.",

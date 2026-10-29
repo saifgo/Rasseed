@@ -7,7 +7,7 @@ import "dotenv/config";
 import assert from "node:assert/strict";
 import { and, eq, inArray, like } from "drizzle-orm";
 import { db } from "@/db";
-import { devices, settings, sims, transactions, users, withdrawals } from "@/db/schema";
+import { devices, payoutMethods, settings, sims, transactions, users, withdrawals } from "@/db/schema";
 import { applyCredit, configureSim, resolveReview } from "@/lib/engine/admin";
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
@@ -134,6 +134,23 @@ async function main() {
     assert.equal(await balance(), before - 1500);
     await assert.rejects(adjustBalance(seller.id, seller.id, -(before + 10_000), "oops"), (e: unknown) => e instanceof EngineError && e.code === "insufficient_balance");
     await assert.rejects(adjustBalance(seller.id, seller.id, 100, "  "), (e: unknown) => e instanceof EngineError && e.code === "reason_required");
+  });
+
+  await scenario("withdrawal: percentage fee is taken from the amount withdrawn, rounded down", async () => {
+    const [d17Method] = await db.select().from(payoutMethods).where(eq(payoutMethods.code, "d17"));
+    await db.update(payoutMethods).set({ feeMillimes: 0, feeBps: 250 }).where(eq(payoutMethods.code, "d17"));
+    try {
+      const before = await balance();
+      // 2.5% of 2.345 DT = 58.625 millimes → 58 fee, 2287 sent.
+      const wid = await requestWithdrawal(seller.id, { amountMillimes: 2345, methodCode: "d17", details: d17 });
+      const [w] = await db.select().from(withdrawals).where(eq(withdrawals.id, wid));
+      assert.equal(w.feeMillimes, 58);
+      assert.equal(w.netMillimes, 2287);
+      assert.equal(await balance(), before - 2345);
+      await rejectWithdrawal(seller.id, wid, "test cleanup");
+    } finally {
+      await db.update(payoutMethods).set({ feeMillimes: d17Method.feeMillimes, feeBps: d17Method.feeBps }).where(eq(payoutMethods.code, "d17"));
+    }
   });
 
   await scenario("partial transfer → seller accepts the received amount", async () => {

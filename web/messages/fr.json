@@ -75,6 +75,7 @@
     "senderHint": "8 chiffres. Il nous permet de reconnaître votre transfert.",
     "payoutMethod": "Comment voulez-vous être payé ?",
     "fee": "Frais : {amount} DT",
+    "feePercent": "Frais : {percent}",
     "noFee": "Sans frais",
     "summary": "Récapitulatif",
     "youSend": "Crédit envoyé",
@@ -358,6 +359,7 @@
       "operator": "{amount} DT pour 10 DT de crédit",
       "free": "Sans frais",
       "fee": "{amount} DT de frais par retrait",
+      "feePercent": "{percent} de frais par retrait",
       "cash": "Payé en dinars tunisiens",
       "posteAlt": "File d’attente à un guichet de La Poste à Sayada",
       "coinsAlt": "Pièces de dinar tunisien sur un tissu rouge"
@@ -379,7 +381,8 @@
       "a6": "Le SMS de l’opérateur indique le numéro qui a envoyé le crédit. On le relie à votre vente, donc seul votre crédit compte.",
       "or": "ou",
       "free": "{method} (sans frais)",
-      "fee": "{method} ({amount} DT de frais)"
+      "fee": "{method} ({amount} DT de frais)",
+      "feePercent": "{method} ({percent} de frais)"
     },
     "footer": {
       "pictures": "Photos",

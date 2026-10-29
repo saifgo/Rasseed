@@ -16,7 +16,7 @@ import {
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
 import { adjustBalance, attachWithdrawalProof, markWithdrawalPaid, rejectWithdrawal } from "@/lib/engine/wallet";
-import { parseDinars, parseRate } from "@/lib/money";
+import { parseDinars, parsePercent, parseRate } from "@/lib/money";
 import { parseBalance, parseCreditSms } from "@/lib/parsers";
 import { getCurrentUser, isAdmin, isStaff, type CurrentUser } from "@/lib/session";
 import { saveSettings, type AppSettings } from "@/lib/settings";
@@ -274,11 +274,22 @@ export async function saveSettingsAction(values: Partial<AppSettings>) {
   });
 }
 
-export async function updatePayoutMethodAction(code: string, values: { active: boolean; fee: string }) {
+export async function updatePayoutMethodAction(
+  code: string,
+  values: { active: boolean; feeType: "fixed" | "percent"; fee: string },
+) {
   return admin(async () => {
-    const fee = values.fee.trim() === "" ? 0 : parseDinars(values.fee);
-    if (fee == null) throw new EngineError("invalid_amount");
-    await db.update(payoutMethods).set({ active: values.active, feeMillimes: fee }).where(eq(payoutMethods.code, code));
+    // Fixed and percentage fees are exclusive: saving one clears the other.
+    const empty = values.fee.trim() === "" || Number(values.fee.trim().replace(",", ".").replace(/\s*%$/, "")) === 0;
+    let feeMillimes = 0;
+    let feeBps = 0;
+    if (!empty) {
+      const parsed = values.feeType === "percent" ? parsePercent(values.fee) : parseDinars(values.fee);
+      if (parsed == null) throw new EngineError(values.feeType === "percent" ? "invalid_fee_percent" : "invalid_amount");
+      if (values.feeType === "percent") feeBps = parsed;
+      else feeMillimes = parsed;
+    }
+    await db.update(payoutMethods).set({ active: values.active, feeMillimes, feeBps }).where(eq(payoutMethods.code, code));
     return null;
   });
 }

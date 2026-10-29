@@ -32,11 +32,16 @@ export async function getAdminCounts() {
     db
       .select({ n: count() })
       .from(sims)
+      .innerJoin(devices, eq(devices.id, sims.deviceId))
       .where(
-        or(
-          eq(sims.status, "unconfigured"),
-          and(eq(sims.status, "active"), or(sql`${sims.lastReportedAt} is null`, lte(sims.lastReportedAt, onlineSince))),
-          and(eq(sims.status, "active"), gte(sims.consecutiveFailures, settings.maxSimFailures)),
+        and(
+          // SIMs in a disabled phone don't need attention.
+          eq(devices.enabled, true),
+          or(
+            eq(sims.status, "unconfigured"),
+            and(eq(sims.status, "active"), or(sql`${sims.lastReportedAt} is null`, lte(sims.lastReportedAt, onlineSince))),
+            and(eq(sims.status, "active"), gte(sims.consecutiveFailures, settings.maxSimFailures)),
+          ),
         ),
       ),
   ]);

@@ -14,7 +14,13 @@ export default async function SettingsPage() {
       <PageHeader title="Settings" description="Timings of the transaction engine, withdrawal minimum and payout methods." />
       <SettingsForm values={settings} defaults={DEFAULT_SETTINGS} />
       <PayoutMethodsForm
-        methods={methods.map((m) => ({ code: m.code, name: m.name.en, active: m.active, fee: (m.feeMillimes / 1000).toFixed(3) }))}
+        methods={methods.map((m) => ({
+          code: m.code,
+          name: m.name.en,
+          active: m.active,
+          feeType: m.feeBps > 0 ? "percent" : "fixed",
+          fee: m.feeBps > 0 ? String(m.feeBps / 100) : (m.feeMillimes / 1000).toFixed(3),
+        }))}
       />
     </>
   );

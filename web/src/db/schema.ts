@@ -265,7 +265,9 @@ export type PayoutField = { key: string; label: LocalizedText; type: "text" | "p
 export const payoutMethods = pgTable("payout_methods", {
   code: text("code").primaryKey(),
   name: jsonb("name").$type<LocalizedText>().notNull(),
+  // A method charges either a fixed fee (feeMillimes) or a percentage of the amount withdrawn (feeBps), never both.
   feeMillimes: millimes("fee_millimes").notNull().default(0),
+  feeBps: integer("fee_bps").notNull().default(0),
   fields: jsonb("fields").$type<PayoutField[]>().notNull(),
   active: boolean("active").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),

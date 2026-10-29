@@ -20,6 +20,20 @@ export function netPayout(creditMillimes: number, rateBps: number, feeMillimes: 
   return Math.max(0, grossPayout(creditMillimes, rateBps) - feeMillimes);
 }
 
+/** Withdrawal fee of a payout method: a percentage of the amount (rounded down) when set, else the fixed fee. */
+export function payoutFee(amountMillimes: number, method: { feeMillimes: number; feeBps: number }): number {
+  if (method.feeBps > 0) return Math.floor((amountMillimes * method.feeBps) / BPS);
+  return method.feeMillimes;
+}
+
+/** Parses a percentage like "2", "2.5", "2,5" or "2%" into basis points (0 < p < 100, up to 2 decimals). */
+export function parsePercent(input: string): number | null {
+  const s = input.trim().replace(",", ".").replace(/\s*%$/, "");
+  if (!/^\d{1,2}(\.\d{1,2})?$/.test(s)) return null;
+  const bps = Math.round(Number(s) * 100);
+  return bps > 0 && bps < BPS ? bps : null;
+}
+
 /** Converts a rate like "0.85" or "85%" into basis points. */
 export function parseRate(input: string): number | null {
   const s = input.trim().replace(",", ".");
@@ -39,6 +53,11 @@ export function formatDinars(millimes: number, locale = "fr-TN"): string {
 
 export function formatRate(rateBps: number): string {
   return `${(rateBps / 100).toFixed(rateBps % 100 === 0 ? 0 : 2)}%`;
+}
+
+/** Fee percentage for sellers: "2 %", "2,5 %". */
+export function formatPercent(bps: number, locale = "fr-TN"): string {
+  return new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 2 }).format(bps / BPS);
 }
 
 /** Seller-friendly amount: "10" for whole dinars (never "10,000", which reads as ten thousand), "2,500" otherwise. */

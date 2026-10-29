@@ -17,11 +17,11 @@ import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { toastManager } from "@/components/ui/toast";
 import type { LocalizedText, PayoutField } from "@/db/schema";
-import { formatDt, parseDinars } from "@/lib/money";
+import { formatDt, formatPercent, parseDinars, payoutFee } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { requestWithdrawalAction } from "./actions";
 
-type Method = { code: string; name: LocalizedText; feeMillimes: number; fields: PayoutField[] };
+type Method = { code: string; name: LocalizedText; feeMillimes: number; feeBps: number; fields: PayoutField[] };
 
 const cardOption =
   "group flex cursor-pointer items-center gap-3 rounded-2xl border-2 bg-card p-3 transition-colors hover:bg-accent/50 has-data-checked:border-emerald-600 has-data-checked:bg-emerald-600/6";
@@ -52,7 +52,8 @@ export function WithdrawForm({
 
   const method = methods.find((m) => m.code === methodCode);
   const amountMillimes = parseDinars(amount);
-  const net = method && amountMillimes ? Math.max(0, amountMillimes - method.feeMillimes) : 0;
+  const fee = method && amountMillimes ? payoutFee(amountMillimes, method) : 0;
+  const net = method && amountMillimes ? Math.max(0, amountMillimes - fee) : 0;
   const methodDetails = useMemo(() => details[methodCode] ?? {}, [details, methodCode]);
   const canWithdraw = balanceMillimes >= minMillimes && methods.length > 0;
 
@@ -124,7 +125,11 @@ export function WithdrawForm({
                 <span className="flex flex-1 flex-col gap-0.5">
                   <span className="font-semibold text-base">{m.name[locale] ?? m.name.en}</span>
                   <span className="text-muted-foreground text-xs">
-                    {m.feeMillimes > 0 ? tc("fee", { amount: formatDt(m.feeMillimes) }) : tc("noFee")}
+                    {m.feeBps > 0
+                      ? tc("feePercent", { percent: formatPercent(m.feeBps) })
+                      : m.feeMillimes > 0
+                        ? tc("fee", { amount: formatDt(m.feeMillimes) })
+                        : tc("noFee")}
                   </span>
                 </span>
                 <CheckCircle2Icon aria-hidden="true" className="hidden size-6 shrink-0 text-emerald-600 group-has-data-checked:block" />
@@ -185,7 +190,7 @@ export function WithdrawForm({
             <Dt compact millimes={amountMillimes ?? 0} />
           </Row>
           <Row label={tc("feeLine")}>
-            <Dt compact millimes={method?.feeMillimes ? -method.feeMillimes : 0} />
+            <Dt compact millimes={fee ? -fee : 0} />
           </Row>
           <Separator />
           <div className="flex items-center justify-between gap-4">

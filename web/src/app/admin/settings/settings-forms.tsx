@@ -7,6 +7,7 @@ import { Card, CardDescription, CardFooter, CardHeader, CardPanel, CardTitle } f
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { AppSettings } from "@/lib/settings";
 import { saveSettingsAction, updatePayoutMethodAction } from "../actions";
@@ -77,14 +78,15 @@ export function SettingsForm({ values, defaults }: { values: AppSettings; defaul
   );
 }
 
-type MethodRow = { code: string; name: string; active: boolean; fee: string };
+type FeeType = "fixed" | "percent";
+type MethodRow = { code: string; name: string; active: boolean; feeType: FeeType; fee: string };
 
 export function PayoutMethodsForm({ methods }: { methods: MethodRow[] }) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base">Payout methods</CardTitle>
-        <CardDescription>Methods sellers can choose when withdrawing. The fee is deducted once per withdrawal.</CardDescription>
+        <CardDescription>Methods sellers can choose when withdrawing. The fee is deducted once per withdrawal: a fixed amount, or a percentage of the amount withdrawn (rounded down to the millime).</CardDescription>
       </CardHeader>
       <CardPanel className="flex flex-col divide-y">
         {methods.map((m) => (
@@ -98,6 +100,7 @@ export function PayoutMethodsForm({ methods }: { methods: MethodRow[] }) {
 function MethodRowForm({ method }: { method: MethodRow }) {
   const { pending, run } = useAdminAction();
   const [active, setActive] = useState(method.active);
+  const [feeType, setFeeType] = useState<FeeType>(method.feeType);
   const [fee, setFee] = useState(method.fee);
   return (
     <div className="flex flex-wrap items-center gap-4 py-3">
@@ -106,16 +109,44 @@ function MethodRowForm({ method }: { method: MethodRow }) {
         <Switch checked={active} onCheckedChange={setActive} />
         Available
       </Label>
-      <Label className="flex items-center gap-2 text-sm">
-        Fee (DT)
-        <Input type="text" inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} className="w-24" />
-      </Label>
+      <div className="flex items-center gap-2 text-sm">
+        <span>Fee</span>
+        <Select
+          aria-label="Fee type"
+          value={feeType}
+          onValueChange={(v) => {
+            setFeeType(v as FeeType);
+            setFee("");
+          }}
+          items={[
+            { value: "fixed", label: "Fixed (DT)" },
+            { value: "percent", label: "Percent (%)" },
+          ]}
+        >
+          <SelectTrigger className="w-32" size="sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectPopup>
+            <SelectItem value="fixed">Fixed (DT)</SelectItem>
+            <SelectItem value="percent">Percent (%)</SelectItem>
+          </SelectPopup>
+        </Select>
+        <Input
+          aria-label={feeType === "percent" ? "Fee in percent" : "Fee in DT"}
+          type="text"
+          inputMode="decimal"
+          placeholder={feeType === "percent" ? "2.5" : "0.000"}
+          value={fee}
+          onChange={(e) => setFee(e.target.value)}
+          className="w-24"
+        />
+      </div>
       <Button
         size="sm"
         variant="outline"
         className="ms-auto"
         loading={pending}
-        onClick={() => run(() => updatePayoutMethodAction(method.code, { active, fee }), { success: `${method.name} saved` })}
+        onClick={() => run(() => updatePayoutMethodAction(method.code, { active, feeType, fee }), { success: `${method.name} saved` })}
       >
         Save
       </Button>

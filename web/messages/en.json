@@ -75,6 +75,7 @@
     "senderHint": "8 digits. We use it to recognise your transfer.",
     "payoutMethod": "How do you want to be paid?",
     "fee": "Fee: {amount} DT",
+    "feePercent": "Fee: {percent}",
     "noFee": "No fee",
     "summary": "Summary",
     "youSend": "Credit you send",
@@ -358,6 +359,7 @@
       "operator": "{amount} DT for 10 DT of credit",
       "free": "No fee",
       "fee": "{amount} DT fee per withdrawal",
+      "feePercent": "{percent} fee per withdrawal",
       "cash": "Paid in Tunisian dinars",
       "posteAlt": "People queueing at a La Poste counter in Sayada",
       "coinsAlt": "Tunisian dinar coins on a red cloth"
@@ -379,7 +381,8 @@
       "a6": "The operator’s SMS names the number that sent the credit. We match it to your sale, so only your credit counts.",
       "or": "or",
       "free": "{method} (no fee)",
-      "fee": "{method} ({amount} DT fee)"
+      "fee": "{method} ({amount} DT fee)",
+      "feePercent": "{method} ({percent} fee)"
     },
     "footer": {
       "pictures": "Pictures",

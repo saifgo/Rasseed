@@ -9,7 +9,7 @@ import { RateTicket, type TicketOperator } from "@/components/landing/rate-ticke
 import { OperatorLogo } from "@/components/app/operator-badge";
 import { InstallLink } from "@/components/pwa/install-button";
 import { brand } from "@/config/brand";
-import { formatDt, grossPayout } from "@/lib/money";
+import { formatDt, formatPercent, grossPayout } from "@/lib/money";
 import { listOperators, listPayoutMethods } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
@@ -69,8 +69,20 @@ export default async function HomePage() {
 
   const codeFor = (template: string) => template.replaceAll("{number}", NUMBER_MASK).replaceAll("{millimes}", "10000").replaceAll("{dinars}", "10");
   const methodName = (m: (typeof methods)[number]) => m.name[lang] ?? m.name.fr;
+  const methodFee = (m: (typeof methods)[number]) =>
+    m.feeBps > 0
+      ? t("works.feePercent", { percent: formatPercent(m.feeBps) })
+      : m.feeMillimes > 0
+        ? t("works.fee", { amount: formatDt(m.feeMillimes) })
+        : t("works.free");
   const methodsText = methods
-    .map((m) => (m.feeMillimes > 0 ? t("faq.fee", { method: methodName(m), amount: formatDt(m.feeMillimes) }) : t("faq.free", { method: methodName(m) })))
+    .map((m) =>
+      m.feeBps > 0
+        ? t("faq.feePercent", { method: methodName(m), percent: formatPercent(m.feeBps) })
+        : m.feeMillimes > 0
+          ? t("faq.fee", { method: methodName(m), amount: formatDt(m.feeMillimes) })
+          : t("faq.free", { method: methodName(m) }),
+    )
     .join(` ${t("faq.or")} `);
   const operatorNames = ops.map((o) => o.name).join(", ");
   // Each code is wrapped in left-to-right isolate marks so it reads correctly inside Arabic text.
@@ -255,7 +267,7 @@ export default async function HomePage() {
                   <img src={PAYOUT_LOGOS[m.code]} alt="" className="lp-tile__mark" />
                   <div className="lp-tile__meta">
                     <h3>{methodName(m)}</h3>
-                    <p>{m.feeMillimes > 0 ? t("works.fee", { amount: formatDt(m.feeMillimes) }) : t("works.free")}</p>
+                    <p>{methodFee(m)}</p>
                   </div>
                 </div>
               ) : (
@@ -263,7 +275,7 @@ export default async function HomePage() {
                   <Image src={laPoste} alt={t("works.posteAlt")} sizes="(max-width: 700px) 50vw, 25vw" />
                   <div className="lp-tile__label">
                     <h3>{methodName(m)}</h3>
-                    <p>{m.feeMillimes > 0 ? t("works.fee", { amount: formatDt(m.feeMillimes) }) : t("works.free")}</p>
+                    <p>{methodFee(m)}</p>
                   </div>
                 </div>
               ),

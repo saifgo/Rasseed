@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
+import { Analytics } from "@/components/app/analytics";
 import { Providers } from "@/components/app/providers";
 import { INSTALL_PROMPT_CAPTURE } from "@/components/pwa/install-prompt";
 import { ServiceWorker } from "@/components/pwa/service-worker";
@@ -37,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="flex min-h-full flex-col">
         <ServiceWorker />
+        <Analytics />
         <NextIntlClientProvider>
           <Providers>
             <div className="isolate flex min-h-full flex-1 flex-col">{children}</div>

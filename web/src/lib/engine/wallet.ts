@@ -1,6 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db, type DbTx } from "@/db";
 import { payoutMethods, savedPayoutDetails, users, walletEntries, withdrawals, type WalletEntryKind } from "@/db/schema";
+import { payoutFee } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
 import { EngineError } from "./core";
@@ -61,7 +62,8 @@ export async function requestWithdrawal(userId: string, input: WithdrawalInput) 
     if (v && f.type === "phone" && !normalizeMsisdn(v)) throw new EngineError("payout_phone_invalid");
     if (v) details[f.key] = f.type === "phone" ? normalizeMsisdn(v)! : v.slice(0, 200);
   }
-  const net = input.amountMillimes - method.feeMillimes;
+  const fee = payoutFee(input.amountMillimes, method);
+  const net = input.amountMillimes - fee;
   if (net <= 0) throw new EngineError("payout_below_fee");
 
   return db.transaction(async (t) => {
@@ -77,7 +79,7 @@ export async function requestWithdrawal(userId: string, input: WithdrawalInput) 
         methodCode: method.code,
         details,
         grossMillimes: input.amountMillimes,
-        feeMillimes: method.feeMillimes,
+        feeMillimes: fee,
         netMillimes: net,
       })
       .returning();

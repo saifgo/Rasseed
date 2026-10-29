@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.telecom.PhoneAccount
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import android.telephony.SubscriptionManager
@@ -212,18 +213,56 @@ class UssdAccessibilityService : AccessibilityService() {
                 handles.firstOrNull { tm.getSubscriptionId(it) == subscriptionId }?.let { return it }
             }
             handles.firstOrNull { it.id == subscriptionId.toString() }?.let { return it }
-            // Many older phones (Android 7/8) use the SIM's ICCID as the account id.
-            val iccId = try {
-                context.getSystemService(SubscriptionManager::class.java)
-                    ?.getActiveSubscriptionInfo(subscriptionId)?.iccId
+            handles.singleOrNull()?.let { return it }
+            // Android 9/10 has no public mapping, but the platform's own one is reachable.
+            hiddenSubIdMatch(context, telecom, handles, subscriptionId)?.let { return it }
+            val info = try {
+                context.getSystemService(SubscriptionManager::class.java)?.getActiveSubscriptionInfo(subscriptionId)
             } catch (_: Exception) {
                 null
-            }
+            } ?: return null
+            // Many older phones (Samsung included) use the SIM's ICCID as the account id.
+            // Android 10 hides the ICCID from normal apps, so this can come back empty.
+            val iccId = info.iccId
             if (!iccId.isNullOrEmpty()) {
                 handles.firstOrNull { it.id.length >= 10 && (iccId.startsWith(it.id) || it.id.startsWith(iccId)) }
                     ?.let { return it }
             }
-            return handles.singleOrNull()
+            // Last resort: the SIM's phone number or name, only when exactly one SIM matches,
+            // so a balance is never read from the wrong SIM.
+            val accounts = handles.mapNotNull { h -> telecom.getPhoneAccount(h)?.let { h to it } }
+            val number = digits(info.number)
+            if (number.length >= 8) {
+                accounts.filter { (_, acc) ->
+                    digits(acc.subscriptionAddress?.schemeSpecificPart).endsWith(number.takeLast(8)) ||
+                        digits(acc.address?.schemeSpecificPart).endsWith(number.takeLast(8))
+                }.singleOrNull()?.let { return it.first }
+            }
+            val name = info.displayName?.toString()?.trim()
+            if (!name.isNullOrEmpty()) {
+                accounts.filter { (_, acc) -> acc.label?.toString()?.trim().equals(name, ignoreCase = true) }
+                    .singleOrNull()?.let { return it.first }
+            }
+            return null
         }
+
+        /** Uses the hidden TelephonyManager.getSubIdForPhoneAccount (API 23+). Null if blocked or absent. */
+        private fun hiddenSubIdMatch(
+            context: Context,
+            telecom: TelecomManager,
+            handles: List<PhoneAccountHandle>,
+            subscriptionId: Int,
+        ): PhoneAccountHandle? = try {
+            val tm = context.getSystemService(TelephonyManager::class.java)
+            val method = TelephonyManager::class.java.getMethod("getSubIdForPhoneAccount", PhoneAccount::class.java)
+            handles.firstOrNull { h ->
+                val acc = telecom.getPhoneAccount(h) ?: return@firstOrNull false
+                method.invoke(tm, acc) as? Int == subscriptionId
+            }
+        } catch (_: Throwable) {
+            null
+        }
+
+        private fun digits(s: String?) = s.orEmpty().filter { it.isDigit() }
     }
 }
