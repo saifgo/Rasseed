@@ -16,6 +16,7 @@ import { getOnlineSince, listDevicesWithSims } from "@/lib/admin-queries";
 import { formatMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
 import { AddPhoneButton, DeviceActions, SimActions } from "./number-actions";
+import { Secret } from "@/components/app/confidential";
 
 export const metadata = { title: "Numbers & phones" };
 
@@ -45,7 +46,13 @@ export default async function NumbersPage({ searchParams }: { searchParams: Prom
               Phones
             </Button>
             <Button size="sm" variant={showDisabled ? "secondary" : "ghost"} render={<Link href="/admin/numbers?tab=disabled" />}>
-              Disabled{disabledCount > 0 && ` (${disabledCount})`}
+              Disabled
+              {disabledCount > 0 && (
+                <>
+                  {" ("}
+                  <Secret>{disabledCount}</Secret>)
+                </>
+              )}
             </Button>
             <AddPhoneButton serverUrl={serverUrl} />
           </div>
@@ -101,7 +108,7 @@ export default async function NumbersPage({ searchParams }: { searchParams: Prom
                 {d.model && <span>{d.model}</span>}
                 {d.androidVersion && <span>Android {d.androidVersion}</span>}
                 {d.appVersion && <span>App {d.appVersion}</span>}
-                {d.lastIp && <span className="font-mono">{d.lastIp}</span>}
+                {d.lastIp && <Secret className="font-mono">{d.lastIp}</Secret>}
               </CardDescription>
               <CardAction>
                 <DeviceActions deviceId={d.id} enabled={d.enabled} name={d.name} serverUrl={serverUrl} />
@@ -139,7 +146,7 @@ export default async function NumbersPage({ searchParams }: { searchParams: Prom
                           <TableCell>{op ? <OperatorName name={op.name} color={op.color} /> : <span className="text-muted-foreground">—</span>}</TableCell>
                           <TableCell className="font-mono">
                             <Link href={`/admin/numbers/${sim.id}`} className="underline-offset-4 hover:underline">
-                              {sim.msisdn ? formatMsisdn(sim.msisdn) : "set number"}
+                              {sim.msisdn ? <Secret dir="ltr">{formatMsisdn(sim.msisdn)}</Secret> : "set number"}
                             </Link>
                           </TableCell>
                           <TableCell>
@@ -159,7 +166,7 @@ export default async function NumbersPage({ searchParams }: { searchParams: Prom
                           <TableCell>
                             {tx?.id ? (
                               <Link href={`/admin/sales/${tx.id}`} className="font-mono text-xs underline-offset-4 hover:underline">
-                                {tx.ref}
+                                <Secret>{tx.ref}</Secret>
                               </Link>
                             ) : (
                               <span className="text-muted-foreground text-xs">free</span>

@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatRate } from "@/lib/money";
 import { renderTransferUssd } from "@/lib/parsers";
 import { setRateAction, testParsersAction, updateOperatorAction } from "../actions";
+import { Secret } from "@/components/app/confidential";
 
 export function RateEditor({ code, name, color, rateBps, active }: { code: string; name: string; color: string; rateBps: number; active: boolean }) {
   const { pending, run } = useAdminAction();
@@ -26,9 +27,11 @@ export function RateEditor({ code, name, color, rateBps, active }: { code: strin
         <CardDescription>
           <OperatorName name={name} color={color} />
         </CardDescription>
-        <CardTitle className="text-3xl">{formatRate(rateBps)}</CardTitle>
+        <CardTitle className="text-3xl">
+          <Secret className="tabular">{formatRate(rateBps)}</Secret>
+        </CardTitle>
         <CardDescription>
-          1 DT of credit pays {(rateBps / 10000).toFixed(3)} DT{!active && " · operator disabled"}
+          1 DT of credit pays <Secret className="tabular">{(rateBps / 10000).toFixed(3)}</Secret> DT{!active && " · operator disabled"}
         </CardDescription>
       </CardHeader>
       <CardFooter className="flex gap-2">
@@ -208,7 +211,8 @@ export function OperatorEditor({
                   ) : (
                     <>
                       <Badge variant={result.sms.kind === "credit" ? "success" : "warning"}>{result.sms.kind}</Badge>{" "}
-                      {((result.sms.credit?.amountMillimes ?? 0) / 1000).toFixed(3)} DT from {result.sms.credit?.senderMsisdn}
+                      <Secret className="tabular">{((result.sms.credit?.amountMillimes ?? 0) / 1000).toFixed(3)}</Secret> DT from{" "}
+                      <Secret dir="ltr">{result.sms.credit?.senderMsisdn}</Secret>
                     </>
                   )}
                 </span>
@@ -218,7 +222,9 @@ export function OperatorEditor({
                     result.balance == null ? (
                       <Badge variant="error">not recognised</Badge>
                     ) : (
-                      <Badge variant="success">{(result.balance / 1000).toFixed(3)} DT</Badge>
+                      <Badge variant="success">
+                        <Secret className="tabular">{(result.balance / 1000).toFixed(3)}</Secret> DT
+                      </Badge>
                     )
                   ) : (
                     "—"

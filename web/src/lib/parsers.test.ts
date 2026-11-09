@@ -32,6 +32,15 @@ describe("parseCreditSms", () => {
     });
   });
 
+  it("parses the Tunisie Telecom MOBIRACID format", () => {
+    const sms =
+      "Service MOBIRACID : Vous venez de recevoir 4900 millimes de la part du 95830078. Votre solde est de 9.725 DT. Profitez maintenant de 900Mo sur *140*9#";
+    expect(parseCreditSms(sms, "TT", cfg)).toEqual({
+      kind: "credit",
+      credit: { amountMillimes: 4900, senderMsisdn: "95830078" },
+    });
+  });
+
   it("reads decimal dinars and an 8-digit sender", () => {
     const r = parseCreditSms("Vous avez recu 2.500 DT de la part de 23321145.", "Ooredoo", cfg);
     expect(r).toEqual({ kind: "credit", credit: { amountMillimes: 2500, senderMsisdn: "23321145" } });

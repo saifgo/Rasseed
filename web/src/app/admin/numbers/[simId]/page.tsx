@@ -9,6 +9,7 @@ import { Frame } from "@/components/ui/frame";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getSimHistory } from "@/lib/admin-queries";
 import { formatMsisdn } from "@/lib/phone";
+import { Secret } from "@/components/app/confidential";
 
 export const metadata = { title: "SIM history" };
 
@@ -24,7 +25,7 @@ export default async function SimHistoryPage({ params }: { params: Promise<{ sim
     <>
       <AutoRefresh seconds={10} />
       <PageHeader
-        title={sim.msisdn ? formatMsisdn(sim.msisdn) : `SIM ${sim.slotIndex + 1}`}
+        title={sim.msisdn ? <Secret dir="ltr">{formatMsisdn(sim.msisdn)}</Secret> : `SIM ${sim.slotIndex + 1}`}
         description={`${device?.name ?? "?"} · slot ${sim.slotIndex + 1} · ${sim.carrierName ?? ""}`}
         actions={<Dt millimes={sim.balanceMillimes} className="font-semibold text-2xl" />}
       />
@@ -55,7 +56,7 @@ export default async function SimHistoryPage({ params }: { params: Promise<{ sim
                     {s.discrepancyMillimes == null ? (
                       "—"
                     ) : s.discrepancyMillimes === 0 ? (
-                      <span className="text-muted-foreground">0</span>
+                      <Secret className="text-muted-foreground">0</Secret>
                     ) : (
                       <Badge variant="warning">
                         <Dt millimes={s.discrepancyMillimes} unit={false} />
@@ -86,14 +87,16 @@ export default async function SimHistoryPage({ params }: { params: Promise<{ sim
                 {credits.map(({ credit, tx }) => (
                   <TableRow key={credit.id}>
                     <TableCell className="text-xs">{credit.receivedAt.toLocaleString("en-GB")}</TableCell>
-                    <TableCell className="font-mono text-xs">{formatMsisdn(credit.senderMsisdn)}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      <Secret dir="ltr">{formatMsisdn(credit.senderMsisdn)}</Secret>
+                    </TableCell>
                     <TableCell className="text-right">
                       <Dt millimes={credit.amountMillimes} />
                     </TableCell>
                     <TableCell className="text-xs">
                       {tx?.id ? (
                         <Link href={`/admin/sales/${tx.id}`} className="font-mono underline-offset-4 hover:underline">
-                          {tx.ref}
+                          <Secret>{tx.ref}</Secret>
                         </Link>
                       ) : (
                         <Badge variant="warning">{credit.status}</Badge>
@@ -127,7 +130,9 @@ export default async function SimHistoryPage({ params }: { params: Promise<{ sim
                         {c.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="max-w-72 whitespace-normal text-muted-foreground text-xs">{c.rawResponse ?? c.error ?? "—"}</TableCell>
+                    <TableCell className="max-w-72 whitespace-normal text-muted-foreground text-xs">
+                      <Secret>{c.rawResponse ?? c.error ?? "—"}</Secret>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -152,13 +157,17 @@ export default async function SimHistoryPage({ params }: { params: Promise<{ sim
               {sms.map((m) => (
                 <TableRow key={m.id}>
                   <TableCell className="text-xs">{m.createdAt.toLocaleString("en-GB")}</TableCell>
-                  <TableCell className="font-mono text-xs">{m.fromAddress}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    <Secret dir="ltr">{m.fromAddress}</Secret>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={m.classification === "credit" ? "success" : m.classification === "untrusted_sender" ? "error" : "secondary"}>
                       {m.classification}
                     </Badge>
                   </TableCell>
-                  <TableCell className="max-w-xl whitespace-normal text-xs">{m.body}</TableCell>
+                  <TableCell className="max-w-xl whitespace-normal text-xs">
+                    <Secret>{m.body}</Secret>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

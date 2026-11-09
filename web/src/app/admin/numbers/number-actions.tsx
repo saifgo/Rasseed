@@ -3,6 +3,7 @@
 import { MoreHorizontalIcon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { useAdminAction } from "@/components/admin/use-admin-action";
+import { Secret } from "@/components/app/confidential";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +43,7 @@ function PairingInfo({ code, serverUrl }: { code: string; serverUrl: string }) {
           Server: <span className="select-all font-mono text-foreground">{serverUrl}</span>
         </span>
         <span>
-          Pairing code: <span className="select-all font-mono font-semibold text-2xl text-foreground tracking-widest">{code}</span>
+          Pairing code: <Secret className="select-all font-mono font-semibold text-2xl text-foreground tracking-widest">{code}</Secret>
         </span>
         <span className="text-xs">The code is valid for 10 minutes and can be used once.</span>
       </AlertDescription>

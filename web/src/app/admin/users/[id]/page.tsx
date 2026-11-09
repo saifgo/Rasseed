@@ -13,6 +13,7 @@ import type { WalletEntryKind, WithdrawalStatus } from "@/db/schema";
 import { getUserDetail, listSales } from "@/lib/admin-queries";
 import { requireStaff } from "@/lib/session";
 import { AdjustBalanceButton, BlockButton, RoleSelect } from "../user-actions";
+import { Secret } from "@/components/app/confidential";
 
 export const metadata = { title: "User" };
 
@@ -97,20 +98,28 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
               <TableBody>
                 {withdrawals.map(({ w, method }) => (
                   <TableRow key={w.id}>
-                    <TableCell className="font-mono">{w.ref}</TableCell>
+                    <TableCell className="font-mono">
+                      <Secret>{w.ref}</Secret>
+                    </TableCell>
                     <TableCell>
                       {method.name.en}
-                      <div className="font-mono text-muted-foreground text-xs">{Object.values(w.details).join(" · ")}</div>
+                      <div className="font-mono text-muted-foreground text-xs">
+                        <Secret dir="ltr">{Object.values(w.details).join(" · ")}</Secret>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <Dt millimes={w.grossMillimes} />
                     </TableCell>
                     <TableCell className="text-right">
-                      <Dt millimes={w.netMillimes} />
+                      <Dt millimes={w.sendMillimes} />
                     </TableCell>
                     <TableCell>
                       <Badge variant={statusVariant[w.status]}>{w.status}</Badge>
-                      {w.reference && <div className="font-mono text-xs">{w.reference}</div>}
+                      {w.reference && (
+                        <div className="font-mono text-xs">
+                          <Secret>{w.reference}</Secret>
+                        </div>
+                      )}
                       {w.rejectReason && <div className="text-muted-foreground text-xs">{w.rejectReason}</div>}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
@@ -158,10 +167,12 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
                     <TableCell className="font-mono text-xs">
                       {e.txId && tx ? (
                         <Link href={`/admin/sales/${e.txId}`} className="underline-offset-4 hover:underline">
-                          {tx.ref}
+                          <Secret>{tx.ref}</Secret>
                         </Link>
+                      ) : w?.ref ? (
+                        <Secret>{w.ref}</Secret>
                       ) : (
-                        (w?.ref ?? "—")
+                        "—"
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{by?.email ?? "system"}</TableCell>

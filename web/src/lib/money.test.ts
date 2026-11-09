@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatPercent, parsePercent, payoutFee } from "./money";
+import { formatPercent, parsePercent, payoutAmounts, payoutFee } from "./money";
 
 describe("payoutFee", () => {
   it("uses the fixed fee when no percentage is set", () => {
@@ -11,6 +11,17 @@ describe("payoutFee", () => {
     expect(payoutFee(100_000, { feeMillimes: 0, feeBps: 200 })).toBe(2000); // 2% of 100 DT
     expect(payoutFee(12_345, { feeMillimes: 0, feeBps: 250 })).toBe(308); // 308.625 → 308
     expect(payoutFee(39, { feeMillimes: 0, feeBps: 250 })).toBe(0); // 0.975 → 0
+  });
+});
+
+describe("payoutAmounts", () => {
+  it("fixed fee: we pay it when sending, so we send the amount minus the fee", () => {
+    expect(payoutAmounts(6000, { feeMillimes: 5000, feeBps: 0 })).toEqual({ fee: 5000, net: 1000, send: 1000, feeByMethod: false });
+  });
+
+  it("percentage fee: the method takes it on receipt, so we send the full amount", () => {
+    // D17 1%: 18 DT asked → 18 DT sent, seller receives 17.820 DT.
+    expect(payoutAmounts(18_000, { feeMillimes: 0, feeBps: 100 })).toEqual({ fee: 180, net: 17_820, send: 18_000, feeByMethod: true });
   });
 });
 

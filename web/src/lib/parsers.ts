@@ -9,10 +9,14 @@ export type CreditParserConfig = {
 
 export type ParsedCredit = { amountMillimes: number; senderMsisdn: string };
 
-// Matches both transfer SMS formats; the unit comes from the SMS itself:
+// Matches all known transfer SMS formats; the unit comes from the SMS itself:
 //  "Vous avez recu 1000 Millimes de la part du numéro 23249201"
 //  "Vous avez recu 1 DT de la part de  21623321145.Nouveau: Avec Mobicash ..." (Ooredoo)
-export const DEFAULT_CREDIT_SMS_REGEX = String.raw`Vous avez re[çc]u\s+(?<amount>\d+(?:[.,]\d+)?)\s*(?<unit>DT|TND|Dinars?|Millimes?)\s+de la part (?:du num[ée]ro|de)\s*:?\s*(?<sender>(?:\+?216)?\d{8})(?!\d)`;
+//  "Service MOBIRACID : Vous venez de recevoir 4900 millimes de la part du 95830078. Votre solde ..." (Tunisie Telecom)
+export const DEFAULT_CREDIT_SMS_REGEX = String.raw`Vous (?:avez re[çc]u|venez de recevoir)\s+(?<amount>\d+(?:[.,]\d+)?)\s*(?<unit>DT|TND|Dinars?|Millimes?)\s+de la part (?:du num[ée]ro|du|de)\s*:?\s*(?<sender>(?:\+?216)?\d{8})(?!\d)`;
+
+/** Previous default (no Tunisie Telecom format); the seed upgrades installs still using it. */
+export const DEFAULT_CREDIT_SMS_REGEX_V2 = String.raw`Vous avez re[çc]u\s+(?<amount>\d+(?:[.,]\d+)?)\s*(?<unit>DT|TND|Dinars?|Millimes?)\s+de la part (?:du num[ée]ro|de)\s*:?\s*(?<sender>(?:\+?216)?\d{8})(?!\d)`;
 
 /** Previous default (millimes format only); the seed upgrades installs still using it. */
 export const DEFAULT_CREDIT_SMS_REGEX_V1 = String.raw`Vous avez re[çc]u\s+(?<amount>\d+(?:[.,]\d+)?)\s*Millimes?\s+de la part du num[ée]ro\s*:?\s*(?<sender>(?:\+?216)?\d{8})`;

@@ -6,6 +6,7 @@ import {
   DEFAULT_BALANCE_REGEX,
   DEFAULT_CREDIT_SMS_REGEX,
   DEFAULT_CREDIT_SMS_REGEX_V1,
+  DEFAULT_CREDIT_SMS_REGEX_V2,
   ORANGE_BALANCE_REGEX,
   ORANGE_BALANCE_REGEX_V1,
 } from "@/lib/parsers";
@@ -65,11 +66,12 @@ async function main() {
     );
 
   // Existing installs: the old credit SMS default only knew the "Millimes ... du numéro" format,
-  // so Ooredoo's "1 DT de la part de 216..." SMS was ignored. Upgrade unless customised.
+  // so Ooredoo's "1 DT de la part de 216..." SMS was ignored; V2 missed Tunisie Telecom's
+  // "Vous venez de recevoir ... de la part du ..." SMS. Upgrade unless customised.
   await db
     .update(operators)
     .set({ creditSmsRegex: DEFAULT_CREDIT_SMS_REGEX })
-    .where(eq(operators.creditSmsRegex, DEFAULT_CREDIT_SMS_REGEX_V1));
+    .where(inArray(operators.creditSmsRegex, [DEFAULT_CREDIT_SMS_REGEX_V1, DEFAULT_CREDIT_SMS_REGEX_V2]));
 
   const phone = (en: string, fr: string, ar: string) => ({ en, fr, ar });
   await db

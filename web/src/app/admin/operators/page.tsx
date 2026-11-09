@@ -8,6 +8,7 @@ import { requireAdmin } from "@/lib/session";
 import { getOperatorsAdmin } from "@/lib/admin-queries";
 import { formatRate } from "@/lib/money";
 import { OperatorEditor, RateEditor } from "./operator-forms";
+import { Secret } from "@/components/app/confidential";
 
 export const metadata = { title: "Operators & rates" };
 
@@ -51,7 +52,9 @@ export default async function OperatorsPage() {
                     <TableRow key={h.id}>
                       <TableCell className="text-xs">{h.createdAt.toLocaleString("en-GB")}</TableCell>
                       <TableCell>{op && <OperatorName name={op.name} color={op.color} />}</TableCell>
-                      <TableCell>{formatRate(h.rateBps)}</TableCell>
+                      <TableCell>
+                        <Secret className="tabular">{formatRate(h.rateBps)}</Secret>
+                      </TableCell>
                       <TableCell className="text-muted-foreground text-xs">{by}</TableCell>
                     </TableRow>
                   );
@@ -107,9 +110,13 @@ export default async function OperatorsPage() {
                 {recentReplies.map((r, i) => (
                   <TableRow key={i}>
                     <TableCell>{r.operatorCode}</TableCell>
-                    <TableCell className="max-w-72 whitespace-normal font-mono text-xs">{r.raw}</TableCell>
+                    <TableCell className="max-w-72 whitespace-normal font-mono text-xs">
+                      <Secret>{r.raw}</Secret>
+                    </TableCell>
                     <TableCell>
-                      {r.parsed != null ? <Badge variant="success">{(r.parsed / 1000).toFixed(3)}</Badge> : <Badge variant="error">failed</Badge>}
+                      {r.parsed != null ? <Badge variant="success">
+                          <Secret className="tabular">{(r.parsed / 1000).toFixed(3)}</Secret>
+                        </Badge> : <Badge variant="error">failed</Badge>}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -131,8 +138,12 @@ export default async function OperatorsPage() {
               <TableBody>
                 {recentSms.map((r, i) => (
                   <TableRow key={i}>
-                    <TableCell className="font-mono text-xs">{r.from}</TableCell>
-                    <TableCell className="max-w-72 whitespace-normal text-xs">{r.body}</TableCell>
+                    <TableCell className="font-mono text-xs">
+                      <Secret dir="ltr">{r.from}</Secret>
+                    </TableCell>
+                    <TableCell className="max-w-72 whitespace-normal text-xs">
+                      <Secret>{r.body}</Secret>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={r.classification === "credit" ? "success" : "secondary"}>{r.classification}</Badge>
                     </TableCell>

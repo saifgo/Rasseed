@@ -1,7 +1,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db, type DbTx } from "@/db";
 import { payoutMethods, savedPayoutDetails, users, walletEntries, withdrawals, type WalletEntryKind } from "@/db/schema";
-import { payoutFee } from "@/lib/money";
+import { payoutAmounts } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
 import { EngineError } from "./core";
@@ -62,8 +62,7 @@ export async function requestWithdrawal(userId: string, input: WithdrawalInput) 
     if (v && f.type === "phone" && !normalizeMsisdn(v)) throw new EngineError("payout_phone_invalid");
     if (v) details[f.key] = f.type === "phone" ? normalizeMsisdn(v)! : v.slice(0, 200);
   }
-  const fee = payoutFee(input.amountMillimes, method);
-  const net = input.amountMillimes - fee;
+  const { fee, net, send } = payoutAmounts(input.amountMillimes, method);
   if (net <= 0) throw new EngineError("payout_below_fee");
 
   return db.transaction(async (t) => {
@@ -81,6 +80,7 @@ export async function requestWithdrawal(userId: string, input: WithdrawalInput) 
         grossMillimes: input.amountMillimes,
         feeMillimes: fee,
         netMillimes: net,
+        sendMillimes: send,
       })
       .returning();
     await addEntry(t, { userId, kind: "withdrawal", amountMillimes: -input.amountMillimes, withdrawalId: w.id });
@@ -141,6 +141,15 @@ export async function rejectWithdrawal(staffId: string, withdrawalId: string, re
       createdBy: staffId,
     });
   });
+}
+
+/** Sets, replaces or clears (empty text) the note shown to the seller while the withdrawal waits to be paid. */
+export async function setWithdrawalNote(withdrawalId: string, note: string) {
+  const text = note.trim().slice(0, 1000);
+  const [w] = await db.select({ status: withdrawals.status }).from(withdrawals).where(eq(withdrawals.id, withdrawalId));
+  if (!w) throw new EngineError("not_found");
+  if (w.status !== "pending") throw new EngineError("invalid_state");
+  await db.update(withdrawals).set({ note: text || null }).where(eq(withdrawals.id, withdrawalId));
 }
 
 /** Attaches (or replaces) the proof on an already-paid withdrawal. */

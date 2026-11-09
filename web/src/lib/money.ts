@@ -26,6 +26,18 @@ export function payoutFee(amountMillimes: number, method: { feeMillimes: number;
   return method.feeMillimes;
 }
 
+/**
+ * Amounts of a withdrawal. A fixed fee is paid by us when sending (e.g. the mandate fee at the post office),
+ * so we send the amount minus the fee. A percentage fee is taken by the payment method itself when the
+ * seller receives the money (e.g. D17 1%), so we send the full amount and the seller receives it minus the fee.
+ */
+export function payoutAmounts(amountMillimes: number, method: { feeMillimes: number; feeBps: number }) {
+  const fee = payoutFee(amountMillimes, method);
+  const net = amountMillimes - fee;
+  const feeByMethod = method.feeBps > 0;
+  return { fee, net, send: feeByMethod ? amountMillimes : net, feeByMethod };
+}
+
 /** Parses a percentage like "2", "2.5", "2,5" or "2%" into basis points (0 < p < 100, up to 2 decimals). */
 export function parsePercent(input: string): number | null {
   const s = input.trim().replace(",", ".").replace(/\s*%$/, "");

@@ -1,7 +1,8 @@
-import { ClockIcon, FileCheckIcon, WalletIcon } from "lucide-react";
+import { ClockIcon, FileCheckIcon, MessageSquareTextIcon, WalletIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
+import { Secret } from "@/components/app/confidential";
 import { Dt } from "@/components/app/money";
 import { PayoutLogo } from "@/components/app/payout-logo";
 import { Badge } from "@/components/ui/badge";
@@ -83,18 +84,27 @@ export default async function WalletPage() {
                     <span className="text-muted-foreground text-sm">{t("youGet")}</span>
                     <Dt compact millimes={w.netMillimes} className="font-bold text-xl" />
                   </div>
-                  <div className="text-muted-foreground text-xs" dir="ltr">
+                  <Secret className="text-muted-foreground text-xs" dir="ltr">
                     {Object.entries(w.details)
                       .map(([k, v]) => (k === "phone" ? formatMsisdn(v) : v))
                       .join(" · ")}
-                  </div>
+                  </Secret>
                   <div className="text-muted-foreground text-xs">
-                    {when(w.paidAt ?? w.rejectedAt ?? w.createdAt)} · <span className="font-mono">{w.ref}</span>
+                    {when(w.paidAt ?? w.rejectedAt ?? w.createdAt)} · <Secret className="font-mono">{w.ref}</Secret>
                   </div>
                   {w.status === "paid" && w.reference && (
                     <span className="text-sm">
-                      {t("reference")}: <span className="font-mono">{w.reference}</span>
+                      {t("reference")}: <Secret className="font-mono">{w.reference}</Secret>
                     </span>
+                  )}
+                  {w.status === "pending" && w.note && (
+                    <div className="mt-1 flex gap-2 rounded-xl bg-amber-50 p-3 text-amber-950 text-sm dark:bg-amber-950/40 dark:text-amber-100">
+                      <MessageSquareTextIcon aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold">{t("noteFromUs")}</span>
+                        <span className="whitespace-pre-line">{w.note}</span>
+                      </div>
+                    </div>
                   )}
                   {w.status === "paid" && w.note && <span className="text-muted-foreground text-sm">{w.note}</span>}
                   {w.status === "rejected" && w.rejectReason && <span className="text-destructive-foreground text-sm">{w.rejectReason}</span>}

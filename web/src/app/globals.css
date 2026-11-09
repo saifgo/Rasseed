@@ -245,4 +245,20 @@
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+  /* Confidential mode: numbers are blurred until clicked (components/app/confidential.tsx). */
+  [data-secret] {
+    transition: filter 150ms ease-out;
+  }
+  html[data-confidential] [data-secret] {
+    cursor: pointer;
+    border-radius: 0.25rem;
+  }
+  html[data-confidential] [data-secret]:not([data-revealed]) {
+    filter: blur(0.4em);
+    user-select: none;
+  }
+  html[data-confidential] [data-secret]:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
 }

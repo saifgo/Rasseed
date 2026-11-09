@@ -1,5 +1,6 @@
 import { BatteryChargingIcon, BatteryIcon, WifiIcon, WifiOffIcon } from "lucide-react";
 import Link from "next/link";
+import { Secret } from "@/components/app/confidential";
 import { Dt } from "@/components/app/money";
 import { OperatorName } from "@/components/app/operator-badge";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
@@ -30,10 +31,10 @@ export default async function AdminOverview() {
       <PageHeader title="Overview" description="Live view of sales, withdrawals, balances and phones." />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Active sales" value={overview.activeSales} hint="Queued, waiting for transfer or verifying" />
+        <StatCard label="Active sales" value={<Secret>{overview.activeSales}</Secret>} hint="Queued, waiting for transfer or verifying" />
         <StatCard
           label="Review queue"
-          value={counts.review}
+          value={<Secret>{counts.review}</Secret>}
           hint={
             counts.review > 0 ? (
               <Link className="underline" href="/admin/review">
@@ -50,7 +51,7 @@ export default async function AdminOverview() {
           hint={
             overview.pendingWithdrawals.count > 0 ? (
               <Link className="underline" href="/admin/withdrawals">
-                {overview.pendingWithdrawals.count} pending
+                <Secret>{overview.pendingWithdrawals.count}</Secret> pending
               </Link>
             ) : (
               "Nothing to send"
@@ -62,7 +63,7 @@ export default async function AdminOverview() {
           value={<Dt millimes={overview.owedMillimes} />}
           hint={
             <>
-              Money owed to sellers · today {overview.today.count} sales, <Dt millimes={overview.today.creditMillimes} /> credit
+              Money owed to sellers · today <Secret>{overview.today.count}</Secret> sales, <Dt millimes={overview.today.creditMillimes} /> credit
             </>
           }
         />
@@ -81,7 +82,7 @@ export default async function AdminOverview() {
                   <OperatorName name={op.name} color={op.color} />
                   <span className="flex items-center gap-3">
                     <span className="text-muted-foreground text-xs">
-                      {b?.sims ?? 0} SIM · rate {formatRate(op.rateBps)}
+                      <Secret>{b?.sims ?? 0}</Secret> SIM · rate <Secret>{formatRate(op.rateBps)}</Secret>
                     </span>
                     <Dt millimes={b?.totalMillimes ?? 0} className="font-medium" />
                   </span>
@@ -122,7 +123,7 @@ export default async function AdminOverview() {
                       ) : (
                         <BatteryIcon aria-hidden="true" className="size-4" />
                       )}
-                      {d.batteryPct}%
+                      <Secret>{d.batteryPct}%</Secret>
                     </span>
                   )}
                   <TimeAgo date={d.lastSeenAt} />

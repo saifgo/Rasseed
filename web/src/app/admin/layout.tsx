@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ConfidentialToggle } from "@/components/app/confidential";
 import { AdminSidebar } from "@/components/admin/admin-nav";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getAdminCounts } from "@/lib/admin-queries";
@@ -19,6 +20,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <SidebarInset>
           <header className="flex h-12 items-center gap-2 border-b px-4 md:hidden">
             <SidebarTrigger />
+            <ConfidentialToggle className="ms-auto" showLabel="Show numbers" hideLabel="Hide numbers" />
           </header>
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4 sm:p-6">{children}</div>
         </SidebarInset>

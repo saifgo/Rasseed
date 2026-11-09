@@ -443,10 +443,12 @@ export const withdrawals = pgTable(
       .notNull()
       .references(() => payoutMethods.code),
     details: jsonb("details").$type<Record<string, string>>().notNull(),
-    // Taken from the balance (gross), fee of the method at request time, amount actually sent (net).
+    // Taken from the balance (gross), fee of the method at request time, amount the seller receives (net),
+    // amount staff send (send): net for a fixed fee we pay, gross for a percentage fee the method takes on receipt.
     grossMillimes: millimes("gross_millimes").notNull(),
     feeMillimes: millimes("fee_millimes").notNull(),
     netMillimes: millimes("net_millimes").notNull(),
+    sendMillimes: millimes("send_millimes").notNull(),
     status: text("status").$type<WithdrawalStatus>().notNull().default("pending"),
     reference: text("reference"),
     note: text("note"),

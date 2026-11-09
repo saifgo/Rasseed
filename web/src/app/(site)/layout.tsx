@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { signOut } from "@/auth";
+import { ConfidentialToggle } from "@/components/app/confidential";
 import { LocaleSwitcher } from "@/components/app/locale-switcher";
 import { Logo } from "@/components/app/logo";
 import { SellerBottomNav, SellerTopNav } from "@/components/app/seller-nav";
 import { UserMenu } from "@/components/app/user-menu";
+import { WhatsAppGroupButton } from "@/components/app/whatsapp-button";
 import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
@@ -13,6 +15,7 @@ import { getCurrentUser, isStaff } from "@/lib/session";
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   const t = await getTranslations();
+  const whatsappGroupUrl = process.env.WHATSAPP_GROUP_URL;
 
   async function signOutAction() {
     "use server";
@@ -29,6 +32,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           {user && <SellerTopNav />}
           <div className="ms-auto flex items-center gap-1">
             <InstallButton />
+            {user && <ConfidentialToggle showLabel={t("common.showNumbers")} hideLabel={t("common.hideNumbers")} />}
             <LocaleSwitcher />
             {user ? (
               <UserMenu
@@ -48,6 +52,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       </header>
       <main className="flex-1 caret-emerald-600 selection:bg-emerald-600/20 selection:text-foreground">{children}</main>
       {user && <SellerBottomNav />}
+      {user && whatsappGroupUrl && <WhatsAppGroupButton href={whatsappGroupUrl} label={t("common.whatsappGroup")} />}
       <footer className={user ? "border-t pb-20 sm:pb-0" : "border-t"}>
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-muted-foreground text-sm">
           <span>

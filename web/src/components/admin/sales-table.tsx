@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Secret } from "@/components/app/confidential";
 import { Dt } from "@/components/app/money";
 import { OperatorName } from "@/components/app/operator-badge";
 import { Frame } from "@/components/ui/frame";
@@ -35,7 +36,7 @@ export function SalesTable({ rows, showReason = false }: { rows: Rows; showReaso
             <TableRow key={tx.id}>
               <TableCell>
                 <Link href={`/admin/sales/${tx.id}`} className="font-mono font-medium underline-offset-4 hover:underline">
-                  {tx.ref}
+                  <Secret>{tx.ref}</Secret>
                 </Link>
               </TableCell>
               <TableCell className="max-w-44 truncate" title={user.email ?? ""}>
@@ -45,7 +46,7 @@ export function SalesTable({ rows, showReason = false }: { rows: Rows; showReaso
                 <OperatorName name={op.name} color={op.color} />
               </TableCell>
               <TableCell className="font-mono text-xs">
-                {formatMsisdn(tx.senderMsisdn)} → {tx.assignedMsisdn ? formatMsisdn(tx.assignedMsisdn) : "—"}
+                <Secret>{formatMsisdn(tx.senderMsisdn)}</Secret> → {tx.assignedMsisdn ? <Secret>{formatMsisdn(tx.assignedMsisdn)}</Secret> : "—"}
               </TableCell>
               <TableCell className="text-right">
                 <Dt millimes={tx.declaredMillimes} />

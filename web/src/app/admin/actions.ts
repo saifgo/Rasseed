@@ -15,7 +15,7 @@ import {
 } from "@/lib/engine/admin";
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
-import { adjustBalance, attachWithdrawalProof, markWithdrawalPaid, rejectWithdrawal } from "@/lib/engine/wallet";
+import { adjustBalance, attachWithdrawalProof, markWithdrawalPaid, rejectWithdrawal, setWithdrawalNote } from "@/lib/engine/wallet";
 import { parseDinars, parsePercent, parseRate } from "@/lib/money";
 import { parseBalance, parseCreditSms } from "@/lib/parsers";
 import { getCurrentUser, isAdmin, isStaff, type CurrentUser } from "@/lib/session";
@@ -81,6 +81,13 @@ export async function markWithdrawalPaidAction(formData: FormData) {
 export async function rejectWithdrawalAction(withdrawalId: string, reason: string) {
   return staff(async (id) => {
     await rejectWithdrawal(id, withdrawalId, reason);
+    return null;
+  });
+}
+
+export async function setWithdrawalNoteAction(withdrawalId: string, note: string) {
+  return staff(async () => {
+    await setWithdrawalNote(withdrawalId, note);
     return null;
   });
 }

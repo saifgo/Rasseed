@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
+import { Secret } from "@/components/app/confidential";
 import { Dt } from "@/components/app/money";
 import { OperatorLogo } from "@/components/app/operator-badge";
 import { StatusBadge } from "@/components/app/status-badge";
@@ -109,17 +110,17 @@ export function LiveSale({ initial }: { initial: View }) {
             <Dt compact millimes={sale.payoutNetMillimes ?? estimatedNet} className="font-semibold [&_span]:text-white/85" />
           </span>
         </div>
-        <span className="hidden font-mono text-sm text-white/80 sm:block">{sale.ref}</span>
+        <Secret className="hidden font-mono text-sm text-white/80 sm:block">{sale.ref}</Secret>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <StatusBadge status={sale.status} />
-        <span className="font-mono text-muted-foreground text-sm sm:hidden">{sale.ref}</span>
+        <Secret className="font-mono text-muted-foreground text-sm sm:hidden">{sale.ref}</Secret>
       </div>
 
       {sale.status === "queued" && (
         <StateCard icon={<HourglassIcon />} title={t("queuedTitle")} spinner>
-          {t("queuedText", { operator: op.name, position: sale.queuePosition ?? 1 })}
+          {t.rich("queuedText", { operator: op.name, position: sale.queuePosition ?? 1, secret: (c) => <Secret>{c}</Secret> })}
         </StateCard>
       )}
       {sale.status === "assigning" && (
@@ -132,10 +133,11 @@ export function LiveSale({ initial }: { initial: View }) {
         <StateCard icon={<TriangleAlertIcon />} title={t("partialTitle")} tone="warning">
           <span className="flex flex-col gap-4">
             <span>
-              {t("partialText", {
+              {t.rich("partialText", {
                 received: dt(sale.confirmedMillimes),
                 declared: dt(sale.declaredMillimes),
                 missing: dt(sale.remainingMillimes),
+                secret: (c) => <Secret>{c}</Secret>,
               })}
             </span>
             <span className="flex flex-col gap-2">
@@ -152,7 +154,7 @@ export function LiveSale({ initial }: { initial: View }) {
       )}
       {sale.status === "partial" && sale.partialChoice === "topup" && (
         <StateCard icon={<TriangleAlertIcon />} title={t("partialTitle")} tone="warning">
-          {t("partialTopupText", { missing: dt(sale.remainingMillimes) })}
+          {t.rich("partialTopupText", { missing: dt(sale.remainingMillimes), secret: (c) => <Secret>{c}</Secret> })}
         </StateCard>
       )}
 
@@ -165,13 +167,13 @@ export function LiveSale({ initial }: { initial: View }) {
       )}
       {sale.status === "confirmed" && sale.method && (
         <SuccessCard title={t("successTitle")} amount={sale.payoutNetMillimes ?? 0}>
-          {t("successTextLegacy", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutNetMillimes ?? 0), method: methodName })}
+          {t.rich("successTextLegacy", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutNetMillimes ?? 0), method: methodName, secret: (c) => <Secret>{c}</Secret> })}
         </SuccessCard>
       )}
       {sale.status === "confirmed" && !sale.method && (
         <SuccessCard title={t("successTitle")} amount={sale.payoutGrossMillimes ?? 0}>
           <span className="flex flex-col gap-4">
-            <span>{t("successText", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutGrossMillimes ?? 0) })}</span>
+            <span>{t.rich("successText", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutGrossMillimes ?? 0), secret: (c) => <Secret>{c}</Secret> })}</span>
             <Button variant="go" className="h-12 text-base sm:h-12" render={<Link href="/wallet" />}>
               <WalletIcon aria-hidden="true" />
               {t("goToWallet")}
@@ -182,10 +184,10 @@ export function LiveSale({ initial }: { initial: View }) {
       {sale.status === "paid" && (
         <SuccessCard title={t("paidTitle")} amount={sale.payout?.netMillimes ?? 0}>
           <span className="flex flex-col gap-3">
-            <span>{t("paidText", { net: dt(sale.payout?.netMillimes ?? 0), method: methodName })}</span>
+            <span>{t.rich("paidText", { net: dt(sale.payout?.netMillimes ?? 0), method: methodName, secret: (c) => <Secret>{c}</Secret> })}</span>
             {sale.payout?.reference && (
               <span className="text-sm">
-                {t("reference")}: <span className="font-mono">{sale.payout.reference}</span>
+                {t("reference")}: <Secret className="font-mono">{sale.payout.reference}</Secret>
               </span>
             )}
             {sale.payout?.note && <span className="text-sm">{sale.payout.note}</span>}
@@ -257,18 +259,20 @@ export function LiveSale({ initial }: { initial: View }) {
             <Detail label={t("received")}>
               <Dt compact millimes={sale.finalMillimes ?? sale.confirmedMillimes} />
             </Detail>
-            <Detail label={t("rate")}>{formatRate(sale.rateBps)}</Detail>
+            <Detail label={t("rate")}>
+              <Secret>{formatRate(sale.rateBps)}</Secret>
+            </Detail>
             <Detail label={sale.method ? `${t("payout")} · ${methodName}` : t("creditedToBalance")}>
               <Dt compact millimes={sale.payoutNetMillimes ?? estimatedNet} className="font-semibold" />
             </Detail>
             {sale.method &&
               Object.entries(sale.payoutDetails).map(([k, v]) => (
                 <Detail key={k} label={sale.method?.fields.find((f) => f.key === k)?.label[locale] ?? k}>
-                  <span dir="auto">{k === "phone" ? formatMsisdn(v) : v}</span>
+                  <Secret dir={k === "phone" ? "ltr" : undefined}>{k === "phone" ? formatMsisdn(v) : v}</Secret>
                 </Detail>
               ))}
             <Detail label={t("sender")}>
-              <span dir="ltr">{formatMsisdn(sale.senderMsisdn)}</span>
+              <Secret dir="ltr">{formatMsisdn(sale.senderMsisdn)}</Secret>
             </Detail>
             <Detail label={t("created")}>{format.dateTime(new Date(sale.createdAt), { dateStyle: "medium", timeStyle: "short" })}</Detail>
           </dl>
@@ -293,13 +297,13 @@ function TransferCard({ sale }: { sale: View }) {
   return (
     <section className="overflow-hidden rounded-2xl border-2 bg-card" style={{ borderColor: op.color }}>
       <div className="flex flex-col gap-1 px-5 pt-5">
-        <h2 className="font-heading font-bold text-2xl leading-tight">{t("sendTitle", { amount })}</h2>
+        <h2 className="font-heading font-bold text-2xl leading-tight">{t.rich("sendTitle", { amount, secret: (c) => <Secret>{c}</Secret> })}</h2>
         <p className="text-muted-foreground">
           {t.rich("sendFrom", {
             sender: formatMsisdn(sale.senderMsisdn),
             b: (chunks) => (
               <bdi dir="ltr" className="font-semibold text-foreground tabular-nums">
-                {chunks}
+                <Secret>{chunks}</Secret>
               </bdi>
             ),
           })}
@@ -316,7 +320,11 @@ function TransferCard({ sale }: { sale: View }) {
         </StepLine>
         {askAmount && (
           <StepLine n={3} color={op.color}>
-            {t.rich("step3Amount", { amount, b: (chunks) => <strong className="tabular-nums">{chunks}</strong> })}
+            {t.rich("step3Amount", { amount, b: (chunks) => (
+                <strong className="tabular-nums">
+                  <Secret>{chunks}</Secret>
+                </strong>
+              ) })}
           </StepLine>
         )}
         <StepLine n={askAmount ? 4 : 3} color={op.color}>
@@ -371,7 +379,7 @@ function CopyRow({ label, value, display, large }: { label: string; value: strin
         <CopyButton value={value} />
       </div>
       <dd dir="ltr" className={cn("break-all text-start font-bold tabular-nums tracking-wide", large ? "text-3xl" : "text-2xl")}>
-        {display}
+        <Secret>{display}</Secret>
       </dd>
     </div>
   );

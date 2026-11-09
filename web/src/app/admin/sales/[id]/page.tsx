@@ -1,6 +1,7 @@
 import { AlertTriangleIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Secret } from "@/components/app/confidential";
 import { Dt } from "@/components/app/money";
 import { OperatorName } from "@/components/app/operator-badge";
 import { Timeline } from "@/components/app/timeline";
@@ -35,7 +36,7 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
     <>
       {live && <AutoRefresh seconds={3} />}
       <PageHeader
-        title={`Sale ${tx.ref}`}
+        title={<>Sale <Secret>{tx.ref}</Secret></>}
         description={`${user?.name ?? ""} · ${user?.email ?? ""}`}
         actions={<AdminStatusBadge status={tx.status} />}
       />
@@ -74,14 +75,14 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
             <Row label="Baseline balance">
               <Dt millimes={tx.baselineBalanceMillimes} />
             </Row>
-            <Row label="Locked rate">{formatRate(tx.rateBps)}</Row>
+            <Row label="Locked rate"><Secret>{formatRate(tx.rateBps)}</Secret></Row>
             <Row label="Sender">
-              <span className="font-mono">{formatMsisdn(tx.senderMsisdn)}</span>
+              <Secret className="font-mono">{formatMsisdn(tx.senderMsisdn)}</Secret>
             </Row>
             <Row label="Receiving number">
               {sim ? (
                 <Link className="font-mono underline-offset-4 hover:underline" href={`/admin/numbers/${sim.id}`}>
-                  {tx.assignedMsisdn ? formatMsisdn(tx.assignedMsisdn) : "—"}
+                  {tx.assignedMsisdn ? <Secret>{formatMsisdn(tx.assignedMsisdn)}</Secret> : "—"}
                 </Link>
               ) : (
                 "—"
@@ -105,7 +106,7 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
                 </>
               ) : (
                 <>
-                  <Dt millimes={tx.finalMillimes ?? 0} /> × {formatRate(tx.rateBps)} · the seller withdraws from their balance
+                  <Dt millimes={tx.finalMillimes ?? 0} /> × <Secret>{formatRate(tx.rateBps)}</Secret> · the seller withdraws from their balance
                 </>
               )}
             </CardDescription>
@@ -118,7 +119,7 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
             )}
             {Object.entries(view.payoutDetails).map(([k, v]) => (
               <Row key={k} label={view.method?.fields.find((f) => f.key === k)?.label.en ?? k}>
-                <span className="select-all font-mono">{v}</span>
+                <Secret className="select-all font-mono">{v}</Secret>
               </Row>
             ))}
             {view.payout && (
@@ -126,7 +127,7 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
                 <Row label="Payout status">
                   <Badge variant={view.payout.status === "paid" ? "success" : "warning"}>{view.payout.status}</Badge>
                 </Row>
-                {view.payout.reference && <Row label="Reference">{view.payout.reference}</Row>}
+                {view.payout.reference && <Row label="Reference"><Secret>{view.payout.reference}</Secret></Row>}
                 {view.payout.hasProof && (
                   <Button variant="outline" size="sm" render={<a href={`/api/payouts/${view.payout.id}/proof`} target="_blank" rel="noreferrer" />}>
                     View proof
@@ -185,7 +186,7 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
               {audit.credits.map(({ credit, sms }) => (
                 <TableRow key={credit.id}>
                   <TableCell className="text-xs">{credit.receivedAt.toLocaleString("en-GB")}</TableCell>
-                  <TableCell className="font-mono text-xs">{formatMsisdn(credit.senderMsisdn)}</TableCell>
+                  <TableCell className="font-mono text-xs"><Secret>{formatMsisdn(credit.senderMsisdn)}</Secret></TableCell>
                   <TableCell className="text-right">
                     <Dt millimes={credit.amountMillimes} />
                   </TableCell>
@@ -194,7 +195,7 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
                   </TableCell>
                   <TableCell>{credit.balanceVerified ? <Badge variant="success">yes</Badge> : <Badge variant="secondary">no</Badge>}</TableCell>
                   <TableCell className="max-w-80 whitespace-normal text-muted-foreground text-xs">
-                    {sms ? `${sms.fromAddress}: ${sms.body}` : "—"}
+                    {sms ? <Secret>{`${sms.fromAddress}: ${sms.body}`}</Secret> : "—"}
                   </TableCell>
                 </TableRow>
               ))}
@@ -236,7 +237,7 @@ export default async function AdminSalePage({ params }: { params: Promise<{ id: 
                   <TableCell className="text-right">
                     <Dt millimes={c.parsedBalanceMillimes} />
                   </TableCell>
-                  <TableCell className="max-w-96 whitespace-normal text-muted-foreground text-xs">{c.rawResponse ?? c.error ?? "—"}</TableCell>
+                  <TableCell className="max-w-96 whitespace-normal text-muted-foreground text-xs">{c.rawResponse ?? c.error ? <Secret>{c.rawResponse ?? c.error}</Secret> : "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Secret } from "@/components/app/confidential";
 import { Dt } from "@/components/app/money";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
 import { PageHeader } from "@/components/admin/page-header";
@@ -9,7 +10,7 @@ import { Frame } from "@/components/ui/frame";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { WithdrawalStatus } from "@/db/schema";
 import { listLegacyPayouts, listWithdrawals } from "@/lib/admin-queries";
-import { AttachProofButton, MarkPaidButton, RejectButton } from "./withdrawal-actions";
+import { AttachProofButton, MarkPaidButton, NoteButton, RejectButton } from "./withdrawal-actions";
 
 export const metadata = { title: "Withdrawals" };
 
@@ -73,7 +74,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
                   <TableRow key={payout.id}>
                     <TableCell>
                       <Link href={`/admin/sales/${tx.id}`} className="font-mono font-medium underline-offset-4 hover:underline">
-                        {tx.ref}
+                        <Secret>{tx.ref}</Secret>
                       </Link>
                     </TableCell>
                     <TableCell className="max-w-40 truncate" title={user.email ?? ""}>
@@ -84,7 +85,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
                       {Object.entries(payout.details).map(([k, v]) => (
                         <div key={k}>
                           <span className="text-muted-foreground">{method.fields.find((f) => f.key === k)?.label.en ?? k}: </span>
-                          <span className="select-all font-mono">{v}</span>
+                          <Secret className="select-all font-mono">{v}</Secret>
                         </div>
                       ))}
                     </TableCell>
@@ -96,7 +97,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
                     </TableCell>
                     <TableCell className="text-muted-foreground text-xs">
                       <TimeAgo date={payout.paidAt} />
-                      {payout.reference && <div className="font-mono">{payout.reference}</div>}
+                      {payout.reference && <div className="font-mono"><Secret>{payout.reference}</Secret></div>}
                     </TableCell>
                     <TableCell className="text-right">
                       {payout.proofPath && (
@@ -116,7 +117,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
   }
 
   const rows = await listWithdrawals(status);
-  const total = rows.reduce((s, r) => s + r.w.netMillimes, 0);
+  const total = rows.reduce((s, r) => s + r.w.sendMillimes, 0);
 
   return (
     <>
@@ -124,7 +125,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
       {header}
       {status === "pending" && rows.length > 0 && (
         <p className="text-sm">
-          {rows.length} withdrawals · total to send <Dt millimes={total} className="font-semibold" />
+          <Secret>{rows.length}</Secret> withdrawals · total to send <Dt millimes={total} className="font-semibold" />
         </p>
       )}
       {rows.length === 0 ? (
@@ -147,7 +148,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
             <TableBody>
               {rows.map(({ w, method, user }) => (
                 <TableRow key={w.id}>
-                  <TableCell className="font-mono font-medium">{w.ref}</TableCell>
+                  <TableCell className="font-mono font-medium"><Secret>{w.ref}</Secret></TableCell>
                   <TableCell className="max-w-40 truncate" title={user.email ?? ""}>
                     <Link href={`/admin/users/${user.id}`} className="underline-offset-4 hover:underline">
                       {user.name ?? user.email}
@@ -158,7 +159,7 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
                     {Object.entries(w.details).map(([k, v]) => (
                       <div key={k}>
                         <span className="text-muted-foreground">{method.fields.find((f) => f.key === k)?.label.en ?? k}: </span>
-                        <span className="select-all font-mono">{v}</span>
+                        <Secret className="select-all font-mono">{v}</Secret>
                       </div>
                     ))}
                   </TableCell>
@@ -166,23 +167,36 @@ export default async function WithdrawalsPage({ searchParams }: { searchParams: 
                     <Dt millimes={w.grossMillimes} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Dt millimes={w.netMillimes} className="font-semibold" />
-                    {w.feeMillimes > 0 && (
-                      <div className="text-muted-foreground text-xs">
-                        fee <Dt millimes={w.feeMillimes} unit={false} />
-                      </div>
-                    )}
+                    <Dt millimes={w.sendMillimes} className="font-semibold" />
+                    {w.feeMillimes > 0 &&
+                      (w.sendMillimes === w.grossMillimes ? (
+                        <div className="text-muted-foreground text-xs">
+                          {method.name.en} takes <Dt millimes={w.feeMillimes} unit={false} /> · seller gets{" "}
+                          <Dt millimes={w.netMillimes} unit={false} />
+                        </div>
+                      ) : (
+                        <div className="text-muted-foreground text-xs">
+                          fee <Dt millimes={w.feeMillimes} unit={false} />
+                        </div>
+                      ))}
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs">
                     <TimeAgo date={status === "pending" ? w.createdAt : status === "paid" ? w.paidAt : w.rejectedAt} />
-                    {w.reference && <div className="font-mono">{w.reference}</div>}
+                    {w.reference && <div className="font-mono"><Secret>{w.reference}</Secret></div>}
                     {w.rejectReason && <div className="max-w-56 whitespace-normal">{w.rejectReason}</div>}
+                    {w.note && status !== "rejected" && (
+                      <div className="max-w-56 whitespace-normal">
+                        <span className="font-medium text-foreground">Note: </span>
+                        {w.note}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     {status === "pending" ? (
                       <div className="flex justify-end gap-2">
+                        <NoteButton withdrawalId={w.id} ref_={w.ref} note={w.note} />
                         <RejectButton withdrawalId={w.id} ref_={w.ref} grossMillimes={w.grossMillimes} />
-                        <MarkPaidButton withdrawalId={w.id} ref_={w.ref} netMillimes={w.netMillimes} />
+                        <MarkPaidButton withdrawalId={w.id} ref_={w.ref} sendMillimes={w.sendMillimes} note={w.note} />
                       </div>
                     ) : status === "paid" ? (
                       w.proofPath ? (

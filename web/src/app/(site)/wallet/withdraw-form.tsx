@@ -4,6 +4,7 @@ import { CheckCircle2Icon, InfoIcon, SendIcon } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { Secret } from "@/components/app/confidential";
 import { BigInput } from "@/components/app/big-input";
 import { Dt } from "@/components/app/money";
 import { PayoutLogo } from "@/components/app/payout-logo";
@@ -17,7 +18,7 @@ import { Radio, RadioGroup } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { toastManager } from "@/components/ui/toast";
 import type { LocalizedText, PayoutField } from "@/db/schema";
-import { formatDt, formatPercent, parseDinars, payoutFee } from "@/lib/money";
+import { formatDt, formatPercent, parseDinars, payoutAmounts } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { requestWithdrawalAction } from "./actions";
 
@@ -52,8 +53,9 @@ export function WithdrawForm({
 
   const method = methods.find((m) => m.code === methodCode);
   const amountMillimes = parseDinars(amount);
-  const fee = method && amountMillimes ? payoutFee(amountMillimes, method) : 0;
-  const net = method && amountMillimes ? Math.max(0, amountMillimes - fee) : 0;
+  const amounts = method && amountMillimes ? payoutAmounts(amountMillimes, method) : null;
+  const fee = amounts?.fee ?? 0;
+  const net = amounts ? Math.max(0, amounts.net) : 0;
   const methodDetails = useMemo(() => details[methodCode] ?? {}, [details, methodCode]);
   const canWithdraw = balanceMillimes >= minMillimes && methods.length > 0;
 
@@ -94,7 +96,7 @@ export function WithdrawForm({
         <div className="flex flex-col gap-1">
           <h2 className="font-semibold text-lg">{t("withdrawTitle")}</h2>
           <p className="text-muted-foreground">
-            {methods.length === 0 ? t("noMethods") : t("needMinimum", { amount: formatDt(minMillimes) })}
+            {methods.length === 0 ? t("noMethods") : t.rich("needMinimum", { amount: formatDt(minMillimes), secret: (c) => <Secret>{c}</Secret> })}
           </p>
         </div>
       </div>
@@ -105,7 +107,7 @@ export function WithdrawForm({
     <section className="flex flex-col gap-5 border-t pt-6">
       <div className="flex flex-col gap-1">
         <h2 className="font-heading font-bold text-2xl">{t("withdrawTitle")}</h2>
-        <p className="text-muted-foreground">{t("withdrawText", { min: formatDt(minMillimes) })}</p>
+        <p className="text-muted-foreground">{t.rich("withdrawText", { min: formatDt(minMillimes), secret: (c) => <Secret>{c}</Secret> })}</p>
       </div>
       <Form
         className="flex flex-col gap-6"
@@ -126,9 +128,9 @@ export function WithdrawForm({
                   <span className="font-semibold text-base">{m.name[locale] ?? m.name.en}</span>
                   <span className="text-muted-foreground text-xs">
                     {m.feeBps > 0
-                      ? tc("feePercent", { percent: formatPercent(m.feeBps) })
+                      ? tc.rich("feePercent", { percent: formatPercent(m.feeBps), secret: (c) => <Secret>{c}</Secret> })
                       : m.feeMillimes > 0
-                        ? tc("fee", { amount: formatDt(m.feeMillimes) })
+                        ? tc.rich("fee", { amount: formatDt(m.feeMillimes), secret: (c) => <Secret>{c}</Secret> })
                         : tc("noFee")}
                   </span>
                 </span>
@@ -156,7 +158,7 @@ export function WithdrawForm({
               {t("all")}
             </Button>
           </div>
-          <FieldDescription>{t("amountHint", { balance: formatDt(balanceMillimes) })}</FieldDescription>
+          <FieldDescription>{t.rich("amountHint", { balance: formatDt(balanceMillimes), secret: (c) => <Secret>{c}</Secret> })}</FieldDescription>
           {errors.amount && <p className="font-medium text-destructive-foreground">{errors.amount}</p>}
         </Field>
 
@@ -189,7 +191,13 @@ export function WithdrawForm({
           <Row label={t("fromBalance")}>
             <Dt compact millimes={amountMillimes ?? 0} />
           </Row>
-          <Row label={tc("feeLine")}>
+          <Row
+            label={
+              method?.feeBps
+                ? t.rich("methodFeeLine", { method: method.name[locale] ?? method.name.en, percent: formatPercent(method.feeBps), secret: (c) => <Secret>{c}</Secret> })
+                : tc("feeLine")
+            }
+          >
             <Dt compact millimes={fee ? -fee : 0} />
           </Row>
           <Separator />
@@ -212,7 +220,7 @@ export function WithdrawForm({
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <span className="text-muted-foreground">{label}</span>

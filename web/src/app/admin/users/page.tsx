@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { listUsers } from "@/lib/admin-queries";
 import { requireStaff } from "@/lib/session";
 import { AdjustBalanceButton, BlockButton, RoleSelect } from "./user-actions";
+import { Secret } from "@/components/app/confidential";
 
 export const metadata = { title: "Sellers & balances" };
 
@@ -76,7 +77,9 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                 <TableCell className="text-right">
                   <Dt millimes={balanceMillimes} className={balanceMillimes > 0 ? "font-semibold" : ""} />
                 </TableCell>
-                <TableCell className="text-right">{sales}</TableCell>
+                <TableCell className="text-right">
+                  <Secret className="tabular">{sales}</Secret>
+                </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
                   <TimeAgo date={user.createdAt} />
                 </TableCell>

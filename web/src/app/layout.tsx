@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
 import { Analytics } from "@/components/app/analytics";
 import { Clarity } from "@/components/app/clarity";
+import { CONFIDENTIAL_INIT } from "@/components/app/confidential";
 import { Providers } from "@/components/app/providers";
 import { INSTALL_PROMPT_CAPTURE } from "@/components/pwa/install-prompt";
 import { ServiceWorker } from "@/components/pwa/service-worker";
@@ -32,10 +33,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   const rtl = isRtl(locale);
   return (
-    <html lang={locale} dir={rtl ? "rtl" : "ltr"} className={cn("h-full antialiased", rtl ? arabic.variable : inter.variable, geistMono.variable)}>
+    <html suppressHydrationWarning lang={locale} dir={rtl ? "rtl" : "ltr"} className={cn("h-full antialiased", rtl ? arabic.variable : inter.variable, geistMono.variable)}>
       <head>
         {/* Catches the browser's install offer even if it arrives before React has loaded. */}
         <script dangerouslySetInnerHTML={{ __html: INSTALL_PROMPT_CAPTURE }} />
+        {/* Turns confidential mode back on before paint, so hidden numbers never flash. */}
+        <script dangerouslySetInnerHTML={{ __html: CONFIDENTIAL_INIT }} />
       </head>
       <body className="flex min-h-full flex-col">
         <ServiceWorker />

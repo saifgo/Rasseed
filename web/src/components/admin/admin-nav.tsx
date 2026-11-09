@@ -3,6 +3,7 @@
 import {
   ArrowLeftIcon,
   BanknoteIcon,
+  CalendarCheckIcon,
   CoinsIcon,
   GaugeIcon,
   ListChecksIcon,
@@ -14,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ConfidentialToggle, Secret } from "@/components/app/confidential";
 import { Logo } from "@/components/app/logo";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -42,6 +44,7 @@ const operations: Item[] = [
   { href: "/admin/sales", label: "All sales", icon: ReceiptTextIcon },
   { href: "/admin/credits", label: "Unmatched credits", icon: CoinsIcon, count: "credits" },
   { href: "/admin/users", label: "Sellers & balances", icon: UsersIcon },
+  { href: "/admin/closing", label: "Day closing", icon: CalendarCheckIcon },
 ];
 
 // Admin only.
@@ -56,10 +59,11 @@ export function AdminSidebar({ counts, role, name }: { counts: AdminCounts; role
   const groups = role === "admin" ? [{ label: "Operations", items: operations }, { label: "Setup", items: setup }] : [{ label: "Operations", items: operations }];
   return (
     <Sidebar>
-      <SidebarHeader className="px-4 py-3">
+      <SidebarHeader className="flex-row items-center justify-between px-4 py-3">
         <Link href="/admin">
           <Logo />
         </Link>
+        <ConfidentialToggle className="hidden md:inline-flex" showLabel="Show numbers" hideLabel="Hide numbers" />
       </SidebarHeader>
       <SidebarContent>
         {groups.map((g) => (
@@ -76,7 +80,7 @@ export function AdminSidebar({ counts, role, name }: { counts: AdminCounts; role
                         <item.icon aria-hidden="true" />
                         <span>{item.label}</span>
                       </SidebarMenuButton>
-                      {n > 0 && <SidebarMenuBadge>{n}</SidebarMenuBadge>}
+                      {n > 0 && <SidebarMenuBadge><Secret>{n}</Secret></SidebarMenuBadge>}
                     </SidebarMenuItem>
                   );
                 })}

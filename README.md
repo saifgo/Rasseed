@@ -39,7 +39,7 @@ rechargemarketplace/
 
 - The balance is an append-only ledger (`wallet_entries`): sale credits, withdrawals, refunds and manual adjustments.
 - On **My balance** the seller requests a withdrawal: any amount up to the balance (minimum set in Admin → Settings),
-  choosing the method and details each time. The method fee is charged **once per withdrawal**: either a fixed amount (e.g. mandate 5 DT) or a percentage of the amount withdrawn (rounded down to the millime).
+  choosing the method and details each time. The method fee is charged **once per withdrawal**: either a fixed amount (e.g. mandate 5 DT), which we pay when sending so we send the amount minus the fee, or a percentage of the amount withdrawn (rounded down to the millime), which the method itself takes on receipt so we send the full amount (D17 1%: 18 DT asked → 18 DT sent → seller receives 17.820 DT).
   The amount leaves the balance immediately; several requests can be pending at once; sellers cannot cancel a request.
 - Staff (Admin → Withdrawals) **mark it paid** (reference, note, proof) or **reject** it with a reason, which refunds the
   full amount to the balance.

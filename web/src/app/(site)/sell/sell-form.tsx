@@ -4,6 +4,7 @@ import { ArrowLeftIcon, ArrowRightIcon, CheckIcon, LockIcon, PhoneIcon, Triangle
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useSyncExternalStore, useTransition } from "react";
+import { Secret } from "@/components/app/confidential";
 import { BigInput } from "@/components/app/big-input";
 import { Dt } from "@/components/app/money";
 import { OperatorLogo } from "@/components/app/operator-badge";
@@ -138,7 +139,7 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
                 <span className="flex flex-1 flex-col gap-0.5">
                   <span className="font-heading font-bold text-2xl">{o.name}</span>
                   <span className="text-muted-foreground text-sm">
-                    {o.active ? t("tileRate", { amount: formatDt(grossPayout(10_000, o.rateBps)) }) : t("operatorUnavailable")}
+                    {o.active ? t.rich("tileRate", { amount: formatDt(grossPayout(10_000, o.rateBps)), secret: (c) => <Secret>{c}</Secret> }) : t("operatorUnavailable")}
                   </span>
                   {o.active && lastOp === o.code && <span className="font-medium text-xs" style={{ color: o.color }}>{t("lastUsed")}</span>}
                 </span>
@@ -253,9 +254,9 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
                 <Dt compact millimes={amountMillimes} className="font-semibold text-xl" />
               </SummaryRow>
               <SummaryRow label={t("fromNumber")} onEdit={() => go(3)} editLabel={t("change")}>
-                <span dir="ltr" className="font-mono font-semibold text-xl">
+                <Secret dir="ltr" className="font-mono font-semibold text-xl">
                   {formatMsisdn(senderNorm)}
-                </span>
+                </Secret>
               </SummaryRow>
               <div className="flex items-baseline justify-between gap-3 p-4">
                 <dt className="font-semibold text-lg">{t("youReceive")}</dt>

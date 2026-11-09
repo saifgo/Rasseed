@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Secret } from "@/components/app/confidential";
 import { Dt } from "@/components/app/money";
 import { AutoRefresh } from "@/components/admin/auto-refresh";
 import { PageHeader } from "@/components/admin/page-header";
@@ -46,10 +47,10 @@ export default async function CreditsPage() {
                   </TableCell>
                   <TableCell className="font-mono text-xs">
                     <Link href={`/admin/numbers/${sim.id}`} className="underline-offset-4 hover:underline">
-                      {sim.msisdn ? formatMsisdn(sim.msisdn) : `slot ${sim.slotIndex + 1}`}
+                      {sim.msisdn ? <Secret>{formatMsisdn(sim.msisdn)}</Secret> : `slot ${sim.slotIndex + 1}`}
                     </Link>
                   </TableCell>
-                  <TableCell className="font-mono text-xs">{formatMsisdn(credit.senderMsisdn)}</TableCell>
+                  <TableCell className="font-mono text-xs"><Secret>{formatMsisdn(credit.senderMsisdn)}</Secret></TableCell>
                   <TableCell className="text-right">
                     <Dt millimes={credit.amountMillimes} />
                   </TableCell>
@@ -59,13 +60,13 @@ export default async function CreditsPage() {
                   <TableCell>
                     {tx?.id ? (
                       <Link href={`/admin/sales/${tx.id}`} className="font-mono underline-offset-4 hover:underline">
-                        {tx.ref}
+                        <Secret>{tx.ref}</Secret>
                       </Link>
                     ) : (
                       <span className="text-muted-foreground text-xs">{credit.note ?? "—"}</span>
                     )}
                   </TableCell>
-                  <TableCell className="max-w-72 whitespace-normal text-muted-foreground text-xs">{sms?.body ?? "—"}</TableCell>
+                  <TableCell className="max-w-72 whitespace-normal text-muted-foreground text-xs">{sms?.body ? <Secret>{sms.body}</Secret> : "—"}</TableCell>
                   <TableCell className="text-right">
                     <CreditActions creditId={credit.id} suggestedRef={tx?.ref ?? ""} />
                   </TableCell>
@@ -94,14 +95,14 @@ export default async function CreditsPage() {
                 {resolved.map(({ credit, tx }) => (
                   <TableRow key={credit.id}>
                     <TableCell className="text-xs">{credit.receivedAt.toLocaleString("en-GB")}</TableCell>
-                    <TableCell className="font-mono text-xs">{formatMsisdn(credit.senderMsisdn)}</TableCell>
+                    <TableCell className="font-mono text-xs"><Secret>{formatMsisdn(credit.senderMsisdn)}</Secret></TableCell>
                     <TableCell className="text-right">
                       <Dt millimes={credit.amountMillimes} />
                     </TableCell>
                     <TableCell>
                       <Badge variant={credit.status === "applied" ? "success" : "secondary"}>{credit.status}</Badge>
                     </TableCell>
-                    <TableCell className="text-xs">{tx?.ref ?? credit.note ?? "—"}</TableCell>
+                    <TableCell className="text-xs">{tx?.ref ? <Secret>{tx.ref}</Secret> : (credit.note ?? "—")}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -115,6 +115,7 @@ async function main() {
     assert.equal(w.status, "pending");
     assert.equal(w.feeMillimes, 5000);
     assert.equal(w.netMillimes, 1000);
+    assert.equal(w.sendMillimes, 1000, "fixed fee: we pay it, so we send the amount minus the fee");
     assert.equal(await balance(), before - 6000, "amount leaves the balance when requested");
     // Reject → full amount back.
     await rejectWithdrawal(seller.id, wid, "wrong name");
@@ -146,6 +147,7 @@ async function main() {
       const [w] = await db.select().from(withdrawals).where(eq(withdrawals.id, wid));
       assert.equal(w.feeMillimes, 58);
       assert.equal(w.netMillimes, 2287);
+      assert.equal(w.sendMillimes, 2345, "percentage fee: the method takes it, so we send the full amount");
       assert.equal(await balance(), before - 2345);
       await rejectWithdrawal(seller.id, wid, "test cleanup");
     } finally {

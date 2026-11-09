@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, gte, ilike, inArray, isNotNull, lte, or, sql, sum } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, ilike, inArray, isNotNull, lt, lte, or, sql, sum } from "drizzle-orm";
 import { db } from "@/db";
 import {
   ACTIVE_TX_STATUSES,
@@ -52,7 +52,7 @@ export async function getOverview() {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   const [[pending], [today], [active], balances, [owed]] = await Promise.all([
-    db.select({ n: count(), total: sum(withdrawals.netMillimes) }).from(withdrawals).where(eq(withdrawals.status, "pending")),
+    db.select({ n: count(), total: sum(withdrawals.sendMillimes) }).from(withdrawals).where(eq(withdrawals.status, "pending")),
     db
       .select({ n: count(), credit: sum(transactions.finalMillimes), payout: sum(transactions.payoutNetMillimes) })
       .from(transactions)
@@ -303,3 +303,143 @@ export async function devicesHealth() {
   return rows.map((d) => ({ ...d, online: Boolean(d.lastSeenAt && d.lastSeenAt > onlineSince) }));
 }
 
+
+/** Business days follow Tunisia time. */
+export const BUSINESS_TZ = "Africa/Tunis";
+
+export function todayInBusinessTz() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: BUSINESS_TZ }).format(new Date());
+}
+
+/**
+ * Day closing for one calendar day (YYYY-MM-DD, Tunisia time):
+ * SIM credit at the start and end of the day per operator, credit received from confirmed sales,
+ * and cash paid out through withdrawals marked paid that day.
+ */
+export async function getDayClosing(day: string) {
+  const [bounds] = await db.execute<{ start: Date; end: Date }>(
+    sql`select ((${day})::date)::timestamp at time zone ${BUSINESS_TZ} as "start",
+               ((${day})::date + 1)::timestamp at time zone ${BUSINESS_TZ} as "end"`,
+  );
+  const start = new Date(bounds.start);
+  const end = new Date(bounds.end);
+  const startIso = start.toISOString();
+  const endIso = end.toISOString();
+
+  const [ops, simRows, beforeStart, firstInDay, beforeEnd, sales, paid] = await Promise.all([
+    db.select().from(operators).orderBy(asc(operators.sortOrder)),
+    db.select({ id: sims.id, operatorCode: sims.operatorCode }).from(sims).where(isNotNull(sims.operatorCode)),
+    // Last balance check before the day started.
+    db.execute<{ sim_id: string; balance: string }>(
+      sql`select distinct on (sim_id) sim_id, balance_millimes::text as balance from balance_snapshots
+          where taken_at < ${startIso}::timestamptz order by sim_id, taken_at desc`,
+    ),
+    // First check of the day: used as the start for SIMs with no earlier check (added that day).
+    db.execute<{ sim_id: string; balance: string }>(
+      sql`select distinct on (sim_id) sim_id, balance_millimes::text as balance from balance_snapshots
+          where taken_at >= ${startIso}::timestamptz and taken_at < ${endIso}::timestamptz order by sim_id, taken_at asc`,
+    ),
+    // Last check before the day ended (for today: the latest check so far).
+    db.execute<{ sim_id: string; balance: string }>(
+      sql`select distinct on (sim_id) sim_id, balance_millimes::text as balance from balance_snapshots
+          where taken_at < ${endIso}::timestamptz order by sim_id, taken_at desc`,
+    ),
+    db
+      .select({
+        operatorCode: transactions.operatorCode,
+        n: count(),
+        credit: sum(transactions.finalMillimes),
+        cash: sum(transactions.payoutGrossMillimes),
+      })
+      .from(transactions)
+      .where(and(inArray(transactions.status, ["confirmed", "paid"]), gte(transactions.completedAt, start), lt(transactions.completedAt, end)))
+      .groupBy(transactions.operatorCode),
+    db
+      .select({
+        methodCode: withdrawals.methodCode,
+        n: count(),
+        send: sum(withdrawals.sendMillimes),
+        gross: sum(withdrawals.grossMillimes),
+        fee: sum(withdrawals.feeMillimes),
+      })
+      .from(withdrawals)
+      .where(and(eq(withdrawals.status, "paid"), gte(withdrawals.paidAt, start), lt(withdrawals.paidAt, end)))
+      .groupBy(withdrawals.methodCode),
+  ]);
+  const methods = await db.select().from(payoutMethods).orderBy(asc(payoutMethods.sortOrder));
+
+  const toMap = (rows: { sim_id: string; balance: string }[]) => new Map(rows.map((r) => [r.sim_id, Number(r.balance)]));
+  const startMap = toMap(beforeStart);
+  const firstMap = toMap(firstInDay);
+  const endMap = toMap(beforeEnd);
+
+  const operatorRows = ops.map((op) => {
+    let startMillimes = 0;
+    let endMillimes = 0;
+    let simsCounted = 0;
+    let estimatedSims = 0;
+    for (const s of simRows) {
+      if (s.operatorCode !== op.code) continue;
+      const before = startMap.get(s.id);
+      const first = firstMap.get(s.id);
+      const last = endMap.get(s.id);
+      if (before == null && first == null && last == null) continue;
+      simsCounted++;
+      if (before != null) startMillimes += before;
+      else if (first != null) {
+        startMillimes += first;
+        estimatedSims++;
+      }
+      endMillimes += last ?? 0;
+    }
+    const sale = sales.find((x) => x.operatorCode === op.code);
+    const receivedMillimes = Number(sale?.credit ?? 0);
+    return {
+      code: op.code,
+      name: op.name,
+      color: op.color,
+      sims: simsCounted,
+      estimatedSims,
+      startMillimes,
+      receivedMillimes,
+      salesCount: sale?.n ?? 0,
+      cashMillimes: Number(sale?.cash ?? 0),
+      endMillimes,
+      // Change not explained by confirmed sales (credit moved out, pending sales, missed checks…).
+      differenceMillimes: endMillimes - startMillimes - receivedMillimes,
+    };
+  });
+
+  const payoutRows = paid.map((p) => {
+    const m = methods.find((x) => x.code === p.methodCode);
+    return {
+      code: p.methodCode,
+      name: m?.name.en ?? p.methodCode,
+      count: p.n,
+      sendMillimes: Number(p.send ?? 0),
+      grossMillimes: Number(p.gross ?? 0),
+      feeMillimes: Number(p.fee ?? 0),
+    };
+  });
+
+  const total = <T>(rows: T[], pick: (r: T) => number) => rows.reduce((a, r) => a + pick(r), 0);
+  return {
+    day,
+    start,
+    end,
+    operators: operatorRows,
+    payouts: payoutRows,
+    totals: {
+      startMillimes: total(operatorRows, (r) => r.startMillimes),
+      receivedMillimes: total(operatorRows, (r) => r.receivedMillimes),
+      salesCount: total(operatorRows, (r) => r.salesCount),
+      cashMillimes: total(operatorRows, (r) => r.cashMillimes),
+      endMillimes: total(operatorRows, (r) => r.endMillimes),
+      differenceMillimes: total(operatorRows, (r) => r.differenceMillimes),
+      paidCount: total(payoutRows, (r) => r.count),
+      paidSendMillimes: total(payoutRows, (r) => r.sendMillimes),
+      paidGrossMillimes: total(payoutRows, (r) => r.grossMillimes),
+      paidFeeMillimes: total(payoutRows, (r) => r.feeMillimes),
+    },
+  };
+}
