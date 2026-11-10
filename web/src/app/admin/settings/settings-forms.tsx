@@ -25,12 +25,26 @@ const labels: Record<keyof AppSettings, { label: string; unit: string; help: str
   lateCreditWindowHours: { label: "Late transfer window", unit: "h", help: "Late transfers within this window are linked to the old sale." },
   maxSimFailures: { label: "SIM failure limit", unit: "×", help: "USSD failures in a row before a SIM is skipped." },
   minWithdrawalMillimes: { label: "Minimum withdrawal", unit: "DT", help: "Smallest amount a seller can withdraw from their balance." },
+  marketplaceEnabled: { label: "Buyer marketplace", unit: "0 = off, 1 = on", help: "On: users with marketplace access (Users page) can buy, sell and recharge. Staff always see it." },
+  commissionBps: { label: "Marketplace commission", unit: "%", help: "Deducted from the credit released to the buyer. Locked on each order when placed." },
+  maxOrderMillimes: { label: "Maximum order amount", unit: "DT", help: "Largest amount of credit a buyer can order at once." },
+  rechargeVerifyAttempts: { label: "Recharge checks", unit: "×", help: "Balance checks after a recharge before it goes to admin review." },
 };
 
 // Shown and edited in dinars; stored in millimes.
-const DINAR_KEYS: (keyof AppSettings)[] = ["minWithdrawalMillimes"];
-const toInput = (k: keyof AppSettings, n: number) => (DINAR_KEYS.includes(k) ? (n / 1000).toFixed(3) : String(n));
-const fromInput = (k: keyof AppSettings, s: string) => (DINAR_KEYS.includes(k) ? Math.round(Number(s.replace(",", ".")) * 1000) : Number(s));
+const DINAR_KEYS: (keyof AppSettings)[] = ["minWithdrawalMillimes", "maxOrderMillimes"];
+// Shown and edited in percent; stored in basis points.
+const PERCENT_KEYS: (keyof AppSettings)[] = ["commissionBps"];
+const ZERO_KEYS: (keyof AppSettings)[] = ["marketplaceEnabled", "commissionBps"];
+const toInput = (k: keyof AppSettings, n: number) =>
+  DINAR_KEYS.includes(k) ? (n / 1000).toFixed(3) : PERCENT_KEYS.includes(k) ? String(n / 100) : String(n);
+const fromInput = (k: keyof AppSettings, s: string) => {
+  const n = Number(s.replace(",", "."));
+  if (DINAR_KEYS.includes(k)) return Math.round(n * 1000);
+  if (PERCENT_KEYS.includes(k)) return Math.round(n * 100);
+  if (k === "marketplaceEnabled") return n ? 1 : 0;
+  return n;
+};
 
 export function SettingsForm({ values, defaults }: { values: AppSettings; defaults: AppSettings }) {
   const { pending, run } = useAdminAction();
@@ -50,9 +64,9 @@ export function SettingsForm({ values, defaults }: { values: AppSettings; defaul
               {labels[k].label} ({labels[k].unit})
             </FieldLabel>
             <Input
-              type={DINAR_KEYS.includes(k) ? "text" : "number"}
+              type={DINAR_KEYS.includes(k) || PERCENT_KEYS.includes(k) ? "text" : "number"}
               inputMode="decimal"
-              min={1}
+              min={ZERO_KEYS.includes(k) ? 0 : 1}
               value={v[k]}
               onChange={(e) => setV((s) => ({ ...s, [k]: e.target.value }))}
             />

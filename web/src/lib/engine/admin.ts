@@ -5,6 +5,7 @@ import { grossPayout } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
 import { EngineError, enqueueBalanceCheck, finalize, lockSim, lockTx, logEvent, releaseSim, updateTx } from "./core";
+import { fundOrderFromTransfer, recordSaleToSarfli } from "./market";
 import { assignQueued } from "./sales";
 import { addEntry } from "./wallet";
 
@@ -46,12 +47,17 @@ export async function applyCredit(adminId: string, creditId: string, txRef: stri
     if (!txRow) throw new EngineError("not_found");
     const tx = (await lockTx(t, txRow.id))!;
 
-    if (tx.status === "confirmed") {
+    if (tx.status === "confirmed" && tx.orderId) {
+      // Late credit of an order transfer: funds the order if it still waits, otherwise becomes seller stock.
+      await updateTx(t, tx.id, { finalMillimes: (tx.finalMillimes ?? 0) + credit.amountMillimes });
+      await fundOrderFromTransfer(t, tx, credit.amountMillimes, "admin");
+    } else if (tx.status === "confirmed") {
       const finalMillimes = (tx.finalMillimes ?? 0) + credit.amountMillimes;
       const gross = grossPayout(finalMillimes, tx.rateBps);
       const delta = gross - (tx.payoutGrossMillimes ?? 0);
       await updateTx(t, tx.id, { finalMillimes, payoutGrossMillimes: gross, payoutNetMillimes: gross });
       if (delta > 0) await addEntry(t, { userId: tx.userId, kind: "sale", amountMillimes: delta, txId: tx.id, createdBy: adminId });
+      await recordSaleToSarfli(t, tx, credit.amountMillimes);
     } else if (["expired", "cancelled"].includes(tx.status)) {
       await finalize(t, tx, credit.amountMillimes, settings, "admin", "late_credit");
     } else {

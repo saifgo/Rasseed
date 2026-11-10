@@ -22,7 +22,7 @@ export async function getBalance(dbx: DbTx | typeof db, userId: string): Promise
 }
 
 /** Serializes every balance change of a user (the users row is the lock). */
-async function lockUser(t: DbTx, userId: string) {
+export async function lockUser(t: DbTx, userId: string) {
   const [u] = await t.select().from(users).where(eq(users.id, userId)).for("update");
   if (!u) throw new EngineError("not_found");
   return u;

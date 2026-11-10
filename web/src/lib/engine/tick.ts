@@ -4,6 +4,7 @@ import { deviceCommands, sims, transactions } from "@/db/schema";
 import { getSettings } from "@/lib/settings";
 import { enqueueBalanceCheck, finalize, lockSim, lockTx, logEvent, releaseSim, updateTx } from "./core";
 import { onCommandFailure } from "./device";
+import { assignRecharges } from "./recharge";
 import { assignQueued } from "./sales";
 
 /** Time-based work. Safe to run concurrently: every step locks the rows it changes. */
@@ -104,4 +105,7 @@ export async function tick() {
 
   // 5. Fill free numbers.
   await assignQueued();
+
+  // 6. Buyer recharges waiting for a SIM.
+  await assignRecharges();
 }

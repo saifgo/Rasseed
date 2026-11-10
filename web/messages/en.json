@@ -287,6 +287,7 @@
       "sale": "Sale confirmed",
       "withdrawal": "Withdrawal",
       "withdrawal_refund": "Withdrawal refused — refund",
+      "stock_sale": "Marketplace credit sold to Sarfli",
       "adjustment": "Adjustment by our team"
     },
     "reference": "Reference",

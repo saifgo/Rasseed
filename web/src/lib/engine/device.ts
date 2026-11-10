@@ -19,6 +19,7 @@ import {
   type Sim,
 } from "./core";
 import type { DbTx } from "@/db";
+import { assignRecharges, onRechargeBalance, onRechargeBalanceFailure, onRechargeSent } from "./recharge";
 import { assignQueued } from "./sales";
 
 export const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
@@ -153,6 +154,8 @@ export async function syncDevice(device: typeof devices.$inferSelect, input: Syn
         id: c.id,
         type: c.type,
         ussd: c.ussdCode,
+        // ussd_send only: replies to type into the following USSD menu pages.
+        steps: c.steps,
         subscriptionId: sim.subscriptionId,
         slotIndex: sim.slotIndex,
         // Lets the phone tell whether a USSD page holds the balance or it must open the next page ("01").
@@ -318,6 +321,22 @@ export async function commandResult(
       return;
     }
     const sim = (await lockSim(t, cmd.simId))!;
+
+    if (cmd.type === "ussd_send") {
+      // A recharge send: keep the raw reply; the balance check that follows decides the outcome.
+      await t
+        .update(deviceCommands)
+        .set({
+          status: input.ok ? "succeeded" : "failed",
+          completedAt: new Date(),
+          rawResponse: input.response ?? null,
+          error: input.ok ? null : (input.error ?? "device_error").slice(0, 500),
+        })
+        .where(eq(deviceCommands.id, cmd.id));
+      await onRechargeSent(t, cmd, input.ok, input.response ?? null, input.ok ? null : (input.error ?? "device_error"));
+      return;
+    }
+
     const [op] = sim.operatorCode ? await t.select().from(operators).where(eq(operators.code, sim.operatorCode)) : [];
     const balance = input.ok && input.response && op ? parseBalance(input.response, op) : null;
 
@@ -341,6 +360,11 @@ export async function commandResult(
       .where(eq(deviceCommands.id, cmd.id));
     await recordSnapshot(t, sim, balance, cmd.id);
 
+    if (cmd.purpose === "recharge_baseline" || cmd.purpose === "recharge_verify") {
+      await onRechargeBalance(t, cmd, sim, balance);
+      return;
+    }
+
     const txId = cmd.purpose === "baseline" ? cmd.txId : sim.heldByTxId;
     if (!txId) return;
     const tx = await lockTx(t, txId);
@@ -363,6 +387,7 @@ export async function commandResult(
     await reconcile(t, tx, sim, balance, settings);
   });
   await assignQueued();
+  await assignRecharges();
 }
 
 export async function onCommandFailure(
@@ -375,6 +400,16 @@ export async function onCommandFailure(
     .update(sims)
     .set({ consecutiveFailures: sim.consecutiveFailures + 1 })
     .where(eq(sims.id, sim.id));
+
+  if (cmd.type === "ussd_send") {
+    // No answer from the phone: the send may or may not have happened. The balance tells.
+    await onRechargeSent(t, cmd, null, null, "no_result");
+    return;
+  }
+  if (cmd.purpose === "recharge_baseline" || cmd.purpose === "recharge_verify") {
+    await onRechargeBalanceFailure(t, cmd, sim);
+    return;
+  }
 
   const txId = cmd.purpose === "baseline" ? cmd.txId : sim.heldByTxId;
   if (!txId) return;

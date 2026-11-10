@@ -22,6 +22,7 @@ const kindLabel: Record<WalletEntryKind, string> = {
   withdrawal: "Withdrawal requested",
   withdrawal_refund: "Withdrawal rejected — refund",
   adjustment: "Manual adjustment",
+  stock_sale: "Credit sold to Sarfli (marketplace stock)",
 };
 const statusVariant: Record<WithdrawalStatus, "warning" | "success" | "error"> = { pending: "warning", paid: "success", rejected: "error" };
 

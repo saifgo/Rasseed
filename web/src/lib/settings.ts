@@ -25,7 +25,18 @@ export const DEFAULT_SETTINGS = {
   maxSimFailures: 3,
   /** Smallest withdrawal a seller can request, in millimes (placeholder: 5 DT — adjust in Settings). */
   minWithdrawalMillimes: 5000,
+  /** Buyer marketplace switch: 0 = hidden from everyone but staff, 1 = open to users with marketplace access. */
+  marketplaceEnabled: 0,
+  /** Sarfli's commission on released orders, in basis points of the credit (200 = 2%). */
+  commissionBps: 0,
+  /** Largest order a buyer can place, in millimes of credit (placeholder: 50 DT — adjust in Settings). */
+  maxOrderMillimes: 50000,
+  /** Balance checks after a recharge was sent, before it goes to an admin. */
+  rechargeVerifyAttempts: 4,
 };
+
+/** Settings where 0 is a meaningful value (switches, rates). */
+const ZERO_ALLOWED = new Set<string>(["marketplaceEnabled", "commissionBps"]);
 
 export type AppSettings = typeof DEFAULT_SETTINGS;
 
@@ -40,7 +51,8 @@ export async function getSettings(): Promise<AppSettings> {
 
 export async function saveSettings(values: Partial<AppSettings>) {
   for (const [key, value] of Object.entries(values)) {
-    if (!(key in DEFAULT_SETTINGS) || typeof value !== "number" || !Number.isFinite(value) || value <= 0) continue;
+    if (!(key in DEFAULT_SETTINGS) || typeof value !== "number" || !Number.isFinite(value)) continue;
+    if (value < 0 || (value === 0 && !ZERO_ALLOWED.has(key))) continue;
     await db.insert(settings).values({ key, value }).onConflictDoUpdate({ target: settings.key, set: { value } });
   }
 }
