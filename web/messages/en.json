@@ -34,7 +34,8 @@
     "sell": "Sell credit",
     "mySales": "My sales",
     "wallet": "My balance",
-    "market": "Market"
+    "buy": "Buy",
+    "sellSection": "Sell"
   },
   "home": {
     "badge": "Ooredoo · Orange · Tunisie Telecom",
@@ -418,13 +419,8 @@
     }
   },
   "market": {
-    "title": "Market",
-    "subtitle": "Buy phone credit from other users at their price, then use it to recharge any number.",
     "myCredit": "My credit",
     "rechargeCta": "Recharge a number",
-    "sellingCta": "Sell credit to buyers",
-    "buyTitle": "Buy credit",
-    "buyHint": "Pick a seller. You pay him directly, only once all the credit is ready at Sarfli.",
     "filter": "Operator",
     "all": "All",
     "noListings": "No offer right now. Come back later.",
@@ -432,8 +428,6 @@
     "buyer": "Buyer",
     "priceLine": "You pay <pay></pay> for 10 DT of credit",
     "paysWith": "Payment: {info}",
-    "myOrders": "My orders",
-    "noOrders": "No order yet.",
     "noRatings": "No ratings yet",
     "ratingTitle": "Average of {count} ratings",
     "ratingCount": "{count, plural, one {# rating} other {# ratings}}",
@@ -506,8 +500,6 @@
     "leftoverSellTitle": "Sell this credit to Sarfli?",
     "leftoverSellText": "You get <cash></cash> on your balance at today's rate. You can withdraw it as usual.",
     "leftoverSold": "Sold. The money is on your balance.",
-    "backToSelling": "My selling",
-    "backToMarket": "Market",
     "orderTitle": "{operator} credit order",
     "boughtFrom": "You buy from {name}",
     "soldTo": "You sell to {name}",
@@ -550,7 +542,6 @@
     "leftoverKept": "You kept <secret>{amount} DT</secret> as stock for your next orders.",
     "leftoverSoldText": "You sold <secret>{amount} DT</secret> to Sarfli.",
     "toPay": "To pay",
-    "buyerPays": "The buyer pays you",
     "howToPay": "How to pay {seller}",
     "noPaymentInfo": "Not given — ask our team.",
     "proofs": "Payment proof",
@@ -602,16 +593,9 @@
     "sellStockTitle": "Sell to Sarfli",
     "cashToWallet": "Added to your balance",
     "sellToSarfli": "Sell to Sarfli",
-    "sellingTitle": "Sell to buyers",
-    "sellingSubtitle": "Set your price, send the credit for each order, and confirm when the buyer has paid you.",
     "myRating": "My rating:",
-    "incomingOrders": "Orders from buyers",
-    "noIncoming": "No order yet.",
-    "myPrices": "My prices",
-    "myPricesHint": "One price per operator. You don't need credit to publish.",
     "myStock": "My stock",
     "myStockHint": "Credit you kept at Sarfli. It is used first for your next orders, or you can sell it to Sarfli.",
-    "noStock": "No stock.",
     "todayRate": "Today Sarfli pays <cash></cash> for 10 DT of credit.",
     "aboveBalance": "More than your credit",
     "rechargeOff": "Recharges are not available yet.",
@@ -637,6 +621,62 @@
     "saleToOrderDone": "The credit was added to order <b>{ref}</b>.",
     "saleToOrderNote": "This transfer goes to the buyer's order <b>{ref}</b>, not to your balance.",
     "openOrder": "Open the order",
-    "toBuyerOrder": "Buyer's order"
+    "toBuyerOrder": "Buyer's order",
+    "needsAction": "Needs your action",
+    "inProgress": "In progress",
+    "finishedOrders": "Finished orders",
+    "seeAll": "See all",
+    "yourOffer": "Your offer",
+    "buyHome": {
+      "title": "Buy",
+      "recharge": "Recharge",
+      "buyCta": "Buy credit",
+      "empty": "Choose a seller. He sends the credit to Sarfli, you pay him, and the credit is yours.",
+      "todoPay": "Pay <secret>{pay} DT</secret> to {seller} and send the proof",
+      "todoExcess": "<secret>{excess} DT</secret> extra credit arrived: take it or not?",
+      "todoRate": "Rate {seller}",
+      "ctaPay": "Pay and send proof",
+      "ctaChoose": "Choose",
+      "ctaRate": "Rate",
+      "inProgressHint": "Nothing to do. We tell you when it's your turn."
+    },
+    "sellers": {
+      "title": "Choose a seller",
+      "hint": "Cheapest first. You pay the seller only when all the credit is ready.",
+      "cheapest": "Cheapest",
+      "per10": "Price for 10 DT of {operator} credit"
+    },
+    "order": {
+      "now": "What to do now",
+      "otherOptions": "Other options",
+      "openAdmin": "Open in admin",
+      "ref": "Order number",
+      "stepsLabel": "Order steps",
+      "steps": {
+        "funding": "Credit",
+        "payment": "Payment",
+        "check": "Confirmation",
+        "done": "Done"
+      }
+    },
+    "sellHome": {
+      "title": "Sell",
+      "todoSend": "Send <secret>{missing} DT</secret> of credit",
+      "todoCheck": "The buyer says he paid you <secret>{pay} DT</secret>",
+      "todoLeftover": "<secret>{amount} DT</secret> of credit left: keep or sell?",
+      "ctaSend": "Send credit",
+      "ctaCheck": "Check the payment",
+      "ctaChoose": "Choose",
+      "waitingHint": "Waiting for the buyer to pay you.",
+      "marketTitle": "The market",
+      "marketHint": "All prices buyers see right now, cheapest first.",
+      "you": "You",
+      "yourPrice": "Your price",
+      "offerOn": "<pay></pay> for 10 DT · Selling",
+      "offerOff": "<pay></pay> for 10 DT · Paused",
+      "noOffer": "Not selling yet. Set your price.",
+      "change": "Change",
+      "sarfliTitle": "Or sell to {brand} now"
+    }
   }
 }

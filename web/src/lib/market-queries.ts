@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db } from "@/db";
-import { listings, OPEN_ORDER_STATUSES, operators, orders, users } from "@/db/schema";
+import { listings, operators, orders, sellerRatings, users } from "@/db/schema";
 import {
   buyerBadMarks,
   canRate,
@@ -30,8 +30,8 @@ export async function requireMarketUser() {
   return { user, settings };
 }
 
-/** Active listings anyone can buy from (operator active, seller still allowed), cheapest first. */
-export async function listOpenListings(viewerId: string) {
+/** Active listings (operator active, seller still allowed), cheapest first. Includes the viewer's own, marked `mine`. */
+export async function listActiveListings(viewerId: string) {
   const settings = await getSettings();
   const rows = await db
     .select({ listing: listings, op: operators, seller: users })
@@ -40,7 +40,7 @@ export async function listOpenListings(viewerId: string) {
     .leftJoin(users, eq(users.id, listings.sellerId))
     .where(and(eq(listings.active, true), eq(operators.active, true)))
     .orderBy(asc(listings.priceBps));
-  const open = rows.filter((r) => r.listing.sellerId !== viewerId && (!r.listing.sellerId || (r.seller && canUseMarketplace(r.seller, settings))));
+  const open = rows.filter((r) => !r.listing.sellerId || (r.seller && canUseMarketplace(r.seller, settings)));
   const reputation = await sellerReputation(open.map((r) => r.listing.sellerId));
   return open.map((r) => ({
     id: r.listing.id,
@@ -50,7 +50,13 @@ export async function listOpenListings(viewerId: string) {
     priceBps: r.listing.priceBps,
     paymentInfo: r.listing.paymentInfo,
     rating: reputation[r.listing.sellerId ?? "sarfli"] ?? null,
+    mine: !!r.listing.sellerId && r.listing.sellerId === viewerId,
   }));
+}
+
+/** Active listings the viewer can buy from (not his own), cheapest first. */
+export async function listOpenListings(viewerId: string) {
+  return (await listActiveListings(viewerId)).filter((l) => !l.mine);
 }
 
 export type OpenListing = Awaited<ReturnType<typeof listOpenListings>>[number];
@@ -67,11 +73,32 @@ export async function userNames(ids: (string | null)[]) {
   return Object.fromEntries(rows.map((r) => [r.id, r.name])) as Record<string, string | null>;
 }
 
-/** Open orders first (oldest first), then finished ones (newest first). */
-export function openFirst<T extends { status: (typeof orders.$inferSelect)["status"]; createdAt: Date }>(rows: T[]) {
-  const open = rows.filter((o) => OPEN_ORDER_STATUSES.includes(o.status)).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
-  const done = rows.filter((o) => !OPEN_ORDER_STATUSES.includes(o.status));
-  return [...open, ...done];
+/** Ids of the given orders the buyer already rated. */
+export async function ratedOrderIds(orderIds: string[]) {
+  if (orderIds.length === 0) return new Set<string>();
+  const rows = await db.select({ orderId: sellerRatings.orderId }).from(sellerRatings).where(inArray(sellerRatings.orderId, orderIds));
+  return new Set(rows.map((r) => r.orderId));
+}
+
+type OrderRow = typeof orders.$inferSelect;
+
+/** Same rule as the engine's canRate, without the rating lookup: done, or cancelled by the buyer with a bad mark. */
+export const rateableStatus = (o: Pick<OrderRow, "status" | "cancelledBy" | "buyerBadMark">) =>
+  o.status === "released" || (o.status === "cancelled" && o.cancelledBy === "buyer" && o.buyerBadMark);
+
+/** What the buyer must do now on this order, or null when nothing. */
+export function buyerNextStep(o: OrderRow, rated: Set<string>): "pay" | "excess" | "rate" | null {
+  if (o.status === "funded") return o.excessMillimes > 0 ? "excess" : "pay";
+  if (rateableStatus(o) && !rated.has(o.id)) return "rate";
+  return null;
+}
+
+/** What the seller must do now on this order, or null when nothing. */
+export function sellerNextStep(o: OrderRow): "send" | "check" | "leftover" | null {
+  if (o.status === "funding") return "send";
+  if (o.status === "proof_uploaded" || o.status === "admin_review") return "check";
+  if (o.status === "cancelled" && o.leftoverMillimes > 0 && !o.leftoverChoice) return "leftover";
+  return null;
 }
 
 /** Everything the order page needs, for its buyer, its seller, or staff. Null when not visible. */

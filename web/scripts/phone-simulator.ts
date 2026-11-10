@@ -14,24 +14,13 @@
  * amount from the SIM and answer with a confirmation; see sendAmount() for how the amount is found.
  */
 import readline from "node:readline";
+import { balanceReply, creditSmsBody, SEND_REFUSED_REPLY, sendAmount, sendSuccessReply } from "../src/lib/simulated-phone";
 
 export type SimSlot = { slotIndex: number; subscriptionId: number; carrierName: string; balanceMillimes: number };
 
 type Command = { id: string; type?: string; ussd: string; steps?: string[]; subscriptionId: number };
 
-/**
- * Amount (millimes) of a credit send, guessed from the rendered code and replies: every number in
- * them except the service code (first group of the USSD), phone numbers (8+ digits) and menu choices
- * (1-2 digits); the largest one left wins. Fits templates using {millimes}, e.g. *133*{millimes}*{number}#
- * or steps ["{millimes}", "1"]. Override `PhoneSimulator.sendAmount` for other formats.
- */
-export function sendAmount(cmd: { ussd: string; steps?: string[] }): number | null {
-  const [, ...rest] = cmd.ussd.match(/\d+/g) ?? [];
-  const nums = [...rest, ...(cmd.steps ?? []).flatMap((s) => s.match(/\d+/g) ?? [])]
-    .filter((n) => n.length >= 3 && n.length < 8)
-    .map(Number);
-  return nums.length ? Math.max(...nums) : null;
-}
+export { sendAmount };
 
 export class PhoneSimulator {
   token: string | null = null;
@@ -45,11 +34,7 @@ export class PhoneSimulator {
   /** Credit sends performed, for tests to inspect. */
   sends: { commandId: string; slotIndex: number; ussd: string; steps: string[]; millimes: number }[] = [];
   /** Mimics each operator's real balance reply. Orange (*101#) lists several buckets; only recharge + transfer count. */
-  balanceFormat = (m: number, ussd: string) =>
-    ussd === "*101#"
-      ? `Votre forfait est de  30 DT. Votre report est de 0 DT. Votre credit recu par transfert est de 0 DT valable jusqu'au --. Votre solde de recharge est de  ${(m / 1000).toFixed(3)} DT.
-01:Page suivante`
-      : `Votre solde est de ${(m / 1000).toFixed(3)} DT. Valable jusqu'au 31/12/2026`;
+  balanceFormat = balanceReply;
 
   constructor(
     public server: string,
@@ -105,14 +90,12 @@ export class PhoneSimulator {
     if (millimes == null) return { ok: false, error: "sim_unknown_amount" };
     if (millimes > sim.balanceMillimes) {
       this.log(`SEND ${cmd.ussd} ${steps.join(" ")} on slot ${sim.slotIndex} refused: balance ${sim.balanceMillimes}`);
-      return { ok: true, response: "Votre solde est insuffisant pour effectuer ce transfert." };
+      return { ok: true, response: SEND_REFUSED_REPLY };
     }
     sim.balanceMillimes -= millimes;
     this.sends.push({ commandId: cmd.id, slotIndex: sim.slotIndex, ussd: cmd.ussd, steps, millimes });
     this.log(`SEND ${cmd.ussd} ${steps.join(" ")} on slot ${sim.slotIndex}: -${millimes} -> ${sim.balanceMillimes}`);
-    // One menu page per scripted reply, then the final confirmation (pages joined like the app does).
-    const pages = [...steps.map(() => "Veuillez confirmer:\n1:Oui\n2:Non"), `Transfert de ${millimes} Millimes effectue avec succes.`];
-    return { ok: true, response: pages.join("\n") };
+    return { ok: true, response: sendSuccessReply(steps, millimes) };
   }
 
   start(intervalMs = 1000) {
@@ -135,7 +118,7 @@ export class PhoneSimulator {
   async transfer(slotIndex: number, millimes: number, senderMsisdn: string) {
     const sim = this.sims.find((s) => s.slotIndex === slotIndex)!;
     sim.balanceMillimes += millimes;
-    return this.deliverSms(slotIndex, `Vous avez recu ${millimes} Millimes de la part du numéro ${senderMsisdn}`);
+    return this.deliverSms(slotIndex, creditSmsBody(millimes, senderMsisdn));
   }
 }
 
@@ -160,7 +143,7 @@ async function main() {
     try {
       if (cmd === "send") await phone.transfer(Number(a), Number(b), c);
       else if (cmd === "silent") phone.sims[Number(a)].balanceMillimes += Number(b);
-      else if (cmd === "fakesms") await phone.deliverSms(Number(a), `Vous avez recu ${b} Millimes de la part du numéro ${c}`);
+      else if (cmd === "fakesms") await phone.deliverSms(Number(a), creditSmsBody(Number(b), c));
       else if (cmd === "balance") console.log(phone.sims);
       else console.log("commands: send <slot> <millimes> <from> | silent <slot> <millimes> | fakesms <slot> <millimes> <from> | balance");
     } catch (e) {

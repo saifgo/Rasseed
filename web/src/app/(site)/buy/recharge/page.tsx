@@ -20,10 +20,11 @@ import { CancelRechargeButton, RechargeForm } from "./recharge-form";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Recharge" };
 
-export default async function RechargePage() {
+export default async function RechargePage({ searchParams }: { searchParams: Promise<{ op?: string }> }) {
   const { user } = await requireMarketUser();
   const t = await getTranslations("market");
   const format = await getFormatter();
+  const { op: wanted } = await searchParams;
   const [ops, balances, recharges] = await Promise.all([listOperators(), balancesByOperator(db, "buyer", user.id), listBuyerRecharges(user.id)]);
   const opBy = Object.fromEntries(ops.map((o) => [o.code, o]));
   // Only operators whose recharge code is set up by our team.
@@ -35,16 +36,16 @@ export default async function RechargePage() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-8">
       {live && <AutoRefresh seconds={4} />}
-      <Button variant="ghost" className="-ms-2 -mb-4 h-10 self-start text-base text-muted-foreground" render={<Link href="/market" />}>
+      <Button variant="ghost" className="-ms-2 -mb-4 h-10 self-start text-base text-muted-foreground" render={<Link href="/buy" />}>
         <ArrowLeftIcon aria-hidden="true" className="rtl:rotate-180" />
-        {t("backToMarket")}
+        {t("buyHome.title")}
       </Button>
       <div className="flex flex-col gap-1">
         <h1 className="font-heading font-bold text-3xl tracking-tight">{t("rechargeTitle")}</h1>
         <p className="text-muted-foreground">{t("rechargeSubtitle")}</p>
       </div>
 
-      <RechargeForm operators={usable} />
+      <RechargeForm operators={usable} initialOp={wanted} />
 
       <section className="flex flex-col gap-3">
         <h2 className="font-heading font-semibold text-xl">{t("rechargeHistory")}</h2>

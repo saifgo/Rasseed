@@ -44,12 +44,12 @@ async function run<T>(fn: (userId: string) => Promise<T>, paths: string[] = []):
   }
 }
 
-const orderPaths = (id: string) => [`/market/orders/${id}`, "/market", "/market/selling"];
+const orderPaths = (id: string) => [`/orders/${id}`, "/buy", "/selling"];
 
 // Buyer ----------------------------------------------------------------------
 
 export async function createOrderAction(input: { listingId: string; amountMillimes: number }) {
-  return run((userId) => createOrder(userId, input), ["/market"]);
+  return run((userId) => createOrder(userId, input), ["/buy", "/selling"]);
 }
 
 export async function takePartialAction(orderId: string) {
@@ -94,7 +94,7 @@ export async function rateSellerAction(orderId: string, stars: number, comment: 
 // Seller ---------------------------------------------------------------------
 
 export async function upsertListingAction(input: ListingInput) {
-  return run((userId) => upsertListing(userId, input), ["/market/selling", "/market"]);
+  return run((userId) => upsertListing(userId, input), ["/selling", "/buy/sellers"]);
 }
 
 export async function confirmPaymentAction(orderId: string) {
@@ -114,15 +114,15 @@ export async function chooseLeftoverAction(orderId: string, choice: "stock" | "s
 }
 
 export async function sellStockAction(operatorCode: string, amountMillimes: number) {
-  return run((userId) => sellStock(userId, operatorCode, amountMillimes), ["/market/selling", "/wallet"]);
+  return run((userId) => sellStock(userId, operatorCode, amountMillimes), ["/selling", "/wallet"]);
 }
 
 // Recharges ------------------------------------------------------------------
 
 export async function createRechargeAction(input: RechargeInput) {
-  return run((userId) => createRecharge(userId, input), ["/market/recharge", "/market"]);
+  return run((userId) => createRecharge(userId, input), ["/buy/recharge", "/buy"]);
 }
 
 export async function cancelRechargeAction(rechargeId: string) {
-  return run((userId) => cancelRecharge(userId, rechargeId), ["/market/recharge", "/market"]);
+  return run((userId) => cancelRecharge(userId, rechargeId), ["/buy/recharge", "/buy"]);
 }

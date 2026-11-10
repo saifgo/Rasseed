@@ -228,7 +228,7 @@ export async function recordSnapshot(db: DbTx, sim: Sim, balance: number, comman
         and(
           eq(recharges.simId, sim.id),
           ne(recharges.status, "failed"),
-          gte(sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.createdAt})`, prev.takenAt),
+          gte(sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.createdAt})`, prev.takenAt.toISOString()),
         ),
       );
     discrepancy = balance - (prev.balanceMillimes + Number(total) - Number(out));

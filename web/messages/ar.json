@@ -34,7 +34,8 @@
     "sell": "بيع الرصيد",
     "mySales": "مبيعاتي",
     "wallet": "رصيدي",
-    "market": "السوق"
+    "buy": "شراء",
+    "sellSection": "بيع"
   },
   "home": {
     "badge": "Ooredoo · Orange · اتصالات تونس",
@@ -418,13 +419,8 @@
     }
   },
   "market": {
-    "title": "السوق",
-    "subtitle": "اشترِ رصيد الهاتف من مستخدمين آخرين بسعرهم، ثم اشحن به أي رقم.",
     "myCredit": "رصيدي من المكالمات",
     "rechargeCta": "شحن رقم",
-    "sellingCta": "بيع الرصيد للمشترين",
-    "buyTitle": "شراء رصيد",
-    "buyHint": "اختر بائعًا. تدفع له مباشرة، فقط عندما يصل كل الرصيد إلى صرفلي.",
     "filter": "المشغّل",
     "all": "الكل",
     "noListings": "لا توجد عروض حاليًا. عد لاحقًا.",
@@ -432,8 +428,6 @@
     "buyer": "المشتري",
     "priceLine": "تدفع <pay></pay> مقابل 10 د.ت من الرصيد",
     "paysWith": "الدفع: {info}",
-    "myOrders": "طلباتي",
-    "noOrders": "لا توجد طلبات بعد.",
     "noRatings": "لا تقييمات بعد",
     "ratingTitle": "معدّل {count} تقييم",
     "ratingCount": "{count, plural, one {تقييم واحد} two {تقييمان} few {# تقييمات} other {# تقييم}}",
@@ -506,8 +500,6 @@
     "leftoverSellTitle": "تبيع هذا الرصيد لصرفلي؟",
     "leftoverSellText": "تحصل على <cash></cash> في حسابك بسعر اليوم. يمكنك سحبه كالعادة.",
     "leftoverSold": "تم البيع. المال في حسابك.",
-    "backToSelling": "مبيعاتي في السوق",
-    "backToMarket": "السوق",
     "orderTitle": "طلب رصيد {operator}",
     "boughtFrom": "تشتري من {name}",
     "soldTo": "تبيع لـ{name}",
@@ -550,7 +542,6 @@
     "leftoverKept": "احتفظت بـ<secret>{amount} د.ت</secret> كمخزون لطلباتك القادمة.",
     "leftoverSoldText": "بعت <secret>{amount} د.ت</secret> لصرفلي.",
     "toPay": "المبلغ للدفع",
-    "buyerPays": "يدفع لك المشتري",
     "howToPay": "كيف تدفع لـ{seller}",
     "noPaymentInfo": "غير محدد — اسأل فريقنا.",
     "proofs": "إثبات الدفع",
@@ -602,16 +593,9 @@
     "sellStockTitle": "البيع لصرفلي",
     "cashToWallet": "يُضاف إلى حسابك",
     "sellToSarfli": "بيع لصرفلي",
-    "sellingTitle": "البيع للمشترين",
-    "sellingSubtitle": "حدد سعرك، أرسل الرصيد لكل طلب، وأكد عندما يدفع لك المشتري.",
     "myRating": "تقييمي:",
-    "incomingOrders": "طلبات المشترين",
-    "noIncoming": "لا توجد طلبات بعد.",
-    "myPrices": "أسعاري",
-    "myPricesHint": "سعر واحد لكل مشغّل. لا تحتاج رصيدًا للنشر.",
     "myStock": "مخزوني",
     "myStockHint": "الرصيد الذي احتفظت به لدى صرفلي. يُستعمل أولًا في طلباتك القادمة، أو يمكنك بيعه لصرفلي.",
-    "noStock": "لا يوجد مخزون.",
     "todayRate": "اليوم يدفع صرفلي <cash></cash> مقابل 10 د.ت من الرصيد.",
     "aboveBalance": "أكثر من رصيدك",
     "rechargeOff": "الشحن غير متاح بعد.",
@@ -637,6 +621,62 @@
     "saleToOrderDone": "أُضيف الرصيد إلى الطلب <b>{ref}</b>.",
     "saleToOrderNote": "هذا التحويل يذهب إلى طلب المشتري <b>{ref}</b>، وليس إلى حسابك.",
     "openOrder": "افتح الطلب",
-    "toBuyerOrder": "طلب مشترٍ"
+    "toBuyerOrder": "طلب مشترٍ",
+    "needsAction": "مطلوب منك",
+    "inProgress": "قيد التنفيذ",
+    "finishedOrders": "الطلبات المنتهية",
+    "seeAll": "عرض الكل",
+    "yourOffer": "عرضك",
+    "buyHome": {
+      "title": "شراء",
+      "recharge": "شحن",
+      "buyCta": "شراء رصيد",
+      "empty": "اختر بائعًا. يرسل الرصيد إلى صرفلي، تدفع له، ويصبح الرصيد لك.",
+      "todoPay": "ادفع <secret>{pay} د.ت</secret> لـ{seller} وأرسل الإثبات",
+      "todoExcess": "وصل <secret>{excess} د.ت</secret> رصيد إضافي: تأخذه أم لا؟",
+      "todoRate": "قيّم {seller}",
+      "ctaPay": "ادفع وأرسل الإثبات",
+      "ctaChoose": "اختر",
+      "ctaRate": "قيّم",
+      "inProgressHint": "لا شيء لتفعله. سنخبرك عندما يحين دورك."
+    },
+    "sellers": {
+      "title": "اختر بائعًا",
+      "hint": "الأرخص أولًا. تدفع للبائع فقط عندما يكون كل الرصيد جاهزًا.",
+      "cheapest": "الأرخص",
+      "per10": "السعر مقابل 10 د.ت من رصيد {operator}"
+    },
+    "order": {
+      "now": "ماذا تفعل الآن",
+      "otherOptions": "خيارات أخرى",
+      "openAdmin": "فتح في الإدارة",
+      "ref": "رقم الطلب",
+      "stepsLabel": "مراحل الطلب",
+      "steps": {
+        "funding": "الرصيد",
+        "payment": "الدفع",
+        "check": "التأكيد",
+        "done": "تم"
+      }
+    },
+    "sellHome": {
+      "title": "بيع",
+      "todoSend": "أرسل <secret>{missing} د.ت</secret> من الرصيد",
+      "todoCheck": "المشتري يقول إنه دفع لك <secret>{pay} د.ت</secret>",
+      "todoLeftover": "بقي <secret>{amount} د.ت</secret> من الرصيد: تحتفظ به أم تبيعه؟",
+      "ctaSend": "أرسل الرصيد",
+      "ctaCheck": "تحقق من الدفع",
+      "ctaChoose": "اختر",
+      "waitingHint": "في انتظار أن يدفع لك المشتري.",
+      "marketTitle": "السوق",
+      "marketHint": "كل الأسعار التي يراها المشترون الآن، الأرخص أولًا.",
+      "you": "أنت",
+      "yourPrice": "سعرك",
+      "offerOn": "<pay></pay> مقابل 10 د.ت · معروض للبيع",
+      "offerOff": "<pay></pay> مقابل 10 د.ت · متوقف",
+      "noOffer": "لم تعرض للبيع بعد. حدد سعرك.",
+      "change": "تعديل",
+      "sarfliTitle": "أو بِع لـ{brand} الآن"
+    }
   }
 }

@@ -34,7 +34,8 @@
     "sell": "Vendre du crédit",
     "mySales": "Mes ventes",
     "wallet": "Mon solde",
-    "market": "Marché"
+    "buy": "Acheter",
+    "sellSection": "Vendre"
   },
   "home": {
     "badge": "Ooredoo · Orange · Tunisie Telecom",
@@ -418,13 +419,8 @@
     }
   },
   "market": {
-    "title": "Marché",
-    "subtitle": "Achetez du crédit téléphonique à d'autres utilisateurs, à leur prix, puis rechargez n'importe quel numéro.",
     "myCredit": "Mon crédit",
     "rechargeCta": "Recharger un numéro",
-    "sellingCta": "Vendre du crédit aux acheteurs",
-    "buyTitle": "Acheter du crédit",
-    "buyHint": "Choisissez un vendeur. Vous le payez directement, seulement quand tout le crédit est arrivé chez Sarfli.",
     "filter": "Opérateur",
     "all": "Tous",
     "noListings": "Aucune offre pour le moment. Revenez plus tard.",
@@ -432,8 +428,6 @@
     "buyer": "Acheteur",
     "priceLine": "Vous payez <pay></pay> pour 10 DT de crédit",
     "paysWith": "Paiement : {info}",
-    "myOrders": "Mes commandes",
-    "noOrders": "Aucune commande pour l'instant.",
     "noRatings": "Pas encore de note",
     "ratingTitle": "Moyenne de {count} notes",
     "ratingCount": "{count, plural, one {# note} other {# notes}}",
@@ -506,8 +500,6 @@
     "leftoverSellTitle": "Vendre ce crédit à Sarfli ?",
     "leftoverSellText": "Vous recevez <cash></cash> sur votre solde au taux du jour. Vous pouvez le retirer comme d'habitude.",
     "leftoverSold": "Vendu. L'argent est sur votre solde.",
-    "backToSelling": "Mes ventes au marché",
-    "backToMarket": "Marché",
     "orderTitle": "Commande de crédit {operator}",
     "boughtFrom": "Vous achetez à {name}",
     "soldTo": "Vous vendez à {name}",
@@ -550,7 +542,6 @@
     "leftoverKept": "Vous avez gardé <secret>{amount} DT</secret> en stock pour vos prochaines commandes.",
     "leftoverSoldText": "Vous avez vendu <secret>{amount} DT</secret> à Sarfli.",
     "toPay": "À payer",
-    "buyerPays": "L'acheteur vous paie",
     "howToPay": "Comment payer {seller}",
     "noPaymentInfo": "Non indiqué — demandez à notre équipe.",
     "proofs": "Preuve de paiement",
@@ -602,16 +593,9 @@
     "sellStockTitle": "Vendre à Sarfli",
     "cashToWallet": "Ajouté à votre solde",
     "sellToSarfli": "Vendre à Sarfli",
-    "sellingTitle": "Vendre aux acheteurs",
-    "sellingSubtitle": "Fixez votre prix, envoyez le crédit pour chaque commande et confirmez quand l'acheteur vous a payé.",
     "myRating": "Ma note :",
-    "incomingOrders": "Commandes des acheteurs",
-    "noIncoming": "Aucune commande pour l'instant.",
-    "myPrices": "Mes prix",
-    "myPricesHint": "Un prix par opérateur. Pas besoin de crédit pour publier.",
     "myStock": "Mon stock",
     "myStockHint": "Le crédit que vous avez gardé chez Sarfli. Il sert d'abord pour vos prochaines commandes, ou vous pouvez le vendre à Sarfli.",
-    "noStock": "Pas de stock.",
     "todayRate": "Aujourd'hui Sarfli paie <cash></cash> pour 10 DT de crédit.",
     "aboveBalance": "Plus que votre crédit",
     "rechargeOff": "Les recharges ne sont pas encore disponibles.",
@@ -637,6 +621,62 @@
     "saleToOrderDone": "Le crédit a été ajouté à la commande <b>{ref}</b>.",
     "saleToOrderNote": "Ce transfert va à la commande de l'acheteur <b>{ref}</b>, pas à votre solde.",
     "openOrder": "Ouvrir la commande",
-    "toBuyerOrder": "Commande d'acheteur"
+    "toBuyerOrder": "Commande d'acheteur",
+    "needsAction": "À faire",
+    "inProgress": "En cours",
+    "finishedOrders": "Commandes terminées",
+    "seeAll": "Tout voir",
+    "yourOffer": "Votre offre",
+    "buyHome": {
+      "title": "Acheter",
+      "recharge": "Recharger",
+      "buyCta": "Acheter du crédit",
+      "empty": "Choisissez un vendeur. Il envoie le crédit à Sarfli, vous le payez, et le crédit est à vous.",
+      "todoPay": "Payez <secret>{pay} DT</secret> à {seller} et envoyez la preuve",
+      "todoExcess": "<secret>{excess} DT</secret> de crédit en plus : vous le prenez ?",
+      "todoRate": "Notez {seller}",
+      "ctaPay": "Payer et envoyer la preuve",
+      "ctaChoose": "Choisir",
+      "ctaRate": "Noter",
+      "inProgressHint": "Rien à faire. On vous prévient quand c'est votre tour."
+    },
+    "sellers": {
+      "title": "Choisir un vendeur",
+      "hint": "Le moins cher d'abord. Vous payez le vendeur seulement quand tout le crédit est prêt.",
+      "cheapest": "Le moins cher",
+      "per10": "Prix pour 10 DT de crédit {operator}"
+    },
+    "order": {
+      "now": "À faire maintenant",
+      "otherOptions": "Autres options",
+      "openAdmin": "Ouvrir dans l'admin",
+      "ref": "Numéro de commande",
+      "stepsLabel": "Étapes de la commande",
+      "steps": {
+        "funding": "Crédit",
+        "payment": "Paiement",
+        "check": "Confirmation",
+        "done": "Terminé"
+      }
+    },
+    "sellHome": {
+      "title": "Vendre",
+      "todoSend": "Envoyez <secret>{missing} DT</secret> de crédit",
+      "todoCheck": "L'acheteur dit vous avoir payé <secret>{pay} DT</secret>",
+      "todoLeftover": "<secret>{amount} DT</secret> de crédit restant : garder ou vendre ?",
+      "ctaSend": "Envoyer le crédit",
+      "ctaCheck": "Vérifier le paiement",
+      "ctaChoose": "Choisir",
+      "waitingHint": "L'acheteur doit vous payer.",
+      "marketTitle": "Le marché",
+      "marketHint": "Tous les prix vus par les acheteurs maintenant, le moins cher d'abord.",
+      "you": "Vous",
+      "yourPrice": "Votre prix",
+      "offerOn": "<pay></pay> pour 10 DT · En vente",
+      "offerOff": "<pay></pay> pour 10 DT · En pause",
+      "noOffer": "Pas encore en vente. Fixez votre prix.",
+      "change": "Modifier",
+      "sarfliTitle": "Ou vendez à {brand} maintenant"
+    }
   }
 }

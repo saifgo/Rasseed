@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { toastManager } from "@/components/ui/toast";
 import { BPS, formatDt, grossPayout, parseDinars, parseRate } from "@/lib/money";
-import { sellStockAction, upsertListingAction } from "../actions";
+import { sellStockAction, upsertListingAction } from "../_market/actions";
 
 type Op = { code: string; name: string; color: string; rateBps: number };
 
@@ -23,9 +23,12 @@ const priceText = (bps: number) => String(Number((bps / BPS).toFixed(4)));
 export function ListingForm({
   op,
   listing,
+  bare = false,
 }: {
   op: Op;
   listing: { priceBps: number; paymentInfo: string; active: boolean } | null;
+  /** Inside another card: no border, no operator header. */
+  bare?: boolean;
 }) {
   const t = useTranslations("market");
   const te = useTranslations("errors");
@@ -54,17 +57,17 @@ export function ListingForm({
 
   return (
     <form
-      className="flex flex-col gap-4 rounded-2xl border-2 bg-card p-4"
-      style={{ borderColor: op.color }}
+      className={bare ? "flex flex-col gap-4" : "flex flex-col gap-4 rounded-2xl border-2 bg-card p-4"}
+      style={bare ? undefined : { borderColor: op.color }}
       onSubmit={(e) => {
         e.preventDefault();
         save();
       }}
     >
       <div className="flex items-center gap-3">
-        <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-10 rounded-xl" />
-        <span className="flex-1 font-heading font-bold text-lg">{op.name}</span>
-        <label className="flex items-center gap-2 text-sm">
+        {!bare && <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-10 rounded-xl" />}
+        <span className="flex-1 font-heading font-bold text-lg">{bare ? t("yourOffer") : op.name}</span>
+        <label className="flex items-center gap-2 font-medium">
           {active ? t("listingOn") : t("listingOff")}
           <Switch checked={active} onCheckedChange={setActive} />
         </label>
@@ -92,7 +95,7 @@ export function ListingForm({
         <Textarea value={paymentInfo} onChange={(e) => setPaymentInfo(e.target.value)} maxLength={500} placeholder={t("paymentInfoPlaceholder")} />
       </label>
       {error && <p className="font-medium text-destructive-foreground text-sm">{error}</p>}
-      <Button type="submit" variant="outline" className="h-11 self-start" loading={pending}>
+      <Button type="submit" variant={bare ? "go" : "outline"} className={bare ? "h-12 text-base sm:h-12" : "h-11 self-start"} loading={pending}>
         <SaveIcon aria-hidden="true" />
         {t("saveListing")}
       </Button>

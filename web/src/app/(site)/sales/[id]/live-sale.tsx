@@ -168,7 +168,7 @@ export function LiveSale({ initial }: { initial: View }) {
           {tm.rich("saleToOrderNote", {
             ref: sale.order.ref,
             b: (c) => (
-              <Link href={`/market/orders/${sale.order!.id}`} className="font-mono font-semibold underline underline-offset-4">
+              <Link href={`/orders/${sale.order!.id}`} className="font-mono font-semibold underline underline-offset-4">
                 {c}
               </Link>
             ),
@@ -191,7 +191,7 @@ export function LiveSale({ initial }: { initial: View }) {
         <SuccessCard title={t("successTitle")} amount={sale.finalMillimes ?? 0}>
           <span className="flex flex-col gap-4">
             <span>{tm.rich("saleToOrderDone", { ref: sale.order.ref, b: (c) => <span className="font-mono font-semibold text-foreground">{c}</span> })}</span>
-            <Button variant="go" className="h-12 text-base sm:h-12" render={<Link href={`/market/orders/${sale.order.id}`} />}>
+            <Button variant="go" className="h-12 text-base sm:h-12" render={<Link href={`/orders/${sale.order.id}`} />}>
               {tm("openOrder")}
               <ArrowRightIcon aria-hidden="true" className="rtl:rotate-180" />
             </Button>
@@ -292,7 +292,7 @@ export function LiveSale({ initial }: { initial: View }) {
             </Detail>
             {sale.order ? (
               <Detail label={tm("depositGoesTo")}>
-                <Link href={`/market/orders/${sale.order.id}`} className="font-mono font-semibold underline-offset-4 hover:underline">
+                <Link href={`/orders/${sale.order.id}`} className="font-mono font-semibold underline-offset-4 hover:underline">
                   {sale.order.ref}
                 </Link>
               </Detail>

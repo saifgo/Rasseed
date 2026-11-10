@@ -13,16 +13,16 @@ import { toastManager } from "@/components/ui/toast";
 import { formatDt, parseDinars } from "@/lib/money";
 import { formatMsisdn, normalizeMsisdn } from "@/lib/phone";
 import { cn } from "@/lib/utils";
-import { cancelRechargeAction, createRechargeAction } from "../actions";
+import { cancelRechargeAction, createRechargeAction } from "../../_market/actions";
 
 type Op = { code: string; name: string; color: string; balanceMillimes: number };
 
-export function RechargeForm({ operators }: { operators: Op[] }) {
+export function RechargeForm({ operators, initialOp }: { operators: Op[]; initialOp?: string }) {
   const t = useTranslations("market");
   const te = useTranslations("errors");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [operatorCode, setOperatorCode] = useState(operators.find((o) => o.balanceMillimes > 0)?.code ?? operators[0]?.code ?? "");
+  const [operatorCode, setOperatorCode] = useState(operators.find((o) => o.code === initialOp)?.code ?? operators.find((o) => o.balanceMillimes > 0)?.code ?? operators[0]?.code ?? "");
   const [number, setNumber] = useState("");
   const [amount, setAmount] = useState("");
   const [showErrors, setShowErrors] = useState(false);

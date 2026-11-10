@@ -6,6 +6,7 @@ import {
   BookOpenCheckIcon,
   CalendarCheckIcon,
   CoinsIcon,
+  FlaskConicalIcon,
   GaugeIcon,
   ListChecksIcon,
   PercentIcon,
@@ -72,15 +73,27 @@ const setup: Item[] = [
   { href: "/admin/operators", label: "Operators & rates", icon: PercentIcon },
   { href: "/admin/settings", label: "Settings", icon: SettingsIcon },
 ];
+// Dev only (AUTH_DEV_LOGIN=true), admin only: simulated agent phone.
+const testPhone: Item = { href: "/admin/test-phone", label: "Test phone", icon: FlaskConicalIcon };
 
-export function AdminSidebar({ counts, role, name }: { counts: AdminCounts; role: UserRole; name: string }) {
+export function AdminSidebar({
+  counts,
+  role,
+  name,
+  showTestPhone = false,
+}: {
+  counts: AdminCounts;
+  role: UserRole;
+  name: string;
+  showTestPhone?: boolean;
+}) {
   const pathname = usePathname();
   const groups =
     role === "admin"
       ? [
           { label: "Operations", items: operations },
           { label: "Marketplace", items: [...market, ...marketAdmin] },
-          { label: "Setup", items: setup },
+          { label: "Setup", items: showTestPhone ? [...setup, testPhone] : setup },
         ]
       : [
           { label: "Operations", items: operations },

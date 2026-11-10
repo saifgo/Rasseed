@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogPanel, DialogPopup, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { BPS, formatDt, grossPayout, parseDinars } from "@/lib/money";
-import { createOrderAction } from "./actions";
+import { createOrderAction } from "../../_market/actions";
 
 type Listing = {
   id: string;
@@ -45,14 +45,14 @@ export function BuyDialog({ listing, commissionBps, maxOrderMillimes }: { listin
     }
     startTransition(async () => {
       const res = await createOrderAction({ listingId: listing.id, amountMillimes: credit });
-      if (res.ok) router.push(`/market/orders/${res.data}`);
+      if (res.ok) router.push(`/orders/${res.data}`);
       else setError(te.has(res.error) ? te(res.error) : te("unknown"));
     });
   }
 
   return (
     <Dialog>
-      <DialogTrigger render={<Button variant="go" className="shrink-0" />}>
+      <DialogTrigger render={<Button variant="go" className="h-12 w-full text-base sm:h-12" />}>
         <ShoppingCartIcon aria-hidden="true" />
         {t("buy")}
       </DialogTrigger>

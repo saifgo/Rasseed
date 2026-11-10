@@ -31,7 +31,7 @@ import {
   reportNotPaidAction,
   takePartialAction,
   uploadProofsAction,
-} from "../../actions";
+} from "../../_market/actions";
 
 type Result = { ok: boolean; error?: string };
 
@@ -361,50 +361,53 @@ export function SellerCancelButton({ orderId }: { orderId: string }) {
   );
 }
 
-export function ConfirmPaymentButtons({ orderId, payMillimes, canReport }: { orderId: string; payMillimes: number; canReport: boolean }) {
+export function ConfirmPaidButton({ orderId, payMillimes }: { orderId: string; payMillimes: number }) {
   const t = useTranslations("market");
   const { act, pending } = useAct();
   return (
-    <span className="flex flex-col gap-2">
-      <ConfirmDialog
-        trigger={{
+    <ConfirmDialog
+      trigger={{
         variant: "go",
         className: bigButton,
         content: (
           <>
-              <CheckIcon aria-hidden="true" />
-              {t("confirmPaid")}
+            <CheckIcon aria-hidden="true" />
+            {t("confirmPaid")}
           </>
         ),
       }}
-        disabled={pending}
-        title={t("confirmPaidTitle")}
-        text={t.rich("confirmPaidText", { pay: () => <Dt compact millimes={payMillimes} className="font-semibold text-foreground" /> })}
-        confirm={t("confirmPaid")}
-        onConfirm={() => act(() => confirmPaymentAction(orderId), t("confirmPaidDone"))}
-      />
-      {canReport && (
-        <ConfirmDialog
-          trigger={{
+      disabled={pending}
+      title={t("confirmPaidTitle")}
+      text={t.rich("confirmPaidText", { pay: () => <Dt compact millimes={payMillimes} className="font-semibold text-foreground" /> })}
+      confirm={t("confirmPaid")}
+      onConfirm={() => act(() => confirmPaymentAction(orderId), t("confirmPaidDone"))}
+    />
+  );
+}
+
+export function NotPaidButton({ orderId }: { orderId: string }) {
+  const t = useTranslations("market");
+  const { act, pending } = useAct();
+  return (
+    <ConfirmDialog
+      trigger={{
         variant: "destructive-outline",
         className: bigButton,
         content: (
           <>
-                <FlagIcon aria-hidden="true" />
-                {t("notPaid")}
+            <FlagIcon aria-hidden="true" />
+            {t("notPaid")}
           </>
         ),
       }}
-          disabled={pending}
-          title={t("notPaidTitle")}
-          text={t("notPaidText")}
-          reason={t("notPaidReason")}
-          confirm={t("notPaid")}
-          destructive
-          onConfirm={(reason) => act(() => reportNotPaidAction(orderId, reason))}
-        />
-      )}
-    </span>
+      disabled={pending}
+      title={t("notPaidTitle")}
+      text={t("notPaidText")}
+      reason={t("notPaidReason")}
+      confirm={t("notPaid")}
+      destructive
+      onConfirm={(reason) => act(() => reportNotPaidAction(orderId, reason))}
+    />
   );
 }
 
