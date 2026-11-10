@@ -1,6 +1,6 @@
 "use client";
 
-import { HandCoinsIcon, ReceiptTextIcon, WalletIcon } from "lucide-react";
+import { HandCoinsIcon, ReceiptTextIcon, StoreIcon, WalletIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -11,6 +11,12 @@ const items = [
   { href: "/sales", key: "mySales", icon: ReceiptTextIcon },
   { href: "/wallet", key: "wallet", icon: WalletIcon },
 ] as const;
+const marketItem = { href: "/market", key: "market", icon: StoreIcon } as const;
+
+/** Menu entries; the marketplace only shows for users who may use it. */
+function menuItems(market: boolean) {
+  return market ? [...items, marketItem] : items;
+}
 
 function useActive() {
   const path = usePathname();
@@ -18,9 +24,10 @@ function useActive() {
 }
 
 /** Top menu for larger screens. */
-export function SellerTopNav() {
+export function SellerTopNav({ market = false }: { market?: boolean }) {
   const t = useTranslations("nav");
   const isActive = useActive();
+  const items = menuItems(market);
   return (
     <nav className="hidden items-center gap-1 sm:flex">
       {items.map((it) => (
@@ -42,12 +49,13 @@ export function SellerTopNav() {
 }
 
 /** Big icon tabs fixed to the bottom of the screen on phones. */
-export function SellerBottomNav() {
+export function SellerBottomNav({ market = false }: { market?: boolean }) {
   const t = useTranslations("nav");
   const isActive = useActive();
+  const items = menuItems(market);
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:hidden">
-      <div className="grid grid-cols-3">
+      <div className={cn("grid", items.length === 4 ? "grid-cols-4" : "grid-cols-3")}>
         {items.map((it) => {
           const active = isActive(it.href);
           return (

@@ -56,10 +56,14 @@ export default async function SalesPage() {
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     <Dt compact millimes={tx.finalMillimes ?? tx.declaredMillimes} className="font-semibold text-lg" />
                     <ArrowRightIcon aria-hidden="true" className="size-4 self-center text-muted-foreground rtl:rotate-180" />
-                    <Dt compact
-                      millimes={tx.payoutNetMillimes ?? grossPayout(tx.declaredMillimes, tx.rateBps)}
-                      className="font-bold text-emerald-700 text-lg dark:text-emerald-400"
-                    />
+                    {tx.orderId ? (
+                      <span className="font-semibold text-muted-foreground">{t("market.toBuyerOrder")}</span>
+                    ) : (
+                      <Dt compact
+                        millimes={tx.payoutNetMillimes ?? grossPayout(tx.declaredMillimes, tx.rateBps)}
+                        className="font-bold text-emerald-700 text-lg dark:text-emerald-400"
+                      />
+                    )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusBadge status={tx.status} />

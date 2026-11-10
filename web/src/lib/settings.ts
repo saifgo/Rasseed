@@ -53,6 +53,9 @@ export async function saveSettings(values: Partial<AppSettings>) {
   for (const [key, value] of Object.entries(values)) {
     if (!(key in DEFAULT_SETTINGS) || typeof value !== "number" || !Number.isFinite(value)) continue;
     if (value < 0 || (value === 0 && !ZERO_ALLOWED.has(key))) continue;
+    if (!Number.isInteger(value)) continue;
+    if (key === "commissionBps" && value > 10_000) continue;
+    if (key === "marketplaceEnabled" && value > 1) continue;
     await db.insert(settings).values({ key, value }).onConflictDoUpdate({ target: settings.key, set: { value } });
   }
 }

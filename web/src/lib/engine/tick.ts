@@ -24,11 +24,19 @@ export async function tick() {
       ),
     );
   for (const { id } of stale) {
+    // One bad command must never stop the rest of the tick (expiries, polling, assignment).
     await db.transaction(async (t) => {
       const [cmd] = await t
         .select()
         .from(deviceCommands)
-        .where(and(eq(deviceCommands.id, id), inArray(deviceCommands.status, ["pending", "sent"])))
+        .where(
+          and(
+            eq(deviceCommands.id, id),
+            inArray(deviceCommands.status, ["pending", "sent"]),
+            // Re-check the age under the lock: the phone may have just picked it up.
+            lt(sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.notBefore})`, timeoutBefore.toISOString()),
+          ),
+        )
         .for("update", { skipLocked: true });
       if (!cmd) return;
       await t
@@ -37,7 +45,7 @@ export async function tick() {
         .where(eq(deviceCommands.id, cmd.id));
       const sim = await lockSim(t, cmd.simId);
       if (sim) await onCommandFailure(t, cmd, sim, settings);
-    });
+    }).catch((err) => console.error("[tick] command timeout failed", id, err));
   }
 
   // 2. Hold window over.

@@ -277,7 +277,7 @@ export async function fundableOrders(sellerId: string, operatorCode?: string) {
     .orderBy(orders.createdAt);
 }
 
-async function activeTransfer(t: DbTx, orderId: string) {
+async function activeTransfer(t: DbTx | typeof db, orderId: string) {
   const [row] = await t
     .select({ id: transactions.id, sms: transactions.smsReceivedMillimes })
     .from(transactions)
@@ -439,7 +439,7 @@ async function cancel(t: DbTx, order: Order, by: "buyer" | "seller" | "admin", r
 }
 
 /** True when the seller already sent credit for this order (confirmed or still being verified). */
-async function sellerSentCredit(t: DbTx, orderId: string) {
+export async function sellerSentCredit(t: DbTx | typeof db, orderId: string) {
   const [sent] = await t
     .select({ id: creditEntries.id })
     .from(creditEntries)

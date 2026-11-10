@@ -11,6 +11,7 @@ import {
   type RechargeStatus,
 } from "@/db/schema";
 import { renderTransferUssd } from "@/lib/parsers";
+import { sendOutcome } from "@/lib/recharge-outcome";
 import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings, type AppSettings } from "@/lib/settings";
 import { EngineError, lockSim, releaseSim, type Sim } from "./core";
@@ -137,32 +138,50 @@ async function freeSim(t: DbTx, simId: string | null, settings: AppSettings) {
   await releaseSim(t, simId, settings);
 }
 
-async function enqueueRechargeBalance(t: DbTx, sim: Sim, purpose: "recharge_baseline" | "recharge_verify", rechargeId: string, delaySeconds = 0) {
-  const [op] = await t.select().from(operators).where(eq(operators.code, sim.operatorCode!));
+async function enqueueRechargeBalance(t: DbTx, sim: Sim, purpose: "recharge_baseline" | "recharge_verify", r: Recharge, delaySeconds = 0) {
+  const [op] = sim.operatorCode ? await t.select().from(operators).where(eq(operators.code, sim.operatorCode)) : [];
+  if (!op || sim.operatorCode !== r.operatorCode) {
+    // The SIM was reconfigured or swapped: its balance no longer tells what happened.
+    await toReview(t, r, "sim_changed");
+    return;
+  }
   await t.insert(deviceCommands).values({
     deviceId: sim.deviceId,
     simId: sim.id,
     type: "ussd_balance",
     ussdCode: op.balanceUssdCode,
     purpose,
-    rechargeId,
+    rechargeId: r.id,
     notBefore: new Date(Date.now() + delaySeconds * 1000),
   });
 }
 
-/** Hands free SIMs with enough balance to queued recharges, oldest first. */
+/** The SIM holding a recharge was swapped in its slot: an admin must decide. */
+export async function rechargeSimChanged(t: DbTx, rechargeId: string) {
+  const r = await lockRecharge(t, rechargeId);
+  if (r && r.status === "sending") await toReview(t, r, "sim_changed");
+}
+
+/**
+ * Hands free SIMs with enough balance to queued recharges, oldest first, per operator.
+ * A recharge no SIM can serve right now is skipped, so it never blocks the ones behind it.
+ */
 export async function assignRecharges(operatorCode?: string) {
   const settings = await getSettings();
-  for (let i = 0; i < 50; i++) {
-    const assigned = await db.transaction(async (t) => {
+  const queued = await db
+    .select({ id: recharges.id })
+    .from(recharges)
+    .where(and(eq(recharges.status, "queued"), operatorCode ? eq(recharges.operatorCode, operatorCode) : undefined))
+    .orderBy(asc(recharges.createdAt))
+    .limit(100);
+  for (const { id } of queued) {
+    await db.transaction(async (t) => {
       const [r] = await t
         .select()
         .from(recharges)
-        .where(and(eq(recharges.status, "queued"), operatorCode ? eq(recharges.operatorCode, operatorCode) : undefined))
-        .orderBy(asc(recharges.createdAt))
-        .limit(1)
+        .where(and(eq(recharges.id, id), eq(recharges.status, "queued")))
         .for("update", { skipLocked: true });
-      if (!r) return false;
+      if (!r) return;
       const onlineSince = new Date(Date.now() - settings.deviceOfflineSeconds * 1000);
       const [row] = await t
         .select({ sim: sims })
@@ -185,13 +204,11 @@ export async function assignRecharges(operatorCode?: string) {
         .orderBy(desc(sims.balanceMillimes))
         .limit(1)
         .for("update", { of: sims, skipLocked: true });
-      if (!row) return false;
+      if (!row) return;
       await t.update(sims).set({ heldByRechargeId: r.id }).where(eq(sims.id, row.sim.id));
       await updateRecharge(t, r.id, { status: "sending", simId: row.sim.id });
-      await enqueueRechargeBalance(t, row.sim, "recharge_baseline", r.id);
-      return true;
+      await enqueueRechargeBalance(t, row.sim, "recharge_baseline", { ...r, status: "sending", simId: row.sim.id });
     });
-    if (!assigned) break;
   }
 }
 
@@ -236,6 +253,24 @@ export async function onRechargeBalance(t: DbTx, cmd: typeof deviceCommands.$inf
   }
 
   if (cmd.purpose !== "recharge_verify" || r.baselineBalanceMillimes == null || !r.baselineAt) return;
+  // A credit announced between the phone reading the baseline and the server storing it may or may not
+  // be in the baseline: the arithmetic below can't tell, so an admin decides.
+  const [baselineCmd] = await t
+    .select({ sentAt: deviceCommands.sentAt, createdAt: deviceCommands.createdAt })
+    .from(deviceCommands)
+    .where(and(eq(deviceCommands.rechargeId, r.id), eq(deviceCommands.purpose, "recharge_baseline"), eq(deviceCommands.status, "succeeded")))
+    .orderBy(desc(deviceCommands.createdAt))
+    .limit(1);
+  const readFrom = baselineCmd?.sentAt ?? baselineCmd?.createdAt ?? r.baselineAt;
+  const [overlap] = await t
+    .select({ id: credits.id })
+    .from(credits)
+    .where(and(eq(credits.simId, sim.id), gte(credits.receivedAt, readFrom), lt(credits.receivedAt, r.baselineAt)))
+    .limit(1);
+  if (overlap) {
+    await updateRecharge(t, r.id, { afterBalanceMillimes: balance });
+    return toReview(t, r, "credit_during_baseline");
+  }
   const incoming = await incomingSince(t, sim.id, r.baselineAt);
   const ifSent = r.baselineBalanceMillimes + incoming - r.amountMillimes;
   const ifNotSent = r.baselineBalanceMillimes + incoming;
@@ -249,7 +284,7 @@ export async function onRechargeBalance(t: DbTx, cmd: typeof deviceCommands.$inf
   if (attempts >= settings.rechargeVerifyAttempts) {
     await toReview(t, r, balance === ifNotSent ? "balance_unchanged" : "balance_mismatch");
   } else {
-    await enqueueRechargeBalance(t, sim, "recharge_verify", r.id, settings.verifyRetrySeconds);
+    await enqueueRechargeBalance(t, sim, "recharge_verify", r, settings.verifyRetrySeconds);
   }
 }
 
@@ -265,10 +300,10 @@ export async function onRechargeSent(
   const settings = await getSettings();
   const r = await lockRecharge(t, cmd.rechargeId);
   if (!r || r.status !== "sending" || r.sendCommandId !== cmd.id) return;
-  await updateRecharge(t, r.id, { sendOk: ok, sendResponse: response, sendError: error });
+  await updateRecharge(t, r.id, { sendOk: sendOutcome(ok, error), sendResponse: response, sendError: error });
   const sim = await lockSim(t, cmd.simId);
   if (!sim) return toReview(t, r, "sim_missing");
-  await enqueueRechargeBalance(t, sim, "recharge_verify", r.id, settings.verifyRetrySeconds);
+  await enqueueRechargeBalance(t, sim, "recharge_verify", r, settings.verifyRetrySeconds);
 }
 
 /** A balance read for a recharge failed or timed out. */
@@ -286,7 +321,7 @@ export async function onRechargeBalanceFailure(t: DbTx, cmd: typeof deviceComman
   const attempts = r.verifyAttempts + 1;
   await updateRecharge(t, r.id, { verifyAttempts: attempts });
   if (attempts >= settings.rechargeVerifyAttempts) await toReview(t, r, "balance_check_failed");
-  else await enqueueRechargeBalance(t, sim, "recharge_verify", r.id, settings.verifyRetrySeconds);
+  else await enqueueRechargeBalance(t, sim, "recharge_verify", r, settings.verifyRetrySeconds);
 }
 
 /** Admin decides a recharge in review: the customer got the credit (succeeded) or not (failed, amount back to the buyer). */

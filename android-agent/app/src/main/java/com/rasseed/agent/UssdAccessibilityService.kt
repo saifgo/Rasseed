@@ -17,6 +17,7 @@ import android.telephony.TelephonyManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import java.text.Normalizer
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -27,6 +28,9 @@ import java.util.concurrent.TimeUnit
  * The code is dialled like a normal call on the right SIM; this service reads the popup text and
  * presses Cancel to close the session. When the balance isn't on the page but the menu offers a next
  * page ("01:Page suivante"), it types that option, sends it and reads the following page too.
+ *
+ * Scripted mode (credit sends): instead of the next-page logic, each new page gets the next scripted
+ * reply typed and sent; the page after the last reply is recorded and the session closed.
  */
 class UssdAccessibilityService : AccessibilityService() {
 
@@ -53,8 +57,19 @@ class UssdAccessibilityService : AccessibilityService() {
         if (text == capture.lastPage) return // previous page still on screen after we pressed Send
         capture.lastPage = text
         capture.pages += text
+        val script = capture.replies
+        if (script != null) {
+            val next = script.poll() ?: return finish(capture, root) // final page: record and close
+            if (reply(root, next)) return // wait for the next page
+            capture.error = "reply_failed_at_step_${capture.stepCount - script.size}"
+            return finish(capture, root)
+        }
         val option = if (capture.pages.size < MAX_PAGES) nextPageOption(capture.allText(), text, capture.balance) else null
         if (option != null && reply(root, option)) return // wait for the next page
+        finish(capture, root)
+    }
+
+    private fun finish(capture: Capture, root: AccessibilityNodeInfo) {
         pending = null
         dismiss(root)
         capture.finish()
@@ -99,7 +114,11 @@ class UssdAccessibilityService : AccessibilityService() {
         performGlobalAction(GLOBAL_ACTION_BACK)
     }
 
-    private class Capture(val balance: Regex?) {
+    /** [replies] is non-null in scripted mode: what to type into each following page, in order. */
+    private class Capture(val balance: Regex?, steps: List<String>? = null) {
+        val replies = steps?.let { ConcurrentLinkedQueue(it) }
+        val stepCount = steps?.size ?: 0
+        @Volatile var error: String? = null
         val latch = CountDownLatch(1)
         // Written on the main thread, read by the waiting worker on timeout.
         val pages = CopyOnWriteArrayList<String>()
@@ -149,6 +168,9 @@ class UssdAccessibilityService : AccessibilityService() {
         /** True when the service is actually connected, not just switched on in Settings. */
         fun isRunning() = instance != null
 
+        /** Like [isRunning], but gives Android a few seconds to (re)bind the service first. */
+        fun awaitRunning(waitMs: Long = 5000) = awaitInstance(waitMs) != null
+
         /**
          * The connected service, waiting briefly in case Android is still (re)binding it. Null when the
          * toggle is on but the service never connected (typical after an app update or a battery kill).
@@ -164,7 +186,11 @@ class UssdAccessibilityService : AccessibilityService() {
             return enabled.split(':').any { it.startsWith(context.packageName + "/") }
         }
 
-        /** Dials the USSD on the given SIM and returns the popup text, or an error code. Not on the main thread. */
+        /**
+         * Dials the USSD on the given SIM and returns the popup text, or an error code. Not on the main thread.
+         * With [replies] (scripted mode, may be empty) it types them into the following pages instead of
+         * looking for the balance, and any incomplete run is reported as a failure with the text seen.
+         */
         @SuppressLint("MissingPermission")
         fun run(
             context: Context,
@@ -172,12 +198,13 @@ class UssdAccessibilityService : AccessibilityService() {
             code: String,
             balanceRegex: String? = null,
             timeoutSeconds: Long = 60,
+            replies: List<String>? = null,
         ): Telephony.UssdResult {
             val service = awaitInstance()
                 ?: return Telephony.UssdResult(false, null, "accessibility_not_running")
             val handle = phoneAccountFor(context, subscriptionId)
                 ?: return Telephony.UssdResult(false, null, "no_phone_account_for_sim")
-            val capture = Capture(balancePattern(balanceRegex))
+            val capture = if (replies != null) Capture(null, replies) else Capture(balancePattern(balanceRegex))
             pending = capture
             // The popup may not render while the screen is off.
             @Suppress("DEPRECATION")
@@ -196,6 +223,15 @@ class UssdAccessibilityService : AccessibilityService() {
             } finally {
                 pending = null
                 if (wake.isHeld) wake.release()
+            }
+            if (replies != null) {
+                // Scripted: only a run that reached its final page counts as done.
+                val seen = capture.allText().ifEmpty { null }
+                return when {
+                    capture.error != null -> Telephony.UssdResult(false, seen, capture.error)
+                    capture.result == null -> Telephony.UssdResult(false, seen, "popup_timeout")
+                    else -> Telephony.UssdResult(true, capture.result, null)
+                }
             }
             // Timed out waiting for a later page: report the pages read so far.
             val text = capture.result

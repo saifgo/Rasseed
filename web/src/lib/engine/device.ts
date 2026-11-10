@@ -19,7 +19,7 @@ import {
   type Sim,
 } from "./core";
 import type { DbTx } from "@/db";
-import { assignRecharges, onRechargeBalance, onRechargeBalanceFailure, onRechargeSent } from "./recharge";
+import { assignRecharges, onRechargeBalance, rechargeSimChanged, onRechargeBalanceFailure, onRechargeSent } from "./recharge";
 import { assignQueued } from "./sales";
 
 export const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
@@ -120,6 +120,7 @@ export async function syncDevice(device: typeof devices.$inferSelect, input: Syn
           const tx = await lockTx(t, existing.heldByTxId);
           if (tx) await sendToReview(t, tx, "sim_changed");
         }
+        if (existing.heldByRechargeId) await rechargeSimChanged(t, existing.heldByRechargeId);
         return;
       }
       await t

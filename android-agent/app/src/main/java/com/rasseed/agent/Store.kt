@@ -48,7 +48,7 @@ data class QueuedResult(val commandId: String, val ok: Boolean, val response: St
  * Durable outbox. Every SMS and every USSD result is written here first and only deleted after the
  * server acknowledged it, so nothing is lost if the network or the server is down.
  */
-class Store(context: Context) : SQLiteOpenHelper(context, "agent.db", null, 1) {
+class Store(context: Context) : SQLiteOpenHelper(context, "agent.db", null, 2) {
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
             """CREATE TABLE sms (local_id TEXT PRIMARY KEY, sub_id INTEGER, slot INTEGER, sender TEXT NOT NULL,
@@ -57,9 +57,43 @@ class Store(context: Context) : SQLiteOpenHelper(context, "agent.db", null, 1) {
         db.execSQL(
             """CREATE TABLE results (command_id TEXT PRIMARY KEY, ok INTEGER NOT NULL, response TEXT, error TEXT)""",
         )
+        createSendsTable(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) createSendsTable(db)
+    }
+
+    /** Every credit send ever started, kept forever so a send is never dialled twice. */
+    private fun createSendsTable(db: SQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS sends (command_id TEXT PRIMARY KEY, started_at INTEGER NOT NULL)")
+    }
+
+    /**
+     * Records that a send is about to be dialled, together with an "interrupted_unknown" result.
+     * Both are committed before dialling: if the app dies mid-send, the next cycle reports that
+     * result instead of running the send again. The real result later replaces it.
+     */
+    @Synchronized
+    fun markSendStarted(id: String) {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            db.insertWithOnConflict(
+                "sends", null,
+                ContentValues().apply { put("command_id", id); put("started_at", System.currentTimeMillis()) },
+                SQLiteDatabase.CONFLICT_IGNORE,
+            )
+            queueResult(QueuedResult(id, false, null, "interrupted_unknown"))
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    @Synchronized
+    fun sendStarted(id: String): Boolean =
+        readableDatabase.rawQuery("SELECT 1 FROM sends WHERE command_id = ?", arrayOf(id)).use { it.moveToFirst() }
 
     @Synchronized
     fun queueSms(m: QueuedSms) {

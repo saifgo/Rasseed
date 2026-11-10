@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * Foreground service that runs 24/7:
  *  1. heartbeat + fetch USSD commands every few seconds,
- *  2. run each balance USSD on the right SIM (one at a time) and report the raw reply,
+ *  2. run each USSD (balance read or credit send) on the right SIM, one at a time, and report the raw reply,
  *  3. upload queued SMS until the server acknowledges them.
  */
 class AgentService : Service() {
@@ -86,7 +86,11 @@ class AgentService : Service() {
 
             for (cmd in commands) {
                 if (store.hasResult(cmd.id)) continue
-                val res = if (cmd.type == "ussd_balance") {
+                // A send that was already started is never run again (its result is queued or delivered).
+                if (cmd.type == "ussd_send" && store.sendStarted(cmd.id)) continue
+                val res = if (cmd.type == "ussd_send") {
+                    sendCredit(cmd)
+                } else if (cmd.type == "ussd_balance") {
                     val silent = Telephony.runUssd(this, cmd.subscriptionId, cmd.ussd)
                     // The silent API can't answer a menu, so if the balance is on a later page
                     // ("01:Page suivante") the popup route is needed to type 01.
@@ -126,6 +130,27 @@ class AgentService : Service() {
         } finally {
             running.set(false)
             updateNotification()
+        }
+    }
+
+    /**
+     * Sends credit from our SIM: runs the USSD exactly ONCE, on one route, with no retry or fallback
+     * (the first attempt may already have reached the operator). The server checks the balance
+     * before and after to decide whether it worked; we only report what we saw.
+     */
+    private fun sendCredit(cmd: Command): Telephony.UssdResult {
+        val silent = cmd.steps.isEmpty() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+        // Checks that fail before anything is dialled: safe to report without marking as started.
+        if (!Telephony.hasPermissions(this)) return Telephony.UssdResult(false, null, "missing_permission")
+        if (!silent && !UssdAccessibilityService.awaitRunning()) {
+            return Telephony.UssdResult(false, null, "accessibility_not_running")
+        }
+        // Persisted before dialling, so a crash mid-send reports "interrupted_unknown" instead of re-running.
+        store.markSendStarted(cmd.id)
+        return if (silent) {
+            Telephony.runUssd(this, cmd.subscriptionId, cmd.ussd)
+        } else {
+            UssdAccessibilityService.run(this, cmd.subscriptionId, cmd.ussd, timeoutSeconds = 90, replies = cmd.steps)
         }
     }
 

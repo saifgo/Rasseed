@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 import { createSaleAction } from "./actions";
 
 type Op = { code: string; name: string; color: string; rateBps: number; active: boolean };
+/** A buyer's order the seller can deposit this transfer to (marketplace). */
+type FundableOrder = { id: string; ref: string; operatorCode: string; missingMillimes: number };
 type Step = 1 | 2 | 3 | 4;
 
 const LAST_OP = "rasseed.lastOperator";
@@ -24,8 +26,21 @@ const LAST_SENDER = "rasseed.lastSender";
 const SUSPICIOUS_MILLIMES = 1_000_000;
 const noopSubscribe = () => () => {};
 
-export function SellForm({ operators, balanceMillimes, initialOp }: { operators: Op[]; balanceMillimes: number; initialOp?: string }) {
+export function SellForm({
+  operators,
+  balanceMillimes,
+  initialOp,
+  orders = [],
+  initialOrderId,
+}: {
+  operators: Op[];
+  balanceMillimes: number;
+  initialOp?: string;
+  orders?: FundableOrder[];
+  initialOrderId?: string;
+}) {
   const t = useTranslations("sell");
+  const tm = useTranslations("market");
   const te = useTranslations("errors");
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -33,7 +48,10 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
   const preset = operators.find((o) => o.active && o.code === initialOp)?.code;
   const [step, setStep] = useState<Step>(preset ? 2 : 1);
   const [operatorCode, setOperatorCode] = useState(preset ?? "");
-  const [amount, setAmount] = useState("");
+  const initialOrder = orders.find((o) => o.id === initialOrderId);
+  // "" = normal sale to Sarfli, otherwise the order this credit goes to.
+  const [orderId, setOrderId] = useState(initialOrder?.id ?? "");
+  const [amount, setAmount] = useState(initialOrder ? String(initialOrder.missingMillimes / 1000) : "");
   const [sender, setSender] = useState("");
   const [showErrors, setShowErrors] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -47,6 +65,8 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
   );
 
   const op = operators.find((o) => o.code === operatorCode);
+  const opOrders = orders.filter((o) => o.operatorCode === operatorCode);
+  const order = opOrders.find((o) => o.id === orderId);
   const amountMillimes = parseDinars(amount);
   const gross = op && amountMillimes ? grossPayout(amountMillimes, op.rateBps) : 0;
   const amountOk = !!amountMillimes && gross > 0;
@@ -62,6 +82,7 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
 
   function pickOperator(code: string) {
     setOperatorCode(code);
+    if (code !== operatorCode) setOrderId("");
     go(2);
   }
 
@@ -71,7 +92,7 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
     localStorage.setItem(LAST_OP, op.code);
     localStorage.setItem(LAST_SENDER, senderNorm);
     startTransition(async () => {
-      const res = await createSaleAction({ operatorCode: op.code, amountMillimes, senderMsisdn: senderNorm });
+      const res = await createSaleAction({ operatorCode: op.code, amountMillimes, senderMsisdn: senderNorm, orderId: order?.id ?? null });
       if (res.ok) router.push(`/sales/${res.data}`);
       else setFormError(te.has(res.error) ? te(res.error) : te("unknown"));
     });
@@ -165,6 +186,23 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
           }}
         >
           <StepTitle title={t("q2", { operator: op.name })} hint={t("q2Hint")} />
+          {opOrders.length > 0 && (
+            <fieldset role="radiogroup" className="flex flex-col gap-2">
+              <legend className="mb-2 font-semibold">{tm("depositWhere")}</legend>
+              <DestinationOption checked={!order} onSelect={() => setOrderId("")} title={tm("depositNormal")} />
+              {opOrders.map((o) => (
+                <DestinationOption
+                  key={o.id}
+                  checked={order?.id === o.id}
+                  onSelect={() => {
+                    setOrderId(o.id);
+                    setAmount(String(o.missingMillimes / 1000));
+                  }}
+                  title={tm.rich("depositToOrder", { ref: o.ref, missing: formatDt(o.missingMillimes), secret: (c) => <Secret>{c}</Secret> })}
+                />
+              ))}
+            </fieldset>
+          )}
           <label className="sr-only" htmlFor="amount">
             {t("amount")}
           </label>
@@ -198,7 +236,11 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
               </AlertDescription>
             </Alert>
           )}
-          <YouGet millimes={gross} label={t("youReceive")} />
+          {order ? (
+            <p className="border-t py-4 font-medium">{tm.rich("depositNote", { ref: order.ref, b: (c) => <span className="font-mono">{c}</span> })}</p>
+          ) : (
+            <YouGet millimes={gross} label={t("youReceive")} />
+          )}
           <Button type="submit" variant="go" className="h-14 w-full text-lg sm:h-14 sm:text-lg">
             {t("next")}
             <ArrowRightIcon aria-hidden="true" className="size-5 rtl:rotate-180" />
@@ -258,12 +300,19 @@ export function SellForm({ operators, balanceMillimes, initialOp }: { operators:
                   {formatMsisdn(senderNorm)}
                 </Secret>
               </SummaryRow>
-              <div className="flex items-baseline justify-between gap-3 p-4">
-                <dt className="font-semibold text-lg">{t("youReceive")}</dt>
-                <dd>
-                  <Dt compact millimes={gross} className="font-bold text-4xl text-emerald-700 dark:text-emerald-400" />
-                </dd>
-              </div>
+              {order ? (
+                <div className="flex items-baseline justify-between gap-3 p-4">
+                  <dt className="font-semibold text-lg">{tm("depositGoesTo")}</dt>
+                  <dd className="font-bold font-mono text-xl">{order.ref}</dd>
+                </div>
+              ) : (
+                <div className="flex items-baseline justify-between gap-3 p-4">
+                  <dt className="font-semibold text-lg">{t("youReceive")}</dt>
+                  <dd>
+                    <Dt compact millimes={gross} className="font-bold text-4xl text-emerald-700 dark:text-emerald-400" />
+                  </dd>
+                </div>
+              )}
             </dl>
           </div>
           <p className="flex items-center gap-2 text-muted-foreground text-sm">
@@ -294,6 +343,26 @@ function StepTitle({ title, hint }: { title: string; hint?: string }) {
       <h2 className="text-balance font-heading font-bold text-2xl leading-tight">{title}</h2>
       {hint && <p className="text-muted-foreground">{hint}</p>}
     </div>
+  );
+}
+
+function DestinationOption({ checked, onSelect, title }: { checked: boolean; onSelect: () => void; title: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={checked}
+      onClick={onSelect}
+      className={cn(
+        "flex items-center gap-3 rounded-2xl border-2 bg-card p-3 text-start transition-colors hover:bg-accent/50",
+        checked && "border-emerald-600 bg-emerald-600/6",
+      )}
+    >
+      <span className={cn("flex size-5 shrink-0 items-center justify-center rounded-full border-2", checked && "border-emerald-600 bg-emerald-600 text-white")}>
+        {checked && <CheckIcon aria-hidden="true" className="size-3" strokeWidth={3} />}
+      </span>
+      <span className="font-medium">{title}</span>
+    </button>
   );
 }
 

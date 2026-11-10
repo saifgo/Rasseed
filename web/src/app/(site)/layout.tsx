@@ -10,11 +10,13 @@ import { WhatsAppGroupButton } from "@/components/app/whatsapp-button";
 import { InstallButton } from "@/components/pwa/install-button";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
+import { hasMarketAccess } from "@/lib/market-queries";
 import { getCurrentUser, isStaff } from "@/lib/session";
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   const t = await getTranslations();
+  const market = await hasMarketAccess(user);
   const whatsappGroupUrl = process.env.WHATSAPP_GROUP_URL;
 
   async function signOutAction() {
@@ -29,7 +31,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <Link href="/" aria-label={brand.name}>
             <Logo />
           </Link>
-          {user && <SellerTopNav />}
+          {user && <SellerTopNav market={market} />}
           <div className="ms-auto flex items-center gap-1">
             <InstallButton />
             {user && <ConfidentialToggle showLabel={t("common.showNumbers")} hideLabel={t("common.hideNumbers")} />}
@@ -51,7 +53,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         </div>
       </header>
       <main className="flex-1 caret-emerald-600 selection:bg-emerald-600/20 selection:text-foreground">{children}</main>
-      {user && <SellerBottomNav />}
+      {user && <SellerBottomNav market={market} />}
       {user && whatsappGroupUrl && <WhatsAppGroupButton href={whatsappGroupUrl} label={t("common.whatsappGroup")} />}
       <footer className={user ? "border-t pb-20 sm:pb-0" : "border-t"}>
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-2 px-4 py-6 text-muted-foreground text-sm">

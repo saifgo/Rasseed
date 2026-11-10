@@ -9,10 +9,29 @@
  *   silent <slot> <millimes>          credit arrives WITHOUT an SMS
  *   fakesms <slot> <millimes> <from>  SMS arrives but the balance does NOT change
  *   balance                           print simulated balances
+ *
+ * Balance commands (ussd_balance) answer with the SIM's balance. Credit sends (ussd_send) deduct the
+ * amount from the SIM and answer with a confirmation; see sendAmount() for how the amount is found.
  */
 import readline from "node:readline";
 
 export type SimSlot = { slotIndex: number; subscriptionId: number; carrierName: string; balanceMillimes: number };
+
+type Command = { id: string; type?: string; ussd: string; steps?: string[]; subscriptionId: number };
+
+/**
+ * Amount (millimes) of a credit send, guessed from the rendered code and replies: every number in
+ * them except the service code (first group of the USSD), phone numbers (8+ digits) and menu choices
+ * (1-2 digits); the largest one left wins. Fits templates using {millimes}, e.g. *133*{millimes}*{number}#
+ * or steps ["{millimes}", "1"]. Override `PhoneSimulator.sendAmount` for other formats.
+ */
+export function sendAmount(cmd: { ussd: string; steps?: string[] }): number | null {
+  const [, ...rest] = cmd.ussd.match(/\d+/g) ?? [];
+  const nums = [...rest, ...(cmd.steps ?? []).flatMap((s) => s.match(/\d+/g) ?? [])]
+    .filter((n) => n.length >= 3 && n.length < 8)
+    .map(Number);
+  return nums.length ? Math.max(...nums) : null;
+}
 
 export class PhoneSimulator {
   token: string | null = null;
@@ -21,6 +40,10 @@ export class PhoneSimulator {
   log: (msg: string) => void = () => {};
   /** When false, balance commands fail (simulates USSD errors). */
   ussdWorks = true;
+  /** Finds the amount of a credit send (see sendAmount above). */
+  sendAmount = sendAmount;
+  /** Credit sends performed, for tests to inspect. */
+  sends: { commandId: string; slotIndex: number; ussd: string; steps: string[]; millimes: number }[] = [];
   /** Mimics each operator's real balance reply. Orange (*101#) lists several buckets; only recharge + transfer count. */
   balanceFormat = (m: number, ussd: string) =>
     ussd === "*101#"
@@ -59,16 +82,37 @@ export class PhoneSimulator {
       androidVersion: "14",
       appVersion: "sim-1",
     });
-    for (const cmd of r.commands as { id: string; ussd: string; subscriptionId: number }[]) {
+    for (const cmd of r.commands as Command[]) {
       const sim = this.sims.find((s) => s.subscriptionId === cmd.subscriptionId);
       if (!sim || !this.ussdWorks) {
         await this.post("/api/device/result", { id: cmd.id, ok: false, error: "USSD_RETURN_FAILURE" });
+        continue;
+      }
+      if (cmd.type === "ussd_send") {
+        await this.post("/api/device/result", { id: cmd.id, ...this.send(sim, cmd) });
         continue;
       }
       this.log(`USSD ${cmd.ussd} on slot ${sim.slotIndex} -> ${sim.balanceMillimes}`);
       await this.post("/api/device/result", { id: cmd.id, ok: true, response: this.balanceFormat(sim.balanceMillimes, cmd.ussd) });
     }
     return r.commands.length as number;
+  }
+
+  /** Runs a credit send once, like the operator would. Like a real phone, a refusal is still ok:true. */
+  private send(sim: SimSlot, cmd: Command) {
+    const steps = cmd.steps ?? [];
+    const millimes = this.sendAmount(cmd);
+    if (millimes == null) return { ok: false, error: "sim_unknown_amount" };
+    if (millimes > sim.balanceMillimes) {
+      this.log(`SEND ${cmd.ussd} ${steps.join(" ")} on slot ${sim.slotIndex} refused: balance ${sim.balanceMillimes}`);
+      return { ok: true, response: "Votre solde est insuffisant pour effectuer ce transfert." };
+    }
+    sim.balanceMillimes -= millimes;
+    this.sends.push({ commandId: cmd.id, slotIndex: sim.slotIndex, ussd: cmd.ussd, steps, millimes });
+    this.log(`SEND ${cmd.ussd} ${steps.join(" ")} on slot ${sim.slotIndex}: -${millimes} -> ${sim.balanceMillimes}`);
+    // One menu page per scripted reply, then the final confirmation (pages joined like the app does).
+    const pages = [...steps.map(() => "Veuillez confirmer:\n1:Oui\n2:Non"), `Transfert de ${millimes} Millimes effectue avec succes.`];
+    return { ok: true, response: pages.join("\n") };
   }
 
   start(intervalMs = 1000) {

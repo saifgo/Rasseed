@@ -52,6 +52,7 @@ const DONE: View["status"][] = ["expired", "cancelled", "rejected", "paid", "con
 
 export function LiveSale({ initial }: { initial: View }) {
   const t = useTranslations("sale");
+  const tm = useTranslations("market");
   const te = useTranslations("errors");
   const locale = useLocale() as keyof LocalizedText;
   const format = useFormatter();
@@ -107,7 +108,11 @@ export function LiveSale({ initial }: { initial: View }) {
           <span className="flex items-center gap-1.5 text-sm text-white/85">
             <Dt compact millimes={sale.declaredMillimes} className="[&_span]:text-white/85" />
             <ArrowRightIcon aria-hidden="true" className="size-3.5 rtl:rotate-180" />
-            <Dt compact millimes={sale.payoutNetMillimes ?? estimatedNet} className="font-semibold [&_span]:text-white/85" />
+            {sale.order ? (
+              <span className="font-mono font-semibold">{sale.order.ref}</span>
+            ) : (
+              <Dt compact millimes={sale.payoutNetMillimes ?? estimatedNet} className="font-semibold [&_span]:text-white/85" />
+            )}
           </span>
         </div>
         <Secret className="hidden font-mono text-sm text-white/80 sm:block">{sale.ref}</Secret>
@@ -158,6 +163,18 @@ export function LiveSale({ initial }: { initial: View }) {
         </StateCard>
       )}
 
+      {sale.order && LIVE.includes(sale.status) && (
+        <p className="rounded-xl bg-muted/60 p-3 text-sm">
+          {tm.rich("saleToOrderNote", {
+            ref: sale.order.ref,
+            b: (c) => (
+              <Link href={`/market/orders/${sale.order!.id}`} className="font-mono font-semibold underline underline-offset-4">
+                {c}
+              </Link>
+            ),
+          })}
+        </p>
+      )}
       {showTransfer && <TransferCard sale={sale} />}
 
       {sale.status === "review" && (
@@ -170,7 +187,18 @@ export function LiveSale({ initial }: { initial: View }) {
           {t.rich("successTextLegacy", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutNetMillimes ?? 0), method: methodName, secret: (c) => <Secret>{c}</Secret> })}
         </SuccessCard>
       )}
-      {sale.status === "confirmed" && !sale.method && (
+      {sale.status === "confirmed" && sale.order && (
+        <SuccessCard title={t("successTitle")} amount={sale.finalMillimes ?? 0}>
+          <span className="flex flex-col gap-4">
+            <span>{tm.rich("saleToOrderDone", { ref: sale.order.ref, b: (c) => <span className="font-mono font-semibold text-foreground">{c}</span> })}</span>
+            <Button variant="go" className="h-12 text-base sm:h-12" render={<Link href={`/market/orders/${sale.order.id}`} />}>
+              {tm("openOrder")}
+              <ArrowRightIcon aria-hidden="true" className="rtl:rotate-180" />
+            </Button>
+          </span>
+        </SuccessCard>
+      )}
+      {sale.status === "confirmed" && !sale.method && !sale.order && (
         <SuccessCard title={t("successTitle")} amount={sale.payoutGrossMillimes ?? 0}>
           <span className="flex flex-col gap-4">
             <span>{t.rich("successText", { amount: dt(sale.finalMillimes ?? 0), net: dt(sale.payoutGrossMillimes ?? 0), secret: (c) => <Secret>{c}</Secret> })}</span>
@@ -262,9 +290,17 @@ export function LiveSale({ initial }: { initial: View }) {
             <Detail label={t("rate")}>
               <Secret>{formatRate(sale.rateBps)}</Secret>
             </Detail>
-            <Detail label={sale.method ? `${t("payout")} · ${methodName}` : t("creditedToBalance")}>
-              <Dt compact millimes={sale.payoutNetMillimes ?? estimatedNet} className="font-semibold" />
-            </Detail>
+            {sale.order ? (
+              <Detail label={tm("depositGoesTo")}>
+                <Link href={`/market/orders/${sale.order.id}`} className="font-mono font-semibold underline-offset-4 hover:underline">
+                  {sale.order.ref}
+                </Link>
+              </Detail>
+            ) : (
+              <Detail label={sale.method ? `${t("payout")} · ${methodName}` : t("creditedToBalance")}>
+                <Dt compact millimes={sale.payoutNetMillimes ?? estimatedNet} className="font-semibold" />
+              </Detail>
+            )}
             {sale.method &&
               Object.entries(sale.payoutDetails).map(([k, v]) => (
                 <Detail key={k} label={sale.method?.fields.find((f) => f.key === k)?.label[locale] ?? k}>

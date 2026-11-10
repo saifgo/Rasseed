@@ -1,8 +1,10 @@
 "use server";
 
 import { EngineError } from "@/lib/engine/core";
+import { canUseMarketplace } from "@/lib/engine/market";
 import { cancelSale, choosePartial, createSale, type CreateSaleInput } from "@/lib/engine/sales";
 import { getCurrentUser } from "@/lib/session";
+import { getSettings } from "@/lib/settings";
 
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -19,6 +21,11 @@ async function run<T>(fn: (userId: string) => Promise<T>): Promise<ActionResult<
 }
 
 export async function createSaleAction(input: CreateSaleInput) {
+  // Depositing to a buyer's order is part of the marketplace.
+  if (input.orderId) {
+    const user = await getCurrentUser();
+    if (!user || !canUseMarketplace(user, await getSettings())) return { ok: false, error: "marketplace_closed" } as const;
+  }
   return run((userId) => createSale(userId, input));
 }
 

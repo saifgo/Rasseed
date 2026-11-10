@@ -3,6 +3,7 @@
 import {
   ArrowLeftIcon,
   BanknoteIcon,
+  BookOpenCheckIcon,
   CalendarCheckIcon,
   CoinsIcon,
   GaugeIcon,
@@ -10,8 +11,11 @@ import {
   PercentIcon,
   ReceiptTextIcon,
   SettingsIcon,
+  ShoppingCartIcon,
   SmartphoneIcon,
+  StoreIcon,
   UsersIcon,
+  ZapIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -33,7 +37,14 @@ import {
 } from "@/components/ui/sidebar";
 import type { UserRole } from "@/db/schema";
 
-export type AdminCounts = { review: number; withdrawals: number; credits: number; numbersAlert: number };
+export type AdminCounts = {
+  review: number;
+  withdrawals: number;
+  credits: number;
+  numbersAlert: number;
+  marketOrders: number;
+  rechargeReview: number;
+};
 
 type Item = { href: string; label: string; icon: typeof GaugeIcon; exact?: boolean; count?: keyof AdminCounts };
 
@@ -47,6 +58,14 @@ const operations: Item[] = [
   { href: "/admin/closing", label: "Day closing", icon: CalendarCheckIcon },
 ];
 
+// Buyer marketplace. Sarfli listing is admin only.
+const market: Item[] = [
+  { href: "/admin/market/orders", label: "Orders", icon: ShoppingCartIcon, count: "marketOrders" },
+  { href: "/admin/market/recharges", label: "Recharges", icon: ZapIcon, count: "rechargeReview" },
+  { href: "/admin/market/ledger", label: "Credit ledger", icon: BookOpenCheckIcon },
+];
+const marketAdmin: Item[] = [{ href: "/admin/market/sarfli", label: "Sarfli listing", icon: StoreIcon }];
+
 // Admin only.
 const setup: Item[] = [
   { href: "/admin/numbers", label: "Numbers & phones", icon: SmartphoneIcon, count: "numbersAlert" },
@@ -56,7 +75,17 @@ const setup: Item[] = [
 
 export function AdminSidebar({ counts, role, name }: { counts: AdminCounts; role: UserRole; name: string }) {
   const pathname = usePathname();
-  const groups = role === "admin" ? [{ label: "Operations", items: operations }, { label: "Setup", items: setup }] : [{ label: "Operations", items: operations }];
+  const groups =
+    role === "admin"
+      ? [
+          { label: "Operations", items: operations },
+          { label: "Marketplace", items: [...market, ...marketAdmin] },
+          { label: "Setup", items: setup },
+        ]
+      : [
+          { label: "Operations", items: operations },
+          { label: "Marketplace", items: market },
+        ];
   return (
     <Sidebar>
       <SidebarHeader className="flex-row items-center justify-between px-4 py-3">

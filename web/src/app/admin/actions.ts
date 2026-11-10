@@ -15,6 +15,8 @@ import {
 } from "@/lib/engine/admin";
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
+import { adjustSarfliCredit, adminCancel, adminRelease, upsertSarfliListing } from "@/lib/engine/market";
+import { resolveRecharge } from "@/lib/engine/recharge";
 import { adjustBalance, attachWithdrawalProof, markWithdrawalPaid, rejectWithdrawal, setWithdrawalNote } from "@/lib/engine/wallet";
 import { parseDinars, parsePercent, parseRate } from "@/lib/money";
 import { parseBalance, parseCreditSms } from "@/lib/parsers";
@@ -130,6 +132,58 @@ export async function setUserBlockedAction(userId: string, blocked: boolean) {
   });
 }
 
+export async function setMarketplaceAccessAction(userId: string, access: boolean) {
+  return admin(async () => {
+    await db.update(users).set({ marketplaceAccess: access }).where(eq(users.id, userId));
+    return null;
+  });
+}
+
+// --- Marketplace -------------------------------------------------------------
+
+export async function releaseOrderAction(orderId: string, note: string) {
+  return staff(async (id) => {
+    await adminRelease(id, orderId, note);
+    return null;
+  });
+}
+
+export async function cancelOrderAction(orderId: string, note: string) {
+  return staff(async (id) => {
+    await adminCancel(id, orderId, note);
+    return null;
+  });
+}
+
+export async function resolveRechargeAction(rechargeId: string, outcome: "succeeded" | "failed", note: string) {
+  return staff(async (id) => {
+    if (outcome !== "succeeded" && outcome !== "failed") throw new EngineError("invalid_state");
+    await resolveRecharge(id, rechargeId, outcome, note);
+    return null;
+  });
+}
+
+/** Signed amount in DT ("-12.5" removes credit). Admin only: it creates or removes Sarfli credit in the ledger. */
+export async function adjustSarfliCreditAction(operatorCode: string, amountDinars: string, note: string) {
+  return admin(async (id) => {
+    const s = amountDinars.trim().replace(/\s/g, "");
+    const negative = s.startsWith("-");
+    const amount = parseDinars(s.replace(/^[+-]/, ""));
+    if (!amount) throw new EngineError("invalid_amount");
+    await adjustSarfliCredit(id, operatorCode, negative ? -amount : amount, note);
+    return null;
+  });
+}
+
+export async function saveSarfliListingAction(operatorCode: string, values: { price: string; paymentInfo: string; active: boolean }) {
+  return admin(async () => {
+    const priceBps = parseRate(values.price);
+    if (!priceBps) throw new EngineError("invalid_rate");
+    await upsertSarfliListing({ operatorCode, priceBps, paymentInfo: values.paymentInfo, active: values.active });
+    return null;
+  });
+}
+
 // --- Credits -----------------------------------------------------------------
 
 export async function applyCreditAction(creditId: string, txRef: string) {
@@ -215,9 +269,25 @@ export async function updateOperatorAction(
     creditSmsSenders: string;
     balanceRegex: string;
     balanceUnit: "auto" | "millimes" | "dinars";
+    rechargeUssdTemplate: string;
+    rechargeUssdSteps: string;
   },
 ) {
   return admin(async () => {
+    // Recharge USSD: empty template = recharges off. Otherwise the dialog must carry the number and the amount.
+    const rechargeTemplate = values.rechargeUssdTemplate.trim();
+    const rechargeSteps = rechargeTemplate
+      ? values.rechargeUssdSteps
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .slice(0, 10)
+      : [];
+    if (rechargeTemplate) {
+      const all = [rechargeTemplate, ...rechargeSteps].join("\n");
+      if (!all.includes("{number}")) throw new EngineError("recharge_needs_number");
+      if (!all.includes("{millimes}") && !all.includes("{dinars}")) throw new EngineError("recharge_needs_amount");
+    }
     for (const re of [values.creditSmsRegex, values.balanceRegex]) {
       try {
         new RegExp(re, "iu");
@@ -244,6 +314,8 @@ export async function updateOperatorAction(
           .filter(Boolean),
         balanceRegex: values.balanceRegex,
         balanceUnit: values.balanceUnit,
+        rechargeUssdTemplate: rechargeTemplate || null,
+        rechargeUssdSteps: rechargeSteps,
         updatedAt: new Date(),
       })
       .where(eq(operators.code, code));

@@ -143,6 +143,7 @@ ALTER TABLE "seller_ratings" ADD CONSTRAINT "seller_ratings_seller_id_users_id_f
 CREATE INDEX "credit_entries_owner_idx" ON "credit_entries" USING btree ("bucket","user_id","operator_code");--> statement-breakpoint
 CREATE INDEX "credit_entries_order_idx" ON "credit_entries" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX "credit_entries_movement_idx" ON "credit_entries" USING btree ("movement_id");--> statement-breakpoint
+CREATE INDEX "credit_entries_recharge_idx" ON "credit_entries" USING btree ("recharge_id");--> statement-breakpoint
 CREATE INDEX "order_events_order_idx" ON "order_events" USING btree ("order_id","created_at");--> statement-breakpoint
 CREATE INDEX "order_proofs_order_idx" ON "order_proofs" USING btree ("order_id");--> statement-breakpoint
 CREATE INDEX "orders_buyer_idx" ON "orders" USING btree ("buyer_id","created_at");--> statement-breakpoint
@@ -151,4 +152,5 @@ CREATE INDEX "orders_status_idx" ON "orders" USING btree ("status","created_at")
 CREATE INDEX "recharges_buyer_idx" ON "recharges" USING btree ("buyer_id","created_at");--> statement-breakpoint
 CREATE INDEX "recharges_status_idx" ON "recharges" USING btree ("status","operator_code","created_at");--> statement-breakpoint
 CREATE INDEX "seller_ratings_seller_idx" ON "seller_ratings" USING btree ("seller_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "sims_held_by_recharge_idx" ON "sims" USING btree ("held_by_recharge_id");
+CREATE UNIQUE INDEX "sims_held_by_recharge_idx" ON "sims" USING btree ("held_by_recharge_id");--> statement-breakpoint
+CREATE INDEX "transactions_order_idx" ON "transactions" USING btree ("order_id");

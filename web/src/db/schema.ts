@@ -378,6 +378,7 @@ export const transactions = pgTable(
   (t) => [
     index("transactions_user_idx").on(t.userId, t.createdAt),
     index("transactions_status_idx").on(t.status, t.operatorCode, t.queuedAt),
+    index("transactions_order_idx").on(t.orderId),
   ],
 );
 
@@ -537,6 +538,7 @@ export const creditEntries = pgTable(
     index("credit_entries_owner_idx").on(t.bucket, t.userId, t.operatorCode),
     index("credit_entries_order_idx").on(t.orderId),
     index("credit_entries_movement_idx").on(t.movementId),
+    index("credit_entries_recharge_idx").on(t.rechargeId),
   ],
 );
 

@@ -8,8 +8,9 @@ import { Frame } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { listUsers } from "@/lib/admin-queries";
+import { getUsersReputation } from "@/lib/market-admin-queries";
 import { requireStaff } from "@/lib/session";
-import { AdjustBalanceButton, BlockButton, RoleSelect } from "./user-actions";
+import { AdjustBalanceButton, BlockButton, MarketplaceAccessSwitch, RoleSelect } from "./user-actions";
 import { Secret } from "@/components/app/confidential";
 
 export const metadata = { title: "Sellers & balances" };
@@ -18,6 +19,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   const me = await requireStaff();
   const { q = "" } = await searchParams;
   const rows = await listUsers(q || undefined);
+  const rep = await getUsersReputation(rows.map((r) => r.user.id));
   const admin = me.role === "admin";
   const owed = rows.reduce((s, r) => s + r.balanceMillimes, 0);
 
@@ -46,6 +48,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
               <TableHead>Role</TableHead>
               <TableHead className="text-right">Balance</TableHead>
               <TableHead className="text-right">Sales</TableHead>
+              <TableHead>Marketplace</TableHead>
               <TableHead>Joined</TableHead>
               <TableHead />
             </TableRow>
@@ -53,7 +56,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
           <TableBody>
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   No users.
                 </TableCell>
               </TableRow>
@@ -79,6 +82,21 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
                 </TableCell>
                 <TableCell className="text-right">
                   <Secret className="tabular">{sales}</Secret>
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {admin ? (
+                      <MarketplaceAccessSwitch userId={user.id} access={user.marketplaceAccess} />
+                    ) : (
+                      <Badge variant={user.marketplaceAccess ? "success" : "secondary"}>{user.marketplaceAccess ? "access" : "no access"}</Badge>
+                    )}
+                    {rep.ratings[user.id] && (
+                      <span className="text-xs" title={`${rep.ratings[user.id].count} ratings`}>
+                        ★ {rep.ratings[user.id].avg.toFixed(1)}
+                      </span>
+                    )}
+                    {(rep.marks[user.id] ?? 0) > 0 && <Badge variant="error">{rep.marks[user.id]} bad mark{rep.marks[user.id] > 1 ? "s" : ""}</Badge>}
+                  </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
                   <TimeAgo date={user.createdAt} />

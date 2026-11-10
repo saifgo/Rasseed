@@ -1,5 +1,5 @@
 {
-  "id": "72334dfa-6ec7-43ec-811f-ee853aef521a",
+  "id": "249a3965-a8e6-4195-b0a7-357d8c99944c",
   "prevId": "e4421d2a-a673-42c1-8fa2-f124c91b1cb6",
   "version": "7",
   "dialect": "postgresql",
@@ -338,6 +338,21 @@
           "columns": [
             {
               "expression": "movement_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "credit_entries_recharge_idx": {
+          "name": "credit_entries_recharge_idx",
+          "columns": [
+            {
+              "expression": "recharge_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3070,6 +3085,21 @@
             },
             {
               "expression": "queued_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "transactions_order_idx": {
+          "name": "transactions_order_idx",
+          "columns": [
+            {
+              "expression": "order_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

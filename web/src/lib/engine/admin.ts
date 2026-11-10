@@ -100,7 +100,7 @@ export async function configureSim(
     const sim = await lockSim(t, simId);
     if (!sim) throw new EngineError("not_found");
     const identityChanged = sim.msisdn !== msisdn || sim.operatorCode !== input.operatorCode;
-    if (sim.heldByTxId && identityChanged) throw new EngineError("sim_busy");
+    if ((sim.heldByTxId || sim.heldByRechargeId) && identityChanged) throw new EngineError("sim_busy");
     await t
       .update(sims)
       .set({
