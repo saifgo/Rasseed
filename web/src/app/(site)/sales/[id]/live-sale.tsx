@@ -119,7 +119,7 @@ export function LiveSale({ initial }: { initial: View }) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <StatusBadge status={sale.status} />
+        <StatusBadge status={sale.status} toOrder={Boolean(sale.order)} />
         <Secret className="font-mono text-muted-foreground text-sm sm:hidden">{sale.ref}</Secret>
       </div>
 

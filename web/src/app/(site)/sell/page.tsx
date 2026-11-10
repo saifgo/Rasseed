@@ -72,7 +72,7 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
                 )}
               </div>
               <div>
-                <StatusBadge status={tx.status} />
+                <StatusBadge status={tx.status} toOrder={Boolean(tx.orderId)} />
               </div>
             </div>
           </Link>

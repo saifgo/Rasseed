@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, SmartphoneIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -34,9 +34,9 @@ export default async function RechargePage({ searchParams }: { searchParams: Pro
   const live = recharges.some((r) => ACTIVE_RECHARGE_STATUSES.includes(r.status));
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-8">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
       {live && <AutoRefresh seconds={4} />}
-      <Button variant="ghost" className="-ms-2 -mb-4 h-10 self-start text-base text-muted-foreground" render={<Link href="/buy" />}>
+      <Button variant="ghost" className="-ms-2 -mb-2 h-10 self-start text-base text-muted-foreground" render={<Link href="/buy" />}>
         <ArrowLeftIcon aria-hidden="true" className="rtl:rotate-180" />
         {t("buyHome.title")}
       </Button>
@@ -50,17 +50,14 @@ export default async function RechargePage({ searchParams }: { searchParams: Pro
       <section className="flex flex-col gap-3">
         <h2 className="font-heading font-semibold text-xl">{t("rechargeHistory")}</h2>
         {recharges.length === 0 ? (
-          <div className="flex flex-col items-center gap-2 py-6 text-center text-muted-foreground">
-            <SmartphoneIcon aria-hidden="true" className="size-8 opacity-60" />
-            {t("noRecharges")}
-          </div>
+          <p className="py-6 text-center text-muted-foreground">{t("noRecharges")}</p>
         ) : (
           <ul className="flex flex-col divide-y overflow-hidden rounded-2xl border bg-card">
             {recharges.map((r) => {
               const op = opBy[r.operatorCode];
               return (
                 <li key={r.id} className="flex items-center gap-4 p-4">
-                  <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-11 rounded-xl" />
+                  <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-12 rounded-xl" />
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <div className="flex flex-wrap items-baseline gap-x-2">
                       <Dt compact millimes={r.amountMillimes} className="font-semibold text-lg" />

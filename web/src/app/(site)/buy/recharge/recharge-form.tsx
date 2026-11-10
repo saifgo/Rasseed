@@ -1,6 +1,6 @@
 "use client";
 
-import { BanIcon, PhoneIcon, SendIcon } from "lucide-react";
+import { BanIcon, PhoneIcon, SendIcon, SmartphoneIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -34,7 +34,12 @@ export function RechargeForm({ operators, initialOp }: { operators: Op[]; initia
   const amountError = !credit ? te("invalid_amount") : op && credit > op.balanceMillimes ? t("aboveBalance") : null;
 
   if (operators.length === 0) {
-    return <p className="rounded-2xl border bg-card p-5 text-muted-foreground">{t("rechargeOff")}</p>;
+    return (
+      <div className="flex flex-col items-center gap-4 py-12 text-center">
+        <SmartphoneIcon aria-hidden="true" className="size-10 text-muted-foreground/60" />
+        <p className="max-w-sm text-muted-foreground">{t("rechargeOff")}</p>
+      </div>
+    );
   }
 
   function submit() {

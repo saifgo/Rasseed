@@ -33,13 +33,14 @@ const styles: Record<TxStatus, { variant: Variant; icon: LucideIcon; spin?: bool
   rejected: { variant: "error", icon: XCircleIcon },
 };
 
-export function StatusBadge({ status, className }: { status: TxStatus; className?: string }) {
+/** `toOrder`: the transfer was deposited to a buyer order, so "confirmed" means the order got the credit, not cash. */
+export function StatusBadge({ status, toOrder = false, className }: { status: TxStatus; toOrder?: boolean; className?: string }) {
   const t = useTranslations("status");
   const s = styles[status];
   return (
     <Badge variant={s.variant} size="lg" className={cn("gap-1.5 rounded-full px-2.5", className)}>
       <s.icon aria-hidden="true" className={cn("size-3.5", s.spin && "animate-spin")} />
-      {t(status)}
+      {toOrder && status === "confirmed" ? t("confirmedToOrder") : t(status)}
     </Badge>
   );
 }

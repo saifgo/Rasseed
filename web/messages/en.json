@@ -204,6 +204,7 @@
     "partial": "Part received",
     "review": "Our team is checking",
     "confirmed": "Money added",
+    "confirmedToOrder": "Credit sent to the order",
     "paid": "Paid",
     "expired": "Time over",
     "cancelled": "Cancelled",

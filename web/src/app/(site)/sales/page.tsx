@@ -66,7 +66,7 @@ export default async function SalesPage() {
                     )}
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <StatusBadge status={tx.status} />
+                    <StatusBadge status={tx.status} toOrder={Boolean(tx.orderId)} />
                     <span className="text-muted-foreground text-xs">{format.dateTime(tx.createdAt, { dateStyle: "medium", timeStyle: "short" })}</span>
                   </div>
                 </div>

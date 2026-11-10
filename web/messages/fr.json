@@ -204,6 +204,7 @@
     "partial": "Reçu en partie",
     "review": "Vérification par l'équipe",
     "confirmed": "Argent ajouté",
+    "confirmedToOrder": "Crédit versé à la commande",
     "paid": "Payé",
     "expired": "Temps écoulé",
     "cancelled": "Annulé",

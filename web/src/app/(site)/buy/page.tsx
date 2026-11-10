@@ -56,41 +56,40 @@ export default async function BuyPage() {
   const live = orders.some((o) => OPEN_ORDER_STATUSES.includes(o.status)) || recharges.some((r) => ACTIVE_RECHARGE_STATUSES.includes(r.status));
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-8">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
       {live && <AutoRefresh seconds={10} />}
       <h1 className="font-heading font-bold text-3xl tracking-tight">{t("buyHome.title")}</h1>
 
       {/* Balances */}
       <section className="flex flex-col gap-3">
         <SectionTitle title={t("myCredit")} />
-        <div className="grid gap-3 sm:grid-cols-3">
+        <ul className="flex flex-col divide-y overflow-hidden rounded-2xl border bg-card">
           {activeOps.map((o) => {
             const balance = balances[o.code] ?? 0;
+            const canRecharge = Boolean(o.rechargeUssdTemplate) && balance > 0;
             return (
-              <div key={o.code} className="flex flex-col gap-3 rounded-2xl border-2 bg-card p-4" style={{ borderColor: o.color }}>
-                <div className="flex items-center gap-3">
-                  <OperatorLogo code={o.code} name={o.name} color={o.color} className="size-10 rounded-xl" />
-                  <div className="flex min-w-0 flex-col">
-                    <span className="text-muted-foreground text-sm">{o.name}</span>
-                    <Dt compact millimes={balance} className="font-bold text-2xl" />
-                  </div>
+              <li key={o.code} className="flex items-center gap-4 p-4">
+                <OperatorLogo code={o.code} name={o.name} color={o.color} className="size-12 rounded-xl" />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-muted-foreground text-sm">{o.name}</span>
+                  <Dt compact millimes={balance} className={balance > 0 ? "font-bold text-2xl" : "font-bold text-2xl text-muted-foreground"} />
                 </div>
                 {o.rechargeUssdTemplate &&
-                  (balance > 0 ? (
-                    <Button variant="outline" className="h-11 w-full text-base sm:h-11" render={<Link href={`/buy/recharge?op=${o.code}`} />}>
+                  (canRecharge ? (
+                    <Button variant="outline" className="h-11 shrink-0 text-base sm:h-11" render={<Link href={`/buy/recharge?op=${o.code}`} />}>
                       <SmartphoneIcon aria-hidden="true" />
                       {t("buyHome.recharge")}
                     </Button>
                   ) : (
-                    <Button variant="outline" className="h-11 w-full text-base sm:h-11" disabled>
+                    <Button variant="outline" className="h-11 shrink-0 text-base sm:h-11" disabled>
                       <SmartphoneIcon aria-hidden="true" />
                       {t("buyHome.recharge")}
                     </Button>
                   ))}
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ul>
       </section>
 
       <Button variant="go" className="h-14 w-full text-lg sm:h-14 sm:text-lg" render={<Link href="/buy/sellers" />}>
@@ -100,7 +99,7 @@ export default async function BuyPage() {
       </Button>
 
       {orders.length === 0 && (
-        <p className="rounded-2xl bg-sky-500/8 p-4 text-center text-sky-900 dark:text-sky-100">{t("buyHome.empty")}</p>
+        <p className="py-6 text-center text-muted-foreground">{t("buyHome.empty")}</p>
       )}
 
       {/* Needs your action */}
@@ -199,7 +198,7 @@ export default async function BuyPage() {
               const op = opBy[r.operatorCode];
               return (
                 <li key={r.id} className="flex items-center gap-4 p-4">
-                  <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-10 rounded-xl" />
+                  <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-12 rounded-xl" />
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <div className="flex flex-wrap items-baseline gap-x-2">
                       <Dt compact millimes={r.amountMillimes} className="font-semibold text-lg" />

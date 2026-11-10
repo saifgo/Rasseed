@@ -72,7 +72,7 @@ export function ActionOrderCard({
   return (
     <li className="flex flex-col gap-3 rounded-2xl border-2 border-amber-500/50 bg-amber-500/6 p-4">
       <div className="flex items-center gap-3">
-        <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-11 rounded-xl" />
+        <OperatorLogo code={op.code} name={op.name} color={op.color} className="size-12 rounded-xl" />
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <Dt compact millimes={amountMillimes} className="font-bold text-lg" />

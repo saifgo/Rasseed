@@ -7,6 +7,7 @@ import { Secret } from "@/components/app/confidential";
 import { Rating } from "@/components/app/market-badges";
 import { Dt } from "@/components/app/money";
 import { OperatorLogo } from "@/components/app/operator-badge";
+import { OperatorFilter } from "@/components/app/operator-filter";
 import { ActionOrderCard, CollapsedList, OrderRow, SectionTitle } from "@/components/app/order-row";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import { buyerBadMarks, listSellerOrders, orderPrice, sellerReputation } from "@
 import { listActiveListings, listSellerListings, requireMarketUser, sellerNextStep, userNames } from "@/lib/market-queries";
 import { formatDt, grossPayout } from "@/lib/money";
 import { listOperators } from "@/lib/queries";
-import { segmentedControlItemVariants, segmentedControlRootClassName } from "@/lib/segmented-control";
 import { cn } from "@/lib/utils";
 import { ListingForm, SellStockForm } from "./selling-forms";
 
@@ -73,7 +73,7 @@ export default async function SellingPage({ searchParams }: { searchParams: Prom
   const prices = op ? board.filter((l) => l.operatorCode === op.code) : [];
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-8">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8">
       {live && <AutoRefresh seconds={10} />}
       <div className="flex flex-col gap-1">
         <h1 className="font-heading font-bold text-3xl tracking-tight">{t("sellHome.title")}</h1>
@@ -152,24 +152,9 @@ export default async function SellingPage({ searchParams }: { searchParams: Prom
       {op && (
         <section className="flex flex-col gap-3">
           <SectionTitle title={t("sellHome.marketTitle")} hint={t("sellHome.marketHint")} />
-          {activeOps.length > 1 && (
-            <nav className={cn(segmentedControlRootClassName, "w-full")} aria-label={t("filter")}>
-              {activeOps.map((o) => (
-                <Link
-                  key={o.code}
-                  href={`/selling?op=${o.code}`}
-                  scroll={false}
-                  aria-current={op.code === o.code ? "page" : undefined}
-                  className={cn(segmentedControlItemVariants({ size: "lg", state: "current" }), "h-11 flex-1 sm:h-10")}
-                >
-                  <OperatorLogo code={o.code} name={o.name} color={o.color} className="size-5 rounded-md" />
-                  {o.name}
-                </Link>
-              ))}
-            </nav>
-          )}
+          <OperatorFilter operators={activeOps} current={op.code} hrefFor={(code) => `/selling?op=${code}`} label={t("filter")} scroll={false} />
 
-          <div className="flex flex-col overflow-hidden rounded-2xl border-2 bg-card" style={{ borderColor: op.color }}>
+          <div className="flex flex-col overflow-hidden rounded-2xl border bg-card">
             {/* Everyone's price for 10 DT, cheapest first */}
             {prices.length === 0 ? (
               <p className="p-4 text-center text-muted-foreground">{t("noListings")}</p>
@@ -253,7 +238,7 @@ export default async function SellingPage({ searchParams }: { searchParams: Prom
           {stockOps.map((o) => (
             <div key={o.code} className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
               <div className="flex items-center gap-3">
-                <OperatorLogo code={o.code} name={o.name} color={o.color} className="size-10 rounded-xl" />
+                <OperatorLogo code={o.code} name={o.name} color={o.color} className="size-12 rounded-xl" />
                 <span className="flex-1 font-semibold">{o.name}</span>
                 <Dt compact millimes={stock[o.code]} className="font-bold text-2xl" />
               </div>

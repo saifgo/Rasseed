@@ -4,15 +4,13 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Rating } from "@/components/app/market-badges";
 import { Dt } from "@/components/app/money";
-import { OperatorLogo } from "@/components/app/operator-badge";
+import { OperatorFilter } from "@/components/app/operator-filter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { orderPrice } from "@/lib/engine/market";
 import { listOpenListings, requireMarketUser } from "@/lib/market-queries";
 import { listOperators } from "@/lib/queries";
-import { segmentedControlItemVariants, segmentedControlRootClassName } from "@/lib/segmented-control";
-import { cn } from "@/lib/utils";
 import { BuyDialog } from "./buy-dialog";
 
 export const dynamic = "force-dynamic";
@@ -38,33 +36,19 @@ export default async function SellersPage({ searchParams }: { searchParams: Prom
         <p className="text-muted-foreground">{t("sellers.hint")}</p>
       </div>
 
-      {activeOps.length > 1 && (
-        <nav className={cn(segmentedControlRootClassName, "w-full")} aria-label={t("filter")}>
-          {activeOps.map((o) => (
-            <Link
-              key={o.code}
-              href={`/buy/sellers?op=${o.code}`}
-              aria-current={op?.code === o.code ? "page" : undefined}
-              className={cn(segmentedControlItemVariants({ size: "lg", state: "current" }), "h-11 flex-1 sm:h-10")}
-            >
-              <OperatorLogo code={o.code} name={o.name} color={o.color} className="size-5 rounded-md" />
-              {o.name}
-            </Link>
-          ))}
-        </nav>
-      )}
+      <OperatorFilter operators={activeOps} current={op?.code} hrefFor={(code) => `/buy/sellers?op=${code}`} label={t("filter")} />
 
       {!op || shown.length === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-2xl border bg-card py-10 text-center text-muted-foreground">
-          <StoreIcon aria-hidden="true" className="size-8 opacity-60" />
-          {t("noListings")}
+        <div className="flex flex-col items-center gap-4 py-12 text-center">
+          <StoreIcon aria-hidden="true" className="size-10 text-muted-foreground/60" />
+          <p className="text-muted-foreground">{t("noListings")}</p>
         </div>
       ) : (
         <ul className="flex flex-col gap-3">
           {shown.map((l, i) => {
             const seller = l.sellerId ? (l.sellerName ?? t("seller")) : brand.name;
             return (
-              <li key={l.id} className="flex flex-col gap-3 rounded-2xl border-2 bg-card p-4" style={i === 0 ? { borderColor: op.color } : undefined}>
+              <li key={l.id} className="flex flex-col gap-3 rounded-2xl border bg-card p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex min-w-0 flex-col gap-1">
                     <span className="flex flex-wrap items-center gap-2 font-semibold text-lg">
