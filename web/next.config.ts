@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["postgres"],
   // Payment proofs (images/PDF up to 5 MB) are uploaded through a server action.
-  experimental: { serverActions: { bodySizeLimit: "6mb" } },
+  experimental: { serverActions: { bodySizeLimit: "6mb" }, agentUpgrade: "security" },
   // The marketplace moved: buyers live under /buy, sellers under /selling, orders under /orders.
   async redirects() {
     return [
