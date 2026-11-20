@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Policies are set as device owner; no legacy device-admin policies are needed. -->
+<device-admin>
+    <uses-policies />
+</device-admin>
