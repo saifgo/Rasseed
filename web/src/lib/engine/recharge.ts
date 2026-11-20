@@ -21,6 +21,7 @@ import { lockSarfli, move } from "./ledger";
 import { posSpentToday } from "./pos";
 import { canUseMarketplace } from "./market";
 import { sarfliCredit, spendsSarfliCredit } from "./sarfli-credit";
+import { operatorsWithUse, rechargeUse, simUseColumn } from "./sim-uses";
 import { lockUser } from "./wallet";
 
 /**
@@ -92,6 +93,9 @@ export async function createRecharge(buyerId: string, input: RechargeInput, orig
   const [op] = await db.select().from(operators).where(eq(operators.code, operatorCode));
   if (!op || !op.active) throw new EngineError("operator_unavailable");
   if (!pkg && !op.rechargeUssdTemplate) throw new EngineError("recharge_unavailable");
+  // Closed while no SIM of this operator may send this kind (Light or Internet).
+  const use = rechargeUse({ packageId: pkg?.id });
+  if (!(await operatorsWithUse(use)).has(op.code)) throw new EngineError(pkg ? "package_unavailable" : "recharge_unavailable");
   if (!Number.isInteger(amount) || amount <= 0) throw new EngineError("invalid_amount");
   // POS: the admin caps each plain recharge per operator (packages are not capped).
   if (origin.posTerminalId && !pkg && op.posMaxRechargeMillimes && amount > op.posMaxRechargeMillimes) {
@@ -136,7 +140,7 @@ export async function createRecharge(buyerId: string, input: RechargeInput, orig
         // Sarfli's own use: only credit that is Sarfli's (real phone credit minus what belongs to others or
         // is not confirmed). Checked under the Sarfli lock so two sends cannot both take the last credit.
         await lockSarfli(t, op.code);
-        const { spendableMillimes } = await sarfliCredit(t, op.code);
+        const { spendableMillimes } = await sarfliCredit(t, op.code, use);
         // This recharge is not in the recharge bucket yet, so spendable does not count it.
         if (amount > spendableMillimes) throw new EngineError("sarfli_credit_insufficient");
         await move(t, {
@@ -331,6 +335,7 @@ export async function assignRecharges(operatorCode?: string) {
         .where(
           and(
             eq(sims.status, "active"),
+            eq(simUseColumn(rechargeUse(r)), true),
             eq(sims.operatorCode, r.operatorCode),
             isNull(sims.heldByTxId),
             isNull(sims.heldByRechargeId),

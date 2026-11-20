@@ -6,6 +6,7 @@ import { useAdminAction } from "@/components/admin/use-admin-action";
 import { Secret } from "@/components/app/confidential";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogClose,
@@ -137,11 +138,18 @@ export function DeviceActions({ deviceId, enabled, name, serverUrl }: { deviceId
   );
 }
 
-type SimInfo = { id: string; operatorCode: string | null; msisdn: string | null; status: string; slot: number };
+type SimUses = { acceptCredit: boolean; sendCredit: boolean; sendData: boolean };
+type SimInfo = { id: string; operatorCode: string | null; msisdn: string | null; status: string; slot: number; uses: SimUses };
 const statusItems = [
-  { label: "Active (receives sales)", value: "active" },
+  { label: "Active (in use)", value: "active" },
   { label: "Disabled", value: "disabled" },
   { label: "Not configured", value: "unconfigured" },
+];
+
+const useItems: { key: keyof SimUses; label: string; hint: string }[] = [
+  { key: "acceptCredit", label: "Accept credit", hint: "Sellers send credit to this number." },
+  { key: "sendCredit", label: "Send credit", hint: "Sends buyer recharges (Light)." },
+  { key: "sendData", label: "Send data", hint: "Sends data packages (Internet)." },
 ];
 
 export function SimActions({ sim, operators, failing }: { sim: SimInfo; operators: { code: string; name: string }[]; failing: boolean }) {
@@ -150,6 +158,7 @@ export function SimActions({ sim, operators, failing }: { sim: SimInfo; operator
   const [operatorCode, setOperatorCode] = useState(sim.operatorCode ?? "");
   const [msisdn, setMsisdn] = useState(sim.msisdn ?? "");
   const [status, setStatus] = useState(sim.status === "unconfigured" ? "active" : sim.status);
+  const [uses, setUses] = useState<SimUses>(sim.uses);
   const opItems = operators.map((o) => ({ label: o.name, value: o.code }));
 
   return (
@@ -202,6 +211,25 @@ export function SimActions({ sim, operators, failing }: { sim: SimInfo; operator
                 </SelectPopup>
               </Select>
             </Field>
+            <fieldset className="flex flex-col gap-3">
+              <legend className="mb-2 font-medium text-sm">What this SIM can do</legend>
+              {useItems.map((u) => (
+                <label key={u.key} className="flex items-start gap-2.5">
+                  <Checkbox
+                    className="mt-0.5"
+                    checked={uses[u.key]}
+                    onCheckedChange={(c) => setUses((prev) => ({ ...prev, [u.key]: c === true }))}
+                  />
+                  <span className="flex flex-col">
+                    <span className="text-sm">{u.label}</span>
+                    <span className="text-muted-foreground text-xs">{u.hint}</span>
+                  </span>
+                </label>
+              ))}
+              {status === "active" && !uses.acceptCredit && !uses.sendCredit && !uses.sendData && (
+                <span className="text-muted-foreground text-xs">Nothing ticked: the SIM is active but never used.</span>
+              )}
+            </fieldset>
           </DialogPanel>
           <DialogFooter>
             <DialogClose render={<Button variant="ghost" />}>Cancel</DialogClose>
@@ -214,6 +242,7 @@ export function SimActions({ sim, operators, failing }: { sim: SimInfo; operator
                       operatorCode: operatorCode || null,
                       msisdn: msisdn.trim() || null,
                       status: status as "active" | "disabled" | "unconfigured",
+                      uses,
                     }),
                   { success: "SIM saved", onSuccess: () => setOpen(false) },
                 )

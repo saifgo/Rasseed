@@ -1,16 +1,20 @@
 import { listPackages } from "@/lib/engine/packages";
 import { posSpentToday } from "@/lib/engine/pos";
-import { spendableByOperator } from "@/lib/market-queries";
+import { spendableByOperator, spendingOffer } from "@/lib/market-queries";
 import { listOperators } from "@/lib/queries";
 import { posRoute } from "../_util";
 
 export const GET = posRoute(null, async ({ terminal, user }) => {
-  const [ops, packages, spentToday] = await Promise.all([
+  const [ops, allPackages, spentToday] = await Promise.all([
     listOperators(),
     listPackages({ activeOnly: true }),
     posSpentToday(terminal.id),
   ]);
-  const { balances, sarfli } = await spendableByOperator(user, ops.map((o) => o.code));
+  const [{ balances, dataBalances, sarfli }, { rechargeEnabled, packages }] = await Promise.all([
+    spendableByOperator(user, ops.map((o) => o.code)),
+    // Light / Internet are greyed out while no SIM of the operator may send them.
+    spendingOffer(ops, allPackages),
+  ]);
   const active = ops.filter((o) => o.active);
   const activeCodes = new Set(active.map((o) => o.code));
   return {
@@ -28,8 +32,10 @@ export const GET = posRoute(null, async ({ terminal, user }) => {
       code: o.code,
       name: o.name,
       color: o.color,
+      // Spendable on Light recharges; dataBalanceMillimes on Internet packages.
       balanceMillimes: balances[o.code] ?? 0,
-      rechargeEnabled: Boolean(o.rechargeUssdTemplate),
+      dataBalanceMillimes: dataBalances[o.code] ?? 0,
+      rechargeEnabled: rechargeEnabled(o),
       // Largest plain recharge per POS sale (null = no cap); packages are not capped.
       maxRechargeMillimes: o.posMaxRechargeMillimes,
     })),

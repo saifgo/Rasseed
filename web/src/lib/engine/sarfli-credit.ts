@@ -3,6 +3,7 @@ import { db, type DbTx } from "@/db";
 import { creditEntries, credits, sims, transactions, type TxStatus, users } from "@/db/schema";
 import { getSettings } from "@/lib/settings";
 import { canUseMarketplace } from "./market";
+import { type SendUse, simUseColumn } from "./sim-uses";
 
 /**
  * Sarfli's own credit: what admins may spend from the POS (or the web recharge page).
@@ -41,8 +42,16 @@ export type SarfliCreditBreakdown = {
   spendableMillimes: number;
 };
 
-/** Breakdown for one operator. Pass the transaction when deciding a spend (under lockSarfli). */
-export async function sarfliCredit(dbx: DbTx | typeof db, operatorCode: string): Promise<SarfliCreditBreakdown> {
+/**
+ * Breakdown for one operator. Pass the transaction when deciding a spend (under lockSarfli).
+ * With a send use (Light or Internet), spendable is also capped by the credit on the SIMs allowed to send
+ * it: credit on the other SIMs is Sarfli's but cannot leave the phones that way.
+ */
+export async function sarfliCredit(
+  dbx: DbTx | typeof db,
+  operatorCode: string,
+  use?: SendUse,
+): Promise<SarfliCreditBreakdown> {
   const [onSims] = await dbx
     .select({ total: sql<string>`coalesce(sum(${sims.balanceMillimes}), 0)` })
     .from(sims)
@@ -68,15 +77,23 @@ export async function sarfliCredit(dbx: DbTx | typeof db, operatorCode: string):
   const unmatchedCreditsMillimes = Number(unmatched.total);
   const othersMillimes = bucket("order") + bucket("seller_stock") + bucket("buyer");
   const pendingRechargesMillimes = bucket("recharge");
-  const spendableMillimes = Math.max(
+  let spendableMillimes = Math.max(
     0,
     onSimsMillimes - unconfirmedSalesMillimes - unmatchedCreditsMillimes - othersMillimes - pendingRechargesMillimes,
   );
+  if (use) {
+    // Recharges in progress leave the sending SIMs, so they come off that credit too.
+    const [sending] = await dbx
+      .select({ total: sql<string>`coalesce(sum(${sims.balanceMillimes}), 0)` })
+      .from(sims)
+      .where(and(eq(sims.operatorCode, operatorCode), eq(sims.status, "active"), eq(simUseColumn(use), true)));
+    spendableMillimes = Math.min(spendableMillimes, Math.max(0, Number(sending.total) - pendingRechargesMillimes));
+  }
   return { onSimsMillimes, unconfirmedSalesMillimes, unmatchedCreditsMillimes, othersMillimes, pendingRechargesMillimes, spendableMillimes };
 }
 
-/** Spendable per operator code, for the POS and the recharge page. */
-export async function sarfliSpendable(operatorCodes: string[]) {
-  const rows = await Promise.all(operatorCodes.map(async (c) => [c, (await sarfliCredit(db, c)).spendableMillimes] as const));
+/** Spendable per operator code (for one send use, or overall), for the POS and the recharge page. */
+export async function sarfliSpendable(operatorCodes: string[], use?: SendUse) {
+  const rows = await Promise.all(operatorCodes.map(async (c) => [c, (await sarfliCredit(db, c, use)).spendableMillimes] as const));
   return Object.fromEntries(rows) as Record<string, number>;
 }

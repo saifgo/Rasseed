@@ -468,7 +468,8 @@ namespace SarfliPos
             if (light && op.MaxRechargeMillimes != null && op.MaxRechargeMillimes.Value > 0 && amount > op.MaxRechargeMillimes.Value)
                 return string.Format(Strings.MaxPerRecharge, Format.Money(op.MaxRechargeMillimes.Value));
             if (amount > DailyLeft()) return DailyLeft() <= 0 ? Strings.DailyLimitReached : Strings.OverDailyLimit;
-            if (amount > op.BalanceMillimes) return Strings.NotEnough;
+            long available = light ? op.BalanceMillimes : (op.DataBalanceMillimes ?? op.BalanceMillimes);
+            if (amount > available) return Strings.NotEnough;
             return null;
         }
 

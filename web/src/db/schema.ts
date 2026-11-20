@@ -160,6 +160,10 @@ export const sims = pgTable(
     operatorCode: text("operator_code").references(() => operators.code),
     msisdn: text("msisdn"), // 8-digit local number
     status: text("status").$type<SimStatus>().notNull().default("unconfigured"),
+    // What an active SIM may be used for: receive sellers' credit, send buyer recharges, send data packages.
+    canAcceptCredit: boolean("can_accept_credit").notNull().default(true),
+    canSendCredit: boolean("can_send_credit").notNull().default(true),
+    canSendData: boolean("can_send_data").notNull().default(true),
     balanceMillimes: millimes("balance_millimes"),
     balanceCheckedAt: ts("balance_checked_at"),
     heldByTxId: uuid("held_by_tx_id"),

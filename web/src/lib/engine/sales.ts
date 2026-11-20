@@ -12,6 +12,7 @@ import { grossPayout } from "@/lib/money";
 import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
 import { EngineError, enqueueBalanceCheck, finalize, lockTx, logEvent, releaseSim, updateTx } from "./core";
+import { operatorsWithUse } from "./sim-uses";
 
 function newRef() {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -30,6 +31,8 @@ export type CreateSaleInput = {
 export async function createSale(userId: string, input: CreateSaleInput) {
   const [op] = await db.select().from(operators).where(eq(operators.code, input.operatorCode));
   if (!op || !op.active) throw new EngineError("operator_unavailable");
+  // Selling is closed while no SIM of this operator accepts credit.
+  if (!(await operatorsWithUse("accept")).has(op.code)) throw new EngineError("operator_unavailable");
   if (!Number.isInteger(input.amountMillimes) || input.amountMillimes <= 0) throw new EngineError("invalid_amount");
   const sender = normalizeMsisdn(input.senderMsisdn);
   if (!sender) throw new EngineError("invalid_sender");
@@ -118,6 +121,7 @@ export async function assignQueued(operatorCode?: string) {
           .where(
             and(
               eq(sims.status, "active"),
+              eq(sims.canAcceptCredit, true),
               eq(sims.operatorCode, code),
               isNull(sims.heldByTxId),
               isNull(sims.heldByRechargeId),

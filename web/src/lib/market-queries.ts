@@ -17,6 +17,7 @@ import { type CurrentUser, getCurrentUser, isStaff, requireUser } from "@/lib/se
 import { getSettings } from "@/lib/settings";
 import { balancesByOperator } from "@/lib/engine/ledger";
 import { canSpend, sarfliSpendable, spendsSarfliCredit } from "@/lib/engine/sarfli-credit";
+import { operatorsWithUse } from "@/lib/engine/sim-uses";
 
 /** True when this user may see the marketplace. */
 export async function hasMarketAccess(user: CurrentUser | null) {
@@ -31,10 +32,35 @@ export async function requireSpender() {
   return { user, sarfli: spendsSarfliCredit(user) };
 }
 
-/** What the user can spend now, per operator: Sarfli's spendable credit for admins, otherwise his own balance. */
+/**
+ * What the user can spend now, per operator: Sarfli's spendable credit for admins, otherwise his own balance.
+ * balances = for Light (credit recharges), dataBalances = for Internet (data packages). For admins they differ
+ * when not every SIM may send both; a buyer's own balance is the same for both.
+ */
 export async function spendableByOperator(user: { id: string; role: CurrentUser["role"] }, operatorCodes: string[]) {
-  if (spendsSarfliCredit(user)) return { balances: await sarfliSpendable(operatorCodes), sarfli: true };
-  return { balances: await balancesByOperator(db, "buyer", user.id), sarfli: false };
+  if (spendsSarfliCredit(user)) {
+    const [balances, dataBalances] = await Promise.all([
+      sarfliSpendable(operatorCodes, "send_credit"),
+      sarfliSpendable(operatorCodes, "send_data"),
+    ]);
+    return { balances, dataBalances, sarfli: true };
+  }
+  const balances = await balancesByOperator(db, "buyer", user.id);
+  return { balances, dataBalances: balances, sarfli: false };
+}
+
+/**
+ * Operators open for spending, with what each one offers now: Light needs the operator's recharge code and a
+ * SIM allowed to send credit; Internet needs active packages and a SIM allowed to send data.
+ */
+export async function spendingOffer<O extends { code: string; active: boolean; rechargeUssdTemplate: string | null }, P extends { operatorCode: string }>(
+  ops: O[],
+  packages: P[],
+) {
+  const [sendCredit, sendData] = await Promise.all([operatorsWithUse("send_credit"), operatorsWithUse("send_data")]);
+  const usablePackages = packages.filter((p) => sendData.has(p.operatorCode));
+  const rechargeEnabled = (o: O) => Boolean(o.rechargeUssdTemplate) && sendCredit.has(o.code);
+  return { rechargeEnabled, packages: usablePackages };
 }
 
 /** For marketplace pages: signed in and allowed, otherwise the page does not exist. */

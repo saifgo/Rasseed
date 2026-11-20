@@ -228,7 +228,7 @@ export async function updateDeviceAction(deviceId: string, values: { name?: stri
 
 export async function configureSimAction(
   simId: string,
-  input: { operatorCode: string | null; msisdn: string | null; status: "unconfigured" | "active" | "disabled" },
+  input: Parameters<typeof configureSim>[1],
 ) {
   return admin(async () => {
     await configureSim(simId, input);
