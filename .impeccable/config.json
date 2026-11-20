@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-10-24T15:58:07.285Z",
         "reason": "agent: static check misses the dark green gradient background; rendered text is white/yellow on ~#075045, well above 4.5:1"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "promo/og.html"
+        ],
+        "createdAt": "2026-11-20T13:15:38.854Z",
+        "reason": "agent: 1200x630 render card; all text is absolutely positioned 46-64px from the card edges, verified in the rendered opengraph-image.jpg"
       }
     ]
   }

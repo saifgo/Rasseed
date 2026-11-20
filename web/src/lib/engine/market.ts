@@ -78,7 +78,8 @@ async function lockSellerSide(t: DbTx, sellerId: string | null, operatorCode: st
 // Listings
 // ---------------------------------------------------------------------------
 
-export type ListingInput = { operatorCode: string; priceBps: number; paymentInfo: string; active: boolean };
+export type ListingSource = "transfers" | "balance";
+export type ListingInput = { operatorCode: string; priceBps: number; paymentInfo: string; active: boolean; source?: ListingSource };
 
 function validateListing(input: ListingInput) {
   if (!Number.isInteger(input.priceBps) || input.priceBps <= 0 || input.priceBps > BPS) throw new EngineError("invalid_rate");
@@ -95,18 +96,19 @@ export async function upsertListing(sellerId: string, input: ListingInput) {
 
 /** Admin manages Sarfli's own listing (sellerId null). */
 export async function upsertSarfliListing(input: ListingInput) {
-  return saveListing(null, input);
+  return saveListing(null, { ...input, source: "transfers" });
 }
 
 async function saveListing(sellerId: string | null, input: ListingInput) {
   const paymentInfo = validateListing(input);
+  const source: ListingSource = input.source === "balance" ? "balance" : "transfers";
   const [op] = await db.select().from(operators).where(eq(operators.code, input.operatorCode));
   if (!op) throw new EngineError("operator_unavailable");
   const owner = sellerId ? eq(listings.sellerId, sellerId) : isNull(listings.sellerId);
   const [existing] = await db
     .select()
     .from(listings)
-    .where(and(owner, eq(listings.operatorCode, op.code)));
+    .where(and(owner, eq(listings.operatorCode, op.code), eq(listings.source, source)));
   if (existing) {
     await db
       .update(listings)
@@ -116,7 +118,7 @@ async function saveListing(sellerId: string | null, input: ListingInput) {
   }
   const [row] = await db
     .insert(listings)
-    .values({ sellerId, operatorCode: op.code, priceBps: input.priceBps, paymentInfo, active: input.active })
+    .values({ sellerId, operatorCode: op.code, priceBps: input.priceBps, paymentInfo, active: input.active, source })
     .returning({ id: listings.id });
   return row.id;
 }
@@ -158,6 +160,7 @@ export async function createOrder(buyerId: string, input: { listingId: string; a
         requestedMillimes: input.amountMillimes,
         amountMillimes: input.amountMillimes,
         status: "funding",
+        resale: listing.source === "balance",
       })
       .returning();
     await logOrder(t, order.id, "created", "buyer", {
@@ -166,7 +169,21 @@ export async function createOrder(buyerId: string, input: { listingId: string; a
       payMillimes: orderPrice(input.amountMillimes, listing.priceBps),
     });
 
-    if (listing.sellerId) {
+    if (listing.sellerId && listing.source === "balance") {
+      // Resale: the credit is already on Sarfli's phones, in the reseller's balance. The whole order is
+      // taken from it at once (no partial resale), and Sarfli's commission applies again on release.
+      const available = await bucketBalance(t, { bucket: "buyer", operatorCode: op.code, userId: listing.sellerId });
+      if (available < input.amountMillimes) throw new EngineError("reseller_balance_low");
+      await move(t, {
+        kind: "resale_funded",
+        operatorCode: op.code,
+        legs: [
+          { bucket: "buyer", userId: listing.sellerId, amountMillimes: -input.amountMillimes },
+          { bucket: "order", orderId: order.id, amountMillimes: input.amountMillimes },
+        ],
+      });
+      await creditOrder(t, order, input.amountMillimes, "resale_funded", "system");
+    } else if (listing.sellerId) {
       const stock = await bucketBalance(t, { bucket: "seller_stock", operatorCode: op.code, userId: listing.sellerId });
       const use = Math.min(stock, input.amountMillimes);
       if (use > 0) {
@@ -414,6 +431,19 @@ export async function flagToAdmin(buyerId: string, orderId: string, reason: stri
  */
 async function cancel(t: DbTx, order: Order, by: "buyer" | "seller" | "admin", reason: string | null, extra: Partial<Order> = {}) {
   let leftover = order.fundedMillimes;
+  if (leftover > 0 && order.resale && order.sellerId) {
+    // Resale: the credit came from the reseller's balance, it simply goes back there.
+    await lockUser(t, order.sellerId);
+    await move(t, {
+      kind: "cancel_to_reseller",
+      operatorCode: order.operatorCode,
+      legs: [
+        { bucket: "order", orderId: order.id, amountMillimes: -leftover },
+        { bucket: "buyer", userId: order.sellerId, amountMillimes: leftover },
+      ],
+    });
+    leftover = 0;
+  }
   if (leftover > 0 && !order.sellerId) {
     await lockSarfli(t, order.operatorCode);
     await move(t, {
@@ -472,6 +502,7 @@ export async function cancelBySeller(sellerId: string, orderId: string, reason: 
 
 /** After a cancellation: the seller keeps the credit as stock, or sells it to Sarfli at today's buy price. */
 export async function chooseLeftover(sellerId: string, orderId: string, choice: "stock" | "sarfli") {
+  if (choice !== "stock" && choice !== "sarfli") throw new EngineError("invalid_choice");
   await db.transaction(async (t) => {
     const order = await lockOrder(t, orderId);
     if (!order.sellerId || order.sellerId !== sellerId) throw new EngineError("not_found");

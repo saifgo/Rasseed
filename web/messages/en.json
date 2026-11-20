@@ -40,7 +40,7 @@
   "home": {
     "badge": "Ooredoo · Orange · Tunisie Telecom",
     "title": "Turn your phone credit into cash",
-    "subtitle": "Send us your credit and we add the money to your balance. Withdraw it by D17, Flouci or money order.",
+    "subtitle": "Send us your credit and we add the money to your balance. Withdraw it by D17, Flouci, Izi, Wafacash or money order.",
     "cta": "Sell my credit",
     "ratesTitle": "Today's prices",
     "ratesHint": "Tap your operator to start.",
@@ -256,6 +256,8 @@
     "excess_pending": "First accept or refuse the extra credit.",
     "proof_required": "Add at least one proof file.",
     "insufficient_credit": "Your credit balance is not enough.",
+    "pos_daily_limit": "This PC has reached its daily limit.",
+    "pos_recharge_limit": "This amount is above the maximum for one recharge.",
     "sarfli_credit_insufficient": "Sarfli does not have enough credit for this right now.",
     "invalid_rate": "Enter a valid price.",
     "payment_info_required": "Write how buyers can pay you.",
@@ -266,7 +268,14 @@
     "order_not_funding": "This order does not need credit anymore.",
     "order_operator_mismatch": "This order is for another operator.",
     "unsupported_file_type": "Only photos (JPG, PNG, WEBP) or PDF files.",
-    "file_too_large": "Each file must be 5 MB or less."
+    "file_too_large": "Each file must be 5 MB or less.",
+    "package_unavailable": "This package is no longer available.",
+    "too_many_files": "Too many files. Send up to 5 at a time.",
+    "invalid_choice": "Choose one of the options.",
+    "too_many_terminals": "You already have 20 PCs connected.",
+    "name_required": "Write a name first.",
+    "try_again": "Please try again.",
+    "reseller_balance_low": "This seller doesn't have that much credit left. Try a smaller amount."
   },
   "wallet": {
     "title": "My balance",
@@ -330,7 +339,7 @@
       "line1": "Phone credit",
       "line2": "into cash",
       "sub": "Send your spare Ooredoo, Orange or Tunisie Telecom credit to Sarfli. The dinars go to your balance, ready to withdraw.",
-      "notesAlt": "A 10 dinar and a 5 dinar Tunisian banknote"
+      "notesAlt": "Two Monopoly banknotes, a 500 and a 100"
     },
     "rates": {
       "title": "Today’s rates",
@@ -562,6 +571,7 @@
       "created": "Order placed: {amount} DT of credit for {pay} DT",
       "stock_applied": "{amount} DT taken from the seller's stock",
       "sarfli_funded": "{amount} DT of Sarfli credit ready",
+      "resale_funded": "{amount} DT reserved from the seller's balance",
       "transfer_received": "{amount} DT received ({funded} DT so far)",
       "funded": "All the credit is here",
       "transfer_to_stock": "{amount} DT arrived after the order stopped waiting — kept for the seller",
@@ -613,6 +623,7 @@
     "rechargeHistory": "My recharges",
     "noRecharges": "No recharge yet.",
     "rechargeRefunded": "The amount is back on your credit.",
+    "rechargeNotCompatible": "This number can't take this package. The amount is back on your credit.",
     "rechargeReviewHint": "Our team checks if the credit arrived. You don't need to do anything.",
     "depositWhere": "Where does this credit go?",
     "depositNormal": "Sell it to Sarfli (money to my balance)",
@@ -678,6 +689,48 @@
       "noOffer": "Not selling yet. Set your price.",
       "change": "Change",
       "sarfliTitle": "Or sell to {brand} now"
-    }
+    },
+    "rechargeWhat": "What to send",
+    "modeCredit": "Credit",
+    "modePackage": "Internet package",
+    "packageRequired": "Choose a package.",
+    "noPackages": "No packages for this operator yet.",
+    "packageSummary": "{package} (<amount></amount>) for <number></number>",
+    "pos": {
+      "link": "Use Sarfli on a shop PC (Windows)",
+      "title": "Shop PCs",
+      "subtitle": "Install the Sarfli POS app on a Windows PC to recharge numbers and send internet packages from your balance.",
+      "name": "PC name",
+      "namePlaceholder": "e.g. Shop counter",
+      "add": "Get a code",
+      "codeTitle": "Type this code in the Sarfli POS app",
+      "codeHint": "Valid 10 minutes, for one PC.",
+      "none": "No PC connected yet.",
+      "lastSeen": "Last used {when}",
+      "neverSeen": "Not connected yet",
+      "newCode": "New code",
+      "revoke": "Disconnect",
+      "revokeConfirm": "Disconnect {name}? It will stop working at once.",
+      "revoked": "PC disconnected",
+      "download": "Download Sarfli POS (Windows)",
+      "steps": "1. Download and open Sarfli POS on the PC. 2. Get a code here. 3. Type it in the app.",
+      "dailyLimit": "Daily limit",
+      "dailyLimitHint": "Most this PC can spend per day (recharges + internet), reset at midnight. Empty = no limit.",
+      "dailyLimitNone": "No daily limit",
+      "dailyLimitValue": "Daily limit <amount></amount>",
+      "spentToday": "Spent today <amount></amount>",
+      "saveLimit": "Save",
+      "limitSaved": "Daily limit saved"
+    },
+    "resell": {
+      "link": "Resell my credit to other buyers",
+      "title": "Resell my credit",
+      "subtitle": "Put your balance on sale at your own price. Buyers order from it, pay you directly, and you confirm the payment.",
+      "rules": "Your credit is reserved as soon as someone orders. If the order is cancelled, it comes back to your balance. Sarfli takes its commission from the buyer's credit on each sale.",
+      "available": "<amount></amount> available",
+      "none": "You have no credit to resell yet.",
+      "balance": "Your balance"
+    },
+    "sarfliUse": "You are an admin: recharges and packages are paid from Sarfli's own credit. The amounts shown are what Sarfli can spend (credit on the phones minus unconfirmed sales and what belongs to others)."
   }
 }

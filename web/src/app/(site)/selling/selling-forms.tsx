@@ -24,11 +24,14 @@ export function ListingForm({
   op,
   listing,
   bare = false,
+  source = "transfers",
 }: {
   op: Op;
   listing: { priceBps: number; paymentInfo: string; active: boolean } | null;
   /** Inside another card: no border, no operator header. */
   bare?: boolean;
+  /** balance = the buyer resells his own balance (/buy/resell). */
+  source?: "transfers" | "balance";
 }) {
   const t = useTranslations("market");
   const te = useTranslations("errors");
@@ -47,7 +50,7 @@ export function ListingForm({
     if (!priceOk || priceBps == null) return setError(t("invalidPrice"));
     if (active && !paymentInfo.trim()) return setError(te("payment_info_required"));
     startTransition(async () => {
-      const res = await upsertListingAction({ operatorCode: op.code, priceBps, paymentInfo, active });
+      const res = await upsertListingAction({ operatorCode: op.code, priceBps, paymentInfo, active, source });
       if (res.ok) {
         toastManager.add({ type: "success", title: t("listingSaved") });
         router.refresh();

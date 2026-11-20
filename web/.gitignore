@@ -46,6 +46,7 @@ next-env.d.ts
 
 # Built Android agent (see android-agent/README)
 /public/downloads/*.apk
+/public/downloads/*.exe
 
 # bundled worker / migrate / seed (Docker)
 /dist

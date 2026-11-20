@@ -14,13 +14,16 @@ export async function tick() {
 
   // 1. USSD commands that never came back.
   const timeoutBefore = new Date(now.getTime() - settings.commandTimeoutSeconds * 1000);
+  // A recharge send can walk several USSD pages, each up to the phone's own 90 s: give it longer.
+  const sendTimeoutBefore = new Date(now.getTime() - Math.max(settings.commandTimeoutSeconds * 4, 360) * 1000);
+  const expired = sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.notBefore}) < case when ${deviceCommands.type} = 'ussd_send' then ${sendTimeoutBefore.toISOString()}::timestamptz else ${timeoutBefore.toISOString()}::timestamptz end`;
   const stale = await db
     .select({ id: deviceCommands.id })
     .from(deviceCommands)
     .where(
       and(
         inArray(deviceCommands.status, ["pending", "sent"]),
-        lt(sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.notBefore})`, timeoutBefore.toISOString()),
+        expired,
       ),
     );
   for (const { id } of stale) {
@@ -34,7 +37,7 @@ export async function tick() {
             eq(deviceCommands.id, id),
             inArray(deviceCommands.status, ["pending", "sent"]),
             // Re-check the age under the lock: the phone may have just picked it up.
-            lt(sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.notBefore})`, timeoutBefore.toISOString()),
+            expired,
           ),
         )
         .for("update", { skipLocked: true });

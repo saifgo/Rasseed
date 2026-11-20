@@ -26,7 +26,8 @@ import { Button } from "@/components/ui/button";
 import { brand } from "@/config/brand";
 import { OPEN_ORDER_STATUSES, type OrderStatus } from "@/db/schema";
 import { formatDt, formatPercent, grossPayout } from "@/lib/money";
-import { getOrderPageView, type OrderPageView, requireMarketUser } from "@/lib/market-queries";
+import { getOrderPageView, type OrderPageView } from "@/lib/market-queries";
+import { requireUser } from "@/lib/session";
 import { cn } from "@/lib/utils";
 import {
   BuyerCancelButton,
@@ -47,7 +48,8 @@ export const metadata: Metadata = { title: "Order" };
 type T = Awaited<ReturnType<typeof getTranslations<"market">>>;
 
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireMarketUser();
+  // Parties to an order can always finish it, even with the marketplace switched off (the view checks the party).
+  await requireUser();
   const { id } = await params;
   const view = await getOrderPageView(id);
   if (!view) notFound();

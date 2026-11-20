@@ -60,6 +60,11 @@ export default async function SellersPage({ searchParams }: { searchParams: Prom
                       )}
                     </span>
                     <Rating rating={l.rating} />
+                    {l.availableMillimes != null && (
+                      <span className="text-muted-foreground text-sm">
+                        {t.rich("resell.available", { amount: () => <Dt compact millimes={l.availableMillimes ?? 0} className="font-semibold text-foreground" /> })}
+                      </span>
+                    )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end">
                     <Dt compact millimes={orderPrice(10_000, l.priceBps)} className="font-bold text-2xl" />
@@ -75,7 +80,7 @@ export default async function SellersPage({ searchParams }: { searchParams: Prom
                     operator: { code: op.code, name: op.name, color: op.color },
                   }}
                   commissionBps={settings.commissionBps}
-                  maxOrderMillimes={settings.maxOrderMillimes}
+                  maxOrderMillimes={l.availableMillimes != null ? Math.min(settings.maxOrderMillimes, l.availableMillimes) : settings.maxOrderMillimes}
                 />
               </li>
             );

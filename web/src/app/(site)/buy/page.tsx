@@ -1,4 +1,4 @@
-import { ArrowRightIcon, HandCoinsIcon, ShoppingCartIcon, SmartphoneIcon, StarIcon, TriangleAlertIcon } from "lucide-react";
+import { ArrowRightIcon, HandCoinsIcon, MonitorSmartphoneIcon, RepeatIcon, ShoppingCartIcon, SmartphoneIcon, StarIcon, TriangleAlertIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -14,6 +14,7 @@ import { ACTIVE_RECHARGE_STATUSES, OPEN_ORDER_STATUSES } from "@/db/schema";
 import { db } from "@/db";
 import { balancesByOperator } from "@/lib/engine/ledger";
 import { listBuyerOrders, orderPrice } from "@/lib/engine/market";
+import { listPackages } from "@/lib/engine/packages";
 import { listBuyerRecharges } from "@/lib/engine/recharge";
 import { buyerNextStep, ratedOrderIds, rateableStatus, requireMarketUser, userNames } from "@/lib/market-queries";
 import { formatDt } from "@/lib/money";
@@ -30,11 +31,12 @@ export default async function BuyPage() {
   const { user } = await requireMarketUser();
   const t = await getTranslations("market");
   const format = await getFormatter();
-  const [ops, balances, orders, recharges] = await Promise.all([
+  const [ops, balances, orders, recharges, packages] = await Promise.all([
     listOperators(),
     balancesByOperator(db, "buyer", user.id),
     listBuyerOrders(user.id),
     listBuyerRecharges(user.id),
+    listPackages({ activeOnly: true }),
   ]);
   const [names, rated] = await Promise.all([
     userNames(orders.map((o) => o.sellerId)),
@@ -66,7 +68,9 @@ export default async function BuyPage() {
         <ul className="flex flex-col divide-y overflow-hidden rounded-2xl border bg-card">
           {activeOps.map((o) => {
             const balance = balances[o.code] ?? 0;
-            const canRecharge = Boolean(o.rechargeUssdTemplate) && balance > 0;
+            // Credit recharges or data packages: either one makes the balance spendable.
+            const offersSpending = Boolean(o.rechargeUssdTemplate) || packages.some((p) => p.operatorCode === o.code);
+            const canRecharge = offersSpending && balance > 0;
             return (
               <li key={o.code} className="flex items-center gap-4 p-4">
                 <OperatorLogo code={o.code} name={o.name} color={o.color} className="size-12 rounded-xl" />
@@ -74,7 +78,7 @@ export default async function BuyPage() {
                   <span className="text-muted-foreground text-sm">{o.name}</span>
                   <Dt compact millimes={balance} className={balance > 0 ? "font-bold text-2xl" : "font-bold text-2xl text-muted-foreground"} />
                 </div>
-                {o.rechargeUssdTemplate &&
+                {offersSpending &&
                   (canRecharge ? (
                     <Button variant="outline" className="h-11 shrink-0 text-base sm:h-11" render={<Link href={`/buy/recharge?op=${o.code}`} />}>
                       <SmartphoneIcon aria-hidden="true" />
@@ -217,6 +221,17 @@ export default async function BuyPage() {
           </ul>
         </section>
       )}
+
+      <Button variant="ghost" className="h-12 self-start text-base text-muted-foreground" render={<Link href="/buy/resell" />}>
+        <RepeatIcon aria-hidden="true" />
+        {t("resell.link")}
+        <ArrowRightIcon aria-hidden="true" className="rtl:rotate-180" />
+      </Button>
+      <Button variant="ghost" className="-mt-4 h-12 self-start text-base text-muted-foreground" render={<Link href="/buy/pos" />}>
+        <MonitorSmartphoneIcon aria-hidden="true" />
+        {t("pos.link")}
+        <ArrowRightIcon aria-hidden="true" className="rtl:rotate-180" />
+      </Button>
     </div>
   );
 }

@@ -1,22 +1,26 @@
-import { and, asc, desc, eq, gt, gte, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import { db, type DbTx } from "@/db";
 import {
   credits,
+  dataPackages,
   deviceCommands,
   devices,
   operators,
+  posTerminals,
   recharges,
   sims,
   users,
   type RechargeStatus,
 } from "@/db/schema";
 import { renderTransferUssd } from "@/lib/parsers";
-import { sendOutcome } from "@/lib/recharge-outcome";
+import { MENU_CHECK_FAILED, NUMBER_NOT_COMPATIBLE, sendOutcome } from "@/lib/recharge-outcome";
 import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings, type AppSettings } from "@/lib/settings";
 import { EngineError, lockSim, releaseSim, type Sim } from "./core";
-import { move } from "./ledger";
+import { lockSarfli, move } from "./ledger";
+import { posSpentToday } from "./pos";
 import { canUseMarketplace } from "./market";
+import { sarfliCredit, spendsSarfliCredit } from "./sarfli-credit";
 import { lockUser } from "./wallet";
 
 /**
@@ -48,38 +52,142 @@ async function updateRecharge(t: DbTx, id: string, values: Partial<Recharge>) {
     .where(eq(recharges.id, id));
 }
 
-export type RechargeInput = { operatorCode: string; msisdn: string; amountMillimes: number };
+export type RechargeInput =
+  | { operatorCode: string; msisdn: string; amountMillimes: number; packageId?: undefined }
+  | { packageId: string; msisdn: string; operatorCode?: undefined; amountMillimes?: undefined };
 
-export async function createRecharge(buyerId: string, input: RechargeInput) {
+export type RechargeOrigin = { posTerminalId?: string | null; clientRef?: string | null };
+
+/**
+ * A plain recharge (operator + amount) or a data package (amount and USSD from the package).
+ * With a clientRef (POS terminals), submitting the same clientRef again returns the existing recharge.
+ */
+export async function createRecharge(buyerId: string, input: RechargeInput, origin: RechargeOrigin = {}) {
+  const clientRef = origin.clientRef?.trim().slice(0, 100) || null;
+  if (clientRef) {
+    const existing = await findByClientRef(buyerId, clientRef);
+    if (existing) return existing.id;
+  }
   const settings = await getSettings();
   const [user] = await db.select().from(users).where(eq(users.id, buyerId));
-  if (!canUseMarketplace(user ?? null, settings)) throw new EngineError("marketplace_closed");
-  const [op] = await db.select().from(operators).where(eq(operators.code, input.operatorCode));
-  if (!op || !op.active) throw new EngineError("operator_unavailable");
-  if (!op.rechargeUssdTemplate) throw new EngineError("recharge_unavailable");
-  if (!Number.isInteger(input.amountMillimes) || input.amountMillimes <= 0) throw new EngineError("invalid_amount");
+  if (!user || user.blocked) throw new EngineError("marketplace_closed");
+  // Admins spend Sarfli's own credit (works with the marketplace off); others spend their own balance.
+  const funding: "balance" | "sarfli" = spendsSarfliCredit(user) ? "sarfli" : "balance";
+  if (funding === "balance" && !canUseMarketplace(user, settings)) throw new EngineError("marketplace_closed");
   const msisdn = normalizeMsisdn(input.msisdn);
   if (!msisdn) throw new EngineError("invalid_msisdn");
 
-  const id = await db.transaction(async (t) => {
-    await lockUser(t, buyerId);
-    const [r] = await t
-      .insert(recharges)
-      .values({ ref: newRef(), buyerId, operatorCode: op.code, msisdn, amountMillimes: input.amountMillimes, status: "queued" })
-      .returning({ id: recharges.id });
-    // Throws insufficient_credit when the buyer's balance for this operator is too low.
-    await move(t, {
-      kind: "recharge_reserve",
-      operatorCode: op.code,
-      legs: [
-        { bucket: "buyer", userId: buyerId, amountMillimes: -input.amountMillimes },
-        { bucket: "recharge", rechargeId: r.id, amountMillimes: input.amountMillimes },
-      ],
+  let operatorCode: string;
+  let amount: number;
+  let pkg: typeof dataPackages.$inferSelect | undefined;
+  if (input.packageId) {
+    [pkg] = await db.select().from(dataPackages).where(eq(dataPackages.id, input.packageId));
+    if (!pkg || !pkg.active) throw new EngineError("package_unavailable");
+    operatorCode = pkg.operatorCode;
+    amount = pkg.priceMillimes;
+  } else {
+    operatorCode = input.operatorCode ?? "";
+    amount = input.amountMillimes ?? 0;
+  }
+  const [op] = await db.select().from(operators).where(eq(operators.code, operatorCode));
+  if (!op || !op.active) throw new EngineError("operator_unavailable");
+  if (!pkg && !op.rechargeUssdTemplate) throw new EngineError("recharge_unavailable");
+  if (!Number.isInteger(amount) || amount <= 0) throw new EngineError("invalid_amount");
+  // POS: the admin caps each plain recharge per operator (packages are not capped).
+  if (origin.posTerminalId && !pkg && op.posMaxRechargeMillimes && amount > op.posMaxRechargeMillimes) {
+    throw new EngineError("pos_recharge_limit");
+  }
+
+  let id: string;
+  try {
+    id = await db.transaction(async (t) => {
+      await lockUser(t, buyerId);
+      // POS: the owner's daily limit for this PC. Checked under the owner's lock, so two sales from the
+      // same PC (or two PCs of the same owner) cannot both pass on the last of the limit.
+      if (origin.posTerminalId) {
+        const [terminal] = await t
+          .select({ dailyLimitMillimes: posTerminals.dailyLimitMillimes })
+          .from(posTerminals)
+          .where(eq(posTerminals.id, origin.posTerminalId));
+        if (terminal?.dailyLimitMillimes && (await posSpentToday(origin.posTerminalId, t)) + amount > terminal.dailyLimitMillimes) {
+          throw new EngineError("pos_daily_limit");
+        }
+      }
+      const [r] = await t
+        .insert(recharges)
+        .values({
+          ref: newRef(),
+          buyerId,
+          operatorCode: op.code,
+          msisdn,
+          amountMillimes: amount,
+          packageId: pkg?.id ?? null,
+          packageName: pkg?.name ?? null,
+          // Copied so a later catalogue edit never changes what this recharge dials.
+          ussdTemplate: pkg?.ussdTemplate ?? null,
+          ussdSteps: pkg?.ussdSteps ?? null,
+          posTerminalId: origin.posTerminalId ?? null,
+          clientRef,
+          funding,
+          status: "queued",
+        })
+        .returning({ id: recharges.id });
+      if (funding === "sarfli") {
+        // Sarfli's own use: only credit that is Sarfli's (real phone credit minus what belongs to others or
+        // is not confirmed). Checked under the Sarfli lock so two sends cannot both take the last credit.
+        await lockSarfli(t, op.code);
+        const { spendableMillimes } = await sarfliCredit(t, op.code);
+        // This recharge is not in the recharge bucket yet, so spendable does not count it.
+        if (amount > spendableMillimes) throw new EngineError("sarfli_credit_insufficient");
+        await move(t, {
+          kind: pkg ? "sarfli_package_reserve" : "sarfli_recharge_reserve",
+          operatorCode: op.code,
+          createdBy: buyerId,
+          sarfliMayGoNegative: true,
+          legs: [
+            { bucket: "sarfli", amountMillimes: -amount },
+            { bucket: "recharge", rechargeId: r.id, amountMillimes: amount },
+          ],
+        });
+        return r.id;
+      }
+      // Throws insufficient_credit when the buyer's balance for this operator is too low.
+      await move(t, {
+        kind: pkg ? "package_reserve" : "recharge_reserve",
+        operatorCode: op.code,
+        legs: [
+          { bucket: "buyer", userId: buyerId, amountMillimes: -amount },
+          { bucket: "recharge", rechargeId: r.id, amountMillimes: amount },
+        ],
+      });
+      return r.id;
     });
-    return r.id;
-  });
+  } catch (e) {
+    // Two submits of the same clientRef raced: the other one won, return it.
+    if (clientRef && (e as { code?: string })?.code === "23505") {
+      const existing = await findByClientRef(buyerId, clientRef);
+      if (existing) return existing.id;
+    }
+    throw e;
+  }
   await assignRecharges(op.code);
   return id;
+}
+
+async function findByClientRef(buyerId: string, clientRef: string) {
+  const [r] = await db
+    .select({ id: recharges.id })
+    .from(recharges)
+    .where(and(eq(recharges.buyerId, buyerId), eq(recharges.clientRef, clientRef)));
+  return r;
+}
+
+export async function getBuyerRecharge(buyerId: string, rechargeId: string) {
+  const [r] = await db
+    .select()
+    .from(recharges)
+    .where(and(eq(recharges.id, rechargeId), eq(recharges.buyerId, buyerId)));
+  return r ?? null;
 }
 
 /** A queued recharge can be cancelled by the buyer (nothing was sent yet). */
@@ -95,6 +203,21 @@ export async function cancelRecharge(buyerId: string, rechargeId: string) {
 
 async function refund(t: DbTx, r: Recharge, note: string, staffId?: string | null) {
   await lockUser(t, r.buyerId);
+  if (r.funding === "sarfli") {
+    // Not sent: back to Sarfli's credit.
+    await lockSarfli(t, r.operatorCode);
+    await move(t, {
+      kind: "sarfli_recharge_refund",
+      operatorCode: r.operatorCode,
+      note,
+      createdBy: staffId ?? null,
+      legs: [
+        { bucket: "recharge", rechargeId: r.id, amountMillimes: -r.amountMillimes },
+        { bucket: "sarfli", amountMillimes: r.amountMillimes },
+      ],
+    });
+    return;
+  }
   await move(t, {
     kind: "recharge_refund",
     operatorCode: r.operatorCode,
@@ -121,9 +244,11 @@ async function markSent(t: DbTx, r: Recharge, staffId?: string | null, note?: st
 }
 
 async function finish(t: DbTx, r: Recharge, status: Extract<RechargeStatus, "succeeded" | "failed">, settings: AppSettings) {
+  // A failed menu check means the operator does not offer this package to the customer's number.
+  const note = status === "failed" && r.sendError === MENU_CHECK_FAILED ? NUMBER_NOT_COMPATIBLE : null;
   if (status === "succeeded") await markSent(t, r);
-  else await refund(t, r, "send_failed");
-  await updateRecharge(t, r.id, { status, completedAt: new Date(), reviewReason: null });
+  else await refund(t, r, note ?? "send_failed");
+  await updateRecharge(t, r.id, { status, completedAt: new Date(), reviewReason: null, ...(note ? { note } : {}) });
   await freeSim(t, r.simId, settings);
 }
 
@@ -159,7 +284,23 @@ async function enqueueRechargeBalance(t: DbTx, sim: Sim, purpose: "recharge_base
 /** The SIM holding a recharge was swapped in its slot: an admin must decide. */
 export async function rechargeSimChanged(t: DbTx, rechargeId: string) {
   const r = await lockRecharge(t, rechargeId);
-  if (r && r.status === "sending") await toReview(t, r, "sim_changed");
+  if (!r || r.status !== "sending") return;
+  // Commands not yet fetched by the phone must never run on the card that replaced this one.
+  await t
+    .update(deviceCommands)
+    .set({ status: "failed", error: "sim_changed", completedAt: new Date() })
+    .where(and(eq(deviceCommands.rechargeId, r.id), eq(deviceCommands.status, "pending")));
+  await toReview(t, r, "sim_changed");
+}
+
+/** True while the phone may still run a command of this recharge (not fetched yet, or fetched without result). */
+async function commandsOutstanding(t: DbTx, rechargeId: string) {
+  const [row] = await t
+    .select({ id: deviceCommands.id })
+    .from(deviceCommands)
+    .where(and(eq(deviceCommands.rechargeId, rechargeId), inArray(deviceCommands.status, ["pending", "sent"])))
+    .limit(1);
+  return Boolean(row);
 }
 
 /**
@@ -236,14 +377,22 @@ export async function onRechargeBalance(t: DbTx, cmd: typeof deviceCommands.$inf
       await updateRecharge(t, r.id, { status: "queued", simId: null });
       return;
     }
-    const [op] = await t.select().from(operators).where(eq(operators.code, r.operatorCode));
-    if (!op?.rechargeUssdTemplate) {
-      await freeSim(t, sim.id, settings);
-      await updateRecharge(t, r.id, { status: "queued", simId: null });
-      return;
+    // A package dials its own copied USSD; a plain recharge dials the operator's recharge USSD.
+    let template = r.ussdTemplate;
+    let stepTemplates = r.ussdSteps ?? [];
+    if (!r.packageId) {
+      const [op] = await t.select().from(operators).where(eq(operators.code, r.operatorCode));
+      template = op?.rechargeUssdTemplate ?? null;
+      stepTemplates = op?.rechargeUssdSteps ?? [];
     }
-    const ussd = renderTransferUssd(op.rechargeUssdTemplate, r.msisdn, r.amountMillimes);
-    const steps = op.rechargeUssdSteps.map((s) => renderTransferUssd(s, r.msisdn, r.amountMillimes));
+    if (!template) {
+      // Recharges for this operator were switched off after submit: an admin decides (refund).
+      await freeSim(t, sim.id, settings);
+      await updateRecharge(t, r.id, { simId: null });
+      return toReview(t, r, "recharge_unavailable");
+    }
+    const ussd = renderTransferUssd(template, r.msisdn, r.amountMillimes);
+    const steps = stepTemplates.map((s) => renderTransferUssd(s, r.msisdn, r.amountMillimes));
     const [send] = await t
       .insert(deviceCommands)
       .values({ deviceId: sim.deviceId, simId: sim.id, type: "ussd_send", ussdCode: ussd, steps, purpose: "recharge_send", rechargeId: r.id })
@@ -276,7 +425,11 @@ export async function onRechargeBalance(t: DbTx, cmd: typeof deviceCommands.$inf
   const ifNotSent = r.baselineBalanceMillimes + incoming;
   await updateRecharge(t, r.id, { afterBalanceMillimes: balance });
 
-  if (balance === ifSent) return finish(t, { ...r, afterBalanceMillimes: balance }, "succeeded", settings);
+  // With credit arriving meanwhile, the arithmetic alone can be fooled (an SMS uploaded after the baseline
+  // may already be inside it, and would then be counted twice): trust it only if the phone saw the send succeed.
+  if (balance === ifSent && (incoming === 0 || r.sendOk === true)) {
+    return finish(t, { ...r, afterBalanceMillimes: balance }, "succeeded", settings);
+  }
   if (balance === ifNotSent && r.sendOk === false) return finish(t, r, "failed", settings);
   // Unchanged after a reported success, or an unexpected amount: operators can lag, look again a few times.
   const attempts = r.verifyAttempts + 1;
@@ -288,6 +441,9 @@ export async function onRechargeBalance(t: DbTx, cmd: typeof deviceCommands.$inf
   }
 }
 
+/** Wait between the send USSD's reply and the first balance check. */
+const RECHARGE_FIRST_VERIFY_SECONDS = 1;
+
 /** Result (or timeout, ok = null) of the send USSD. The outcome is decided by the balance, never by a retry. */
 export async function onRechargeSent(
   t: DbTx,
@@ -297,13 +453,13 @@ export async function onRechargeSent(
   error: string | null,
 ) {
   if (!cmd.rechargeId) return;
-  const settings = await getSettings();
   const r = await lockRecharge(t, cmd.rechargeId);
   if (!r || r.status !== "sending" || r.sendCommandId !== cmd.id) return;
   await updateRecharge(t, r.id, { sendOk: sendOutcome(ok, error), sendResponse: response, sendError: error });
   const sim = await lockSim(t, cmd.simId);
   if (!sim) return toReview(t, r, "sim_missing");
-  await enqueueRechargeBalance(t, sim, "recharge_verify", r, settings.verifyRetrySeconds);
+  // First look right after the send's reply; if the operator lags, the retries below wait verifyRetrySeconds.
+  await enqueueRechargeBalance(t, sim, "recharge_verify", r, RECHARGE_FIRST_VERIFY_SECONDS);
 }
 
 /** A balance read for a recharge failed or timed out. */
@@ -333,6 +489,8 @@ export async function resolveRecharge(staffId: string, rechargeId: string, outco
     const r = await lockRecharge(t, rechargeId);
     if (!r) throw new EngineError("not_found");
     if (r.status !== "review") throw new EngineError("invalid_state");
+    // A send still in the phone's hands could go out after a refund: wait for its result or timeout.
+    if (await commandsOutstanding(t, r.id)) throw new EngineError("command_outstanding");
     if (outcome === "succeeded") await markSent(t, r, staffId, text);
     else await refund(t, r, text, staffId);
     await updateRecharge(t, r.id, { status: outcome, resolvedBy: staffId, note: text, completedAt: new Date() });

@@ -11,6 +11,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
+    "db:reset": "tsx src/db/reset.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "sim:phone": "tsx scripts/phone-simulator.ts",

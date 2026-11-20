@@ -128,6 +128,11 @@ export default async function MarketRechargesPage({
                       <Link href={`/admin/users/${buyer.id}`} className="underline-offset-4 hover:underline">
                         {buyer.name ?? buyer.email}
                       </Link>
+                      {(r.funding === "sarfli" || r.packageName) && (
+                        <div className="text-muted-foreground text-xs">
+                          {[r.funding === "sarfli" ? "Sarfli use" : null, r.packageName].filter(Boolean).join(" · ")}
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <OperatorName name={o.name} color={o.color} />

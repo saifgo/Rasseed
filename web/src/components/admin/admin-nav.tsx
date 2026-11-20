@@ -9,6 +9,7 @@ import {
   FlaskConicalIcon,
   GaugeIcon,
   ListChecksIcon,
+  PackageIcon,
   PercentIcon,
   ReceiptTextIcon,
   SettingsIcon,
@@ -65,7 +66,10 @@ const market: Item[] = [
   { href: "/admin/market/recharges", label: "Recharges", icon: ZapIcon, count: "rechargeReview" },
   { href: "/admin/market/ledger", label: "Credit ledger", icon: BookOpenCheckIcon },
 ];
-const marketAdmin: Item[] = [{ href: "/admin/market/sarfli", label: "Sarfli listing", icon: StoreIcon }];
+const marketAdmin: Item[] = [
+  { href: "/admin/market/sarfli", label: "Sarfli listing", icon: StoreIcon },
+  { href: "/admin/market/packages", label: "Data packages", icon: PackageIcon },
+];
 
 // Admin only.
 const setup: Item[] = [

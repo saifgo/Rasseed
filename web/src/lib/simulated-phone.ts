@@ -1,3 +1,5 @@
+import { isMenuCheck } from "./recharge-outcome";
+
 /**
  * Replies a simulated agent phone gives, shared by the terminal simulator (scripts/phone-simulator.ts)
  * and the admin "Test phone" page (src/lib/test-phone.ts). Pure functions, no database.
@@ -21,7 +23,7 @@ export const SEND_REFUSED_REPLY = "Votre solde est insuffisant pour effectuer ce
 
 /** One menu page per scripted reply, then the final confirmation (pages joined like the app does). */
 export function sendSuccessReply(steps: string[], millimes: number): string {
-  return [...steps.map(() => "Veuillez confirmer:\n1:Oui\n2:Non"), `Transfert de ${millimes} Millimes effectue avec succes.`].join("\n");
+  return [...steps.filter((s) => !isMenuCheck(s)).map(() => "Veuillez confirmer:\n1:Oui\n2:Non"), `Transfert de ${millimes} Millimes effectue avec succes.`].join("\n");
 }
 
 /**
@@ -32,7 +34,7 @@ export function sendSuccessReply(steps: string[], millimes: number): string {
  */
 export function sendAmount(cmd: { ussd: string; steps?: string[] }): number | null {
   const [, ...rest] = cmd.ussd.match(/\d+/g) ?? [];
-  const nums = [...rest, ...(cmd.steps ?? []).flatMap((s) => s.match(/\d+/g) ?? [])]
+  const nums = [...rest, ...(cmd.steps ?? []).filter((s) => !isMenuCheck(s)).flatMap((s) => s.match(/\d+/g) ?? [])]
     .filter((n) => n.length >= 3 && n.length < 8)
     .map(Number);
   return nums.length ? Math.max(...nums) : null;

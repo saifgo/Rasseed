@@ -1,4 +1,4 @@
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, MonitorSmartphoneIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -9,11 +9,11 @@ import { Dt } from "@/components/app/money";
 import { OperatorLogo } from "@/components/app/operator-badge";
 import { Button } from "@/components/ui/button";
 import { ACTIVE_RECHARGE_STATUSES } from "@/db/schema";
-import { db } from "@/db";
-import { balancesByOperator } from "@/lib/engine/ledger";
+import { listPackages } from "@/lib/engine/packages";
 import { listBuyerRecharges } from "@/lib/engine/recharge";
-import { requireMarketUser } from "@/lib/market-queries";
+import { requireSpender, spendableByOperator } from "@/lib/market-queries";
 import { formatMsisdn } from "@/lib/phone";
+import { NUMBER_NOT_COMPATIBLE } from "@/lib/recharge-outcome";
 import { listOperators } from "@/lib/queries";
 import { CancelRechargeButton, RechargeForm } from "./recharge-form";
 
@@ -21,16 +21,26 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Recharge" };
 
 export default async function RechargePage({ searchParams }: { searchParams: Promise<{ op?: string }> }) {
-  const { user } = await requireMarketUser();
+  const { user, sarfli } = await requireSpender();
   const t = await getTranslations("market");
   const format = await getFormatter();
   const { op: wanted } = await searchParams;
-  const [ops, balances, recharges] = await Promise.all([listOperators(), balancesByOperator(db, "buyer", user.id), listBuyerRecharges(user.id)]);
+  const [ops, recharges, packages] = await Promise.all([listOperators(), listBuyerRecharges(user.id), listPackages({ activeOnly: true })]);
+  const { balances } = await spendableByOperator(user, ops.map((o) => o.code));
   const opBy = Object.fromEntries(ops.map((o) => [o.code, o]));
-  // Only operators whose recharge code is set up by our team.
+  // Only operators whose recharge code is set up by our team, or that have data packages.
   const usable = ops
-    .filter((o) => o.active && o.rechargeUssdTemplate)
-    .map((o) => ({ code: o.code, name: o.name, color: o.color, balanceMillimes: balances[o.code] ?? 0 }));
+    .filter((o) => o.active && (o.rechargeUssdTemplate || packages.some((p) => p.operatorCode === o.code)))
+    .map((o) => ({
+      code: o.code,
+      name: o.name,
+      color: o.color,
+      balanceMillimes: balances[o.code] ?? 0,
+      rechargeEnabled: Boolean(o.rechargeUssdTemplate),
+    }));
+  const usablePackages = packages
+    .filter((p) => usable.some((o) => o.code === p.operatorCode))
+    .map((p) => ({ id: p.id, operatorCode: p.operatorCode, name: p.name, priceMillimes: p.priceMillimes }));
   const live = recharges.some((r) => ACTIVE_RECHARGE_STATUSES.includes(r.status));
 
   return (
@@ -44,8 +54,18 @@ export default async function RechargePage({ searchParams }: { searchParams: Pro
         <h1 className="font-heading font-bold text-3xl tracking-tight">{t("rechargeTitle")}</h1>
         <p className="text-muted-foreground">{t("rechargeSubtitle")}</p>
       </div>
+      {sarfli && (
+        <p className="rounded-xl bg-amber-50 p-3 text-amber-950 text-sm dark:bg-amber-950/40 dark:text-amber-100">{t("sarfliUse")}</p>
+      )}
 
-      <RechargeForm operators={usable} initialOp={wanted} />
+      <RechargeForm operators={usable} packages={usablePackages} initialOp={wanted} />
+
+      {sarfli && (
+        <Button variant="ghost" className="h-12 self-start text-base text-muted-foreground" render={<Link href="/buy/pos" />}>
+          <MonitorSmartphoneIcon aria-hidden="true" />
+          {t("pos.link")}
+        </Button>
+      )}
 
       <section className="flex flex-col gap-3">
         <h2 className="font-heading font-semibold text-xl">{t("rechargeHistory")}</h2>
@@ -65,13 +85,18 @@ export default async function RechargePage({ searchParams }: { searchParams: Pro
                         {formatMsisdn(r.msisdn)}
                       </Secret>
                     </div>
+                    {r.packageName && <span className="text-sm">{r.packageName}</span>}
                     <div className="flex flex-wrap items-center gap-2">
                       <RechargeStatusBadge status={r.status} />
                       <span className="text-muted-foreground text-xs">
                         {format.dateTime(r.createdAt, { dateStyle: "medium", timeStyle: "short" })} · <span className="font-mono">{r.ref}</span>
                       </span>
                     </div>
-                    {r.status === "failed" && <span className="text-muted-foreground text-xs">{t("rechargeRefunded")}</span>}
+                    {r.status === "failed" && (
+                      <span className="text-muted-foreground text-xs">
+                        {t(r.note === NUMBER_NOT_COMPATIBLE ? "rechargeNotCompatible" : "rechargeRefunded")}
+                      </span>
+                    )}
                     {r.status === "review" && <span className="text-muted-foreground text-xs">{t("rechargeReviewHint")}</span>}
                   </div>
                   {r.status === "queued" && <CancelRechargeButton id={r.id} />}

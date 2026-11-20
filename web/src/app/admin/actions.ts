@@ -2,7 +2,9 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { devLoginEnabled, signOut } from "@/auth";
 import { db } from "@/db";
+import { resetAndSeed } from "@/db/seed-data";
 import { devices, operators, payoutMethods, USER_ROLES, users, type UserRole } from "@/db/schema";
 import {
   applyCredit,
@@ -16,6 +18,7 @@ import {
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
 import { adjustSarfliCredit, adminCancel, adminRelease, upsertSarfliListing } from "@/lib/engine/market";
+import { createPackage, updatePackage } from "@/lib/engine/packages";
 import { resolveRecharge } from "@/lib/engine/recharge";
 import { adjustBalance, attachWithdrawalProof, markWithdrawalPaid, rejectWithdrawal, setWithdrawalNote } from "@/lib/engine/wallet";
 import { parseDinars, parsePercent, parseRate } from "@/lib/money";
@@ -353,6 +356,26 @@ export async function saveSettingsAction(values: Partial<AppSettings>) {
   });
 }
 
+/** Per-operator cap on one plain (Light) recharge sent from a POS. Empty = no cap. Values in DT. */
+export async function savePosRechargeLimitsAction(values: Record<string, string>) {
+  return admin(async () => {
+    const parsed: [string, number | null][] = [];
+    for (const [code, raw] of Object.entries(values)) {
+      if (!raw.trim()) {
+        parsed.push([code, null]);
+        continue;
+      }
+      const millimes = parseDinars(raw);
+      if (!millimes) throw new EngineError("invalid_amount");
+      parsed.push([code, millimes]);
+    }
+    for (const [code, millimes] of parsed) {
+      await db.update(operators).set({ posMaxRechargeMillimes: millimes, updatedAt: new Date() }).where(eq(operators.code, code));
+    }
+    return null;
+  });
+}
+
 export async function updatePayoutMethodAction(
   code: string,
   values: { active: boolean; feeType: "fixed" | "percent"; fee: string },
@@ -371,4 +394,57 @@ export async function updatePayoutMethodAction(
     await db.update(payoutMethods).set({ active: values.active, feeMillimes, feeBps }).where(eq(payoutMethods.code, code));
     return null;
   });
+}
+
+// --- Data packages (admin) ----------------------------------------------------
+
+export type PackageFormValues = {
+  name: string;
+  price: string;
+  ussdTemplate: string;
+  ussdSteps: string;
+  active: boolean;
+  sortOrder: string;
+};
+
+function packageInput(v: PackageFormValues) {
+  const priceMillimes = parseDinars(v.price);
+  if (!priceMillimes) throw new EngineError("invalid_amount");
+  return {
+    name: v.name,
+    priceMillimes,
+    ussdTemplate: v.ussdTemplate,
+    ussdSteps: v.ussdSteps.split("\n").map((l) => l.trim()),
+    active: v.active,
+    sortOrder: Number.parseInt(v.sortOrder, 10) || 0,
+  };
+}
+
+export async function createPackageAction(operatorCode: string, values: PackageFormValues) {
+  return admin(async () => createPackage({ operatorCode, ...packageInput(values) }));
+}
+
+export async function updatePackageAction(id: string, values: PackageFormValues) {
+  return admin(async () => {
+    await updatePackage(id, packageInput(values));
+    return null;
+  });
+}
+
+// --- Dev tools ---------------------------------------------------------------
+
+/** Dev only (same switch as the password-less login): wipes the database, seeds demo data and signs out. */
+export async function devResetDatabaseAction(): Promise<AdminResult> {
+  if (!devLoginEnabled) return { ok: false, error: "forbidden" };
+  const user = await getCurrentUser();
+  if (!user || !isAdmin(user)) return { ok: false, error: "forbidden" };
+  try {
+    await resetAndSeed();
+  } catch (e) {
+    console.error("[dev reset]", e);
+    return { ok: false, error: "unknown" };
+  }
+  // Every user (and so this session's user) was deleted: log in again with the dev login.
+  await signOut({ redirectTo: "/login" });
+  return { ok: true, data: null };
 }

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectItem, SelectPopup, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { AppSettings } from "@/lib/settings";
-import { saveSettingsAction, updatePayoutMethodAction } from "../actions";
+import { savePosRechargeLimitsAction, saveSettingsAction, updatePayoutMethodAction } from "../actions";
 
 const labels: Record<keyof AppSettings, { label: string; unit: string; help: string }> = {
   holdMinutes: { label: "Number hold time", unit: "min", help: "Time the seller has to send the credit." },
@@ -86,6 +86,44 @@ export function SettingsForm({ values, defaults }: { values: AppSettings; defaul
           }
         >
           Save settings
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
+type PosLimitRow = { code: string; name: string; max: string };
+
+/** Per-operator cap on one Light recharge sent from SarfliPOS. Packages are not capped. */
+export function PosRechargeLimitsForm({ operators }: { operators: PosLimitRow[] }) {
+  const { pending, run } = useAdminAction();
+  const [v, setV] = useState<Record<string, string>>(Object.fromEntries(operators.map((o) => [o.code, o.max])));
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">SarfliPOS recharge limit</CardTitle>
+        <CardDescription>
+          Largest Light (credit) recharge one sale on a SarfliPOS PC can send, per operator. Empty = no limit. Internet packages and
+          recharges from the website are not limited.
+        </CardDescription>
+      </CardHeader>
+      <CardPanel className="grid gap-5 sm:grid-cols-3">
+        {operators.map((o) => (
+          <Field key={o.code}>
+            <FieldLabel>{o.name} (DT)</FieldLabel>
+            <Input
+              type="text"
+              inputMode="decimal"
+              placeholder="No limit"
+              value={v[o.code] ?? ""}
+              onChange={(e) => setV((s) => ({ ...s, [o.code]: e.target.value }))}
+            />
+          </Field>
+        ))}
+      </CardPanel>
+      <CardFooter className="justify-end">
+        <Button loading={pending} onClick={() => run(() => savePosRechargeLimitsAction(v), { success: "POS limits saved" })}>
+          Save POS limits
         </Button>
       </CardFooter>
     </Card>

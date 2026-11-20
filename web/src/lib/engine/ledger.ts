@@ -24,6 +24,11 @@ export type Movement = {
   txId?: string | null;
   note?: string | null;
   createdBy?: string | null;
+  /**
+   * Sarfli's own use (admin POS) is checked against the real credit on the phones (sarfli-credit.ts), not
+   * against the tracked Sarfli bucket, which has no opening balance for credit bought before the ledger.
+   */
+  sarfliMayGoNegative?: boolean;
 };
 
 type Owner = { bucket: CreditBucket; operatorCode: string; userId?: string | null; orderId?: string | null; rechargeId?: string | null };
@@ -80,6 +85,7 @@ export async function move(t: DbTx, m: Movement) {
 
   for (const l of legs) {
     if (l.amountMillimes >= 0 || l.bucket === "external") continue;
+    if (l.bucket === "sarfli" && m.sarfliMayGoNegative) continue;
     const after = await bucketBalance(t, { ...l, operatorCode: m.operatorCode });
     if (after < 0) throw new EngineError(l.bucket === "sarfli" ? "sarfli_credit_insufficient" : "insufficient_credit");
   }

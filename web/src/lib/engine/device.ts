@@ -139,6 +139,10 @@ export async function syncDevice(device: typeof devices.$inferSelect, input: Syn
         eq(deviceCommands.deviceId, device.id),
         eq(deviceCommands.status, "pending"),
         lte(deviceCommands.notBefore, now),
+        inArray(
+          deviceCommands.simId,
+          db.select({ id: sims.id }).from(sims).where(and(eq(sims.deviceId, device.id), eq(sims.status, "active"))),
+        ),
       ),
     )
     .returning();
@@ -403,8 +407,9 @@ export async function onCommandFailure(
     .where(eq(sims.id, sim.id));
 
   if (cmd.type === "ussd_send") {
-    // No answer from the phone: the send may or may not have happened. The balance tells.
-    await onRechargeSent(t, cmd, null, null, "no_result");
+    // Never fetched by the phone: it was not dialled. Fetched without an answer: the balance tells.
+    if (cmd.status === "pending") await onRechargeSent(t, cmd, false, null, "never_delivered");
+    else await onRechargeSent(t, cmd, null, null, "no_result");
     return;
   }
   if (cmd.purpose === "recharge_baseline" || cmd.purpose === "recharge_verify") {

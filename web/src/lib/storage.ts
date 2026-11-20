@@ -1,5 +1,5 @@
 import "server-only";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const root = path.resolve(/*turbopackIgnore: true*/ process.env.STORAGE_DIR ?? "./storage");
@@ -26,4 +26,11 @@ export async function readProof(relative: string) {
   const full = path.resolve(/*turbopackIgnore: true*/ root, relative);
   if (!full.startsWith(root + path.sep)) throw new Error("invalid_path");
   return readFile(full);
+}
+
+/** Removes a stored file (e.g. proofs saved for an upload that was then refused). */
+export async function deleteProof(relative: string) {
+  const full = path.resolve(/*turbopackIgnore: true*/ root, relative);
+  if (!full.startsWith(root + path.sep)) throw new Error("invalid_path");
+  await unlink(full);
 }

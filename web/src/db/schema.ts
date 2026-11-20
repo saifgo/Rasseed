@@ -109,6 +109,8 @@ export const operators = pgTable("operators", {
   rechargeUssdTemplate: text("recharge_ussd_template"),
   // Replies typed into the following USSD menu pages, in order (same placeholders), e.g. ["{millimes}", "1"].
   rechargeUssdSteps: jsonb("recharge_ussd_steps").$type<string[]>().notNull().default([]),
+  // Largest plain ("Light") recharge one POS sale may send, in millimes. Null = no cap. Packages are not capped.
+  posMaxRechargeMillimes: integer("pos_max_recharge_millimes"),
   updatedAt: ts("updated_at").notNull().defaultNow(),
 });
 
@@ -556,10 +558,13 @@ export const listings = pgTable(
     // How buyers pay this seller (D17 number, Flouci, ...). Copied onto every order.
     paymentInfo: text("payment_info").notNull().default(""),
     active: boolean("active").notNull().default(true),
+    // transfers = the seller sends credit to Sarfli's phones for each order;
+    // balance = a buyer resells his own balance: orders are funded from it at once.
+    source: text("source", { enum: ["transfers", "balance"] }).notNull().default("transfers"),
     createdAt: ts("created_at").notNull().defaultNow(),
     updatedAt: ts("updated_at").notNull().defaultNow(),
   },
-  (t) => [unique("listings_seller_operator_key").on(t.sellerId, t.operatorCode).nullsNotDistinct()],
+  (t) => [unique("listings_seller_operator_source_key").on(t.sellerId, t.operatorCode, t.source).nullsNotDistinct()],
 );
 
 export const ORDER_STATUSES = ["funding", "funded", "proof_uploaded", "admin_review", "released", "cancelled"] as const;
@@ -598,6 +603,8 @@ export const orders = pgTable(
     cancelledBy: text("cancelled_by", { enum: ["buyer", "seller", "admin"] }),
     cancelReason: text("cancel_reason"),
     buyerBadMark: boolean("buyer_bad_mark").notNull().default(false),
+    // Resale: the seller is a buyer reselling his balance (funded from it at once, refunded to it on cancel).
+    resale: boolean("resale").notNull().default(false),
     // After a cancellation with credit already on our SIMs: amount waiting for the seller's choice, and the choice.
     leftoverMillimes: millimes("leftover_millimes").notNull().default(0),
     leftoverChoice: text("leftover_choice", { enum: ["stock", "sarfli"] }),
@@ -667,6 +674,51 @@ export const sellerRatings = pgTable(
   (t) => [index("seller_ratings_seller_idx").on(t.sellerId)],
 );
 
+/** Data packages buyers can activate for a customer, paid from their balance. Kept by admins. */
+export const dataPackages = pgTable(
+  "data_packages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    operatorCode: text("operator_code")
+      .notNull()
+      .references(() => operators.code),
+    name: text("name").notNull(),
+    // Deducted from the buyer's balance, and what the agent SIM's balance must drop by.
+    priceMillimes: millimes("price_millimes").notNull(),
+    // USSD dialled by the agent phone. Placeholders: {number} {millimes} {dinars}.
+    ussdTemplate: text("ussd_template").notNull(),
+    ussdSteps: jsonb("ussd_steps").$type<string[]>().notNull().default([]),
+    active: boolean("active").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("data_packages_operator_idx").on(t.operatorCode, t.sortOrder)],
+);
+
+/** A buyer's Windows POS terminal, paired with a short code and then using a bearer token. */
+export const posTerminals = pgTable(
+  "pos_terminals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    name: text("name").notNull(),
+    deviceName: text("device_name"),
+    tokenHash: text("token_hash").unique(),
+    pairingCode: text("pairing_code"),
+    pairingExpiresAt: ts("pairing_expires_at"),
+    lastSeenAt: ts("last_seen_at"),
+    lastIp: text("last_ip"),
+    // Set by the owner: most this PC may spend per day (Tunisia time), recharges + packages. Null = no limit.
+    dailyLimitMillimes: integer("daily_limit_millimes"),
+    revokedAt: ts("revoked_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("pos_terminals_user_idx").on(t.userId)],
+);
+
 export const RECHARGE_STATUSES = ["queued", "sending", "succeeded", "failed", "review"] as const;
 export type RechargeStatus = (typeof RECHARGE_STATUSES)[number];
 export const ACTIVE_RECHARGE_STATUSES: RechargeStatus[] = ["queued", "sending"];
@@ -685,6 +737,16 @@ export const recharges = pgTable(
       .references(() => operators.code),
     msisdn: text("msisdn").notNull(),
     amountMillimes: millimes("amount_millimes").notNull(),
+    // Data package (null = plain recharge). Name and USSD are copied at submit time.
+    packageId: uuid("package_id").references(() => dataPackages.id),
+    packageName: text("package_name"),
+    ussdTemplate: text("ussd_template"),
+    ussdSteps: jsonb("ussd_steps").$type<string[]>(),
+    // Sent from a POS terminal; clientRef makes retries of the same sale return the same recharge.
+    posTerminalId: uuid("pos_terminal_id").references(() => posTerminals.id),
+    clientRef: text("client_ref"),
+    // balance = paid from the buyer's credit balance; sarfli = an admin spending Sarfli's own credit (POS / web).
+    funding: text("funding", { enum: ["balance", "sarfli"] }).notNull().default("balance"),
     status: text("status").$type<RechargeStatus>().notNull(),
     simId: uuid("sim_id").references(() => sims.id),
     baselineBalanceMillimes: millimes("baseline_balance_millimes"),
@@ -705,6 +767,7 @@ export const recharges = pgTable(
   },
   (t) => [
     index("recharges_buyer_idx").on(t.buyerId, t.createdAt),
+    uniqueIndex("recharges_buyer_client_ref_key").on(t.buyerId, t.clientRef),
     index("recharges_status_idx").on(t.status, t.operatorCode, t.createdAt),
   ],
 );

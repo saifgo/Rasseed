@@ -12,6 +12,7 @@ import { Frame } from "@/components/ui/frame";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getReconciliation, listRecentMovements } from "@/lib/market-admin-queries";
 import { requireStaff } from "@/lib/session";
+import { sarfliSpendable } from "@/lib/engine/sarfli-credit";
 import { cn } from "@/lib/utils";
 import { Secret } from "@/components/app/confidential";
 import { AdjustSarfliCreditForm } from "./ledger-forms";
@@ -21,6 +22,7 @@ export const metadata = { title: "Credit ledger" };
 export default async function LedgerPage() {
   const me = await requireStaff();
   const [rows, movements] = await Promise.all([getReconciliation(), listRecentMovements()]);
+  const spendable = await sarfliSpendable(rows.map((r) => r.code));
   const short = rows.filter((r) => r.simMillimes < r.customer);
 
   return (
@@ -62,7 +64,8 @@ export default async function LedgerPage() {
               <Line label="Buyer balances" value={r.buyers} />
               <Line label="Recharges in progress" value={r.recharge} />
               <Line label="Customer-owned credit" value={r.customer} strong />
-              <Line label="Sarfli credit" value={r.sarfli} />
+              <Line label="Sarfli credit (tracked)" value={r.sarfli} />
+              <Line label="Admins can spend now (POS)" value={spendable[r.code] ?? 0} strong />
               <div className="flex items-center justify-between gap-4 border-t pt-2">
                 <span className="font-medium">Gap (SIMs − ledger)</span>
                 {r.gap === 0 ? (

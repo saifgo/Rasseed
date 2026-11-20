@@ -15,11 +15,26 @@ import {
 } from "@/lib/engine/market";
 import { type CurrentUser, getCurrentUser, isStaff, requireUser } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
+import { balancesByOperator } from "@/lib/engine/ledger";
+import { canSpend, sarfliSpendable, spendsSarfliCredit } from "@/lib/engine/sarfli-credit";
 
 /** True when this user may see the marketplace. */
 export async function hasMarketAccess(user: CurrentUser | null) {
   if (!user) return false;
   return canUseMarketplace(user, await getSettings());
+}
+
+/** For recharge pages: marketplace users, and admins spending Sarfli's credit (even with the marketplace off). */
+export async function requireSpender() {
+  const user = await requireUser();
+  if (!(await canSpend(user))) notFound();
+  return { user, sarfli: spendsSarfliCredit(user) };
+}
+
+/** What the user can spend now, per operator: Sarfli's spendable credit for admins, otherwise his own balance. */
+export async function spendableByOperator(user: { id: string; role: CurrentUser["role"] }, operatorCodes: string[]) {
+  if (spendsSarfliCredit(user)) return { balances: await sarfliSpendable(operatorCodes), sarfli: true };
+  return { balances: await balancesByOperator(db, "buyer", user.id), sarfli: false };
 }
 
 /** For marketplace pages: signed in and allowed, otherwise the page does not exist. */
@@ -40,7 +55,15 @@ export async function listActiveListings(viewerId: string) {
     .leftJoin(users, eq(users.id, listings.sellerId))
     .where(and(eq(listings.active, true), eq(operators.active, true)))
     .orderBy(asc(listings.priceBps));
-  const open = rows.filter((r) => !r.listing.sellerId || (r.seller && canUseMarketplace(r.seller, settings)));
+  const allowed = rows.filter((r) => !r.listing.sellerId || (r.seller && canUseMarketplace(r.seller, settings)));
+  // Resale listings sell from the reseller's balance: show how much is left, hide them when empty.
+  const resellers = [...new Set(allowed.filter((r) => r.listing.source === "balance").map((r) => r.listing.sellerId!))];
+  const resaleBalances = Object.fromEntries(
+    await Promise.all(resellers.map(async (id) => [id, await balancesByOperator(db, "buyer", id)] as const)),
+  );
+  const availableFor = (r: (typeof allowed)[number]) =>
+    r.listing.source === "balance" ? (resaleBalances[r.listing.sellerId!]?.[r.listing.operatorCode] ?? 0) : null;
+  const open = allowed.filter((r) => availableFor(r) !== 0);
   const reputation = await sellerReputation(open.map((r) => r.listing.sellerId));
   return open.map((r) => ({
     id: r.listing.id,
@@ -51,6 +74,9 @@ export async function listActiveListings(viewerId: string) {
     paymentInfo: r.listing.paymentInfo,
     rating: reputation[r.listing.sellerId ?? "sarfli"] ?? null,
     mine: !!r.listing.sellerId && r.listing.sellerId === viewerId,
+    resale: r.listing.source === "balance",
+    /** Resale only: credit left to sell (null = funded by the seller's transfers, no fixed amount). */
+    availableMillimes: availableFor(r),
   }));
 }
 
@@ -61,8 +87,12 @@ export async function listOpenListings(viewerId: string) {
 
 export type OpenListing = Awaited<ReturnType<typeof listOpenListings>>[number];
 
-export async function listSellerListings(sellerId: string) {
-  return db.select().from(listings).where(eq(listings.sellerId, sellerId));
+/** The seller's own listings (funded by his transfers). Resale listings are managed on /buy/resell. */
+export async function listSellerListings(sellerId: string, source: "transfers" | "balance" = "transfers") {
+  return db
+    .select()
+    .from(listings)
+    .where(and(eq(listings.sellerId, sellerId), eq(listings.source, source)));
 }
 
 /** Names of users by id (for order lists). */

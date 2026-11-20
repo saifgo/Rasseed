@@ -40,7 +40,7 @@
   "home": {
     "badge": "Ooredoo · Orange · Tunisie Telecom",
     "title": "Transformez votre crédit en argent",
-    "subtitle": "Envoyez-nous votre crédit, on ajoute l'argent à votre solde. Retirez-le par D17, Flouci ou mandat.",
+    "subtitle": "Envoyez-nous votre crédit, on ajoute l'argent à votre solde. Retirez-le par D17, Flouci, Izi, Wafacash ou mandat.",
     "cta": "Vendre mon crédit",
     "ratesTitle": "Prix du jour",
     "ratesHint": "Touchez votre opérateur pour commencer.",
@@ -256,6 +256,8 @@
     "excess_pending": "Acceptez ou refusez d'abord le crédit en plus.",
     "proof_required": "Ajoutez au moins un fichier de preuve.",
     "insufficient_credit": "Votre crédit ne suffit pas.",
+    "pos_daily_limit": "Ce PC a atteint sa limite du jour.",
+    "pos_recharge_limit": "Ce montant dépasse le maximum pour une recharge.",
     "sarfli_credit_insufficient": "Sarfli n'a pas assez de crédit pour cela en ce moment.",
     "invalid_rate": "Saisissez un prix valide.",
     "payment_info_required": "Indiquez comment les acheteurs peuvent vous payer.",
@@ -266,7 +268,14 @@
     "order_not_funding": "Cette commande n'a plus besoin de crédit.",
     "order_operator_mismatch": "Cette commande est pour un autre opérateur.",
     "unsupported_file_type": "Seulement des photos (JPG, PNG, WEBP) ou des PDF.",
-    "file_too_large": "Chaque fichier doit faire 5 Mo au maximum."
+    "file_too_large": "Chaque fichier doit faire 5 Mo au maximum.",
+    "package_unavailable": "Ce forfait n'est plus disponible.",
+    "too_many_files": "Trop de fichiers. Envoyez-en 5 au maximum à la fois.",
+    "invalid_choice": "Choisissez une des options.",
+    "too_many_terminals": "Vous avez déjà 20 PC connectés.",
+    "name_required": "Écrivez un nom d'abord.",
+    "try_again": "Veuillez réessayer.",
+    "reseller_balance_low": "Ce vendeur n'a plus autant de crédit. Essayez un montant plus petit."
   },
   "wallet": {
     "title": "Mon solde",
@@ -330,7 +339,7 @@
       "line1": "Votre crédit",
       "line2": "en argent",
       "sub": "Envoyez votre crédit Ooredoo, Orange ou Tunisie Telecom à Sarfli. Les dinars vont sur votre solde, prêts à être retirés.",
-      "notesAlt": "Un billet tunisien de 10 dinars et un de 5 dinars"
+      "notesAlt": "Deux billets de Monopoly, un de 500 et un de 100"
     },
     "rates": {
       "title": "Prix du jour",
@@ -562,6 +571,7 @@
       "created": "Commande passée : {amount} DT de crédit pour {pay} DT",
       "stock_applied": "{amount} DT pris dans le stock du vendeur",
       "sarfli_funded": "{amount} DT de crédit Sarfli prêts",
+      "resale_funded": "{amount} DT réservés sur le solde du vendeur",
       "transfer_received": "{amount} DT reçus ({funded} DT au total)",
       "funded": "Tout le crédit est arrivé",
       "transfer_to_stock": "{amount} DT arrivés après la fin de l'attente — gardés pour le vendeur",
@@ -613,6 +623,7 @@
     "rechargeHistory": "Mes recharges",
     "noRecharges": "Aucune recharge pour l'instant.",
     "rechargeRefunded": "Le montant est revenu sur votre crédit.",
+    "rechargeNotCompatible": "Ce numéro ne peut pas recevoir ce forfait. Le montant est revenu sur votre crédit.",
     "rechargeReviewHint": "Notre équipe vérifie si le crédit est arrivé. Vous n'avez rien à faire.",
     "depositWhere": "Où va ce crédit ?",
     "depositNormal": "Le vendre à Sarfli (argent sur mon solde)",
@@ -678,6 +689,48 @@
       "noOffer": "Pas encore en vente. Fixez votre prix.",
       "change": "Modifier",
       "sarfliTitle": "Ou vendez à {brand} maintenant"
-    }
+    },
+    "rechargeWhat": "Quoi envoyer",
+    "modeCredit": "Crédit",
+    "modePackage": "Forfait internet",
+    "packageRequired": "Choisissez un forfait.",
+    "noPackages": "Pas encore de forfaits pour cet opérateur.",
+    "packageSummary": "{package} (<amount></amount>) pour <number></number>",
+    "pos": {
+      "link": "Utiliser Sarfli sur un PC du magasin (Windows)",
+      "title": "PC du magasin",
+      "subtitle": "Installez l'application Sarfli POS sur un PC Windows pour recharger des numéros et envoyer des forfaits internet depuis votre solde.",
+      "name": "Nom du PC",
+      "namePlaceholder": "ex. Comptoir",
+      "add": "Obtenir un code",
+      "codeTitle": "Tapez ce code dans l'application Sarfli POS",
+      "codeHint": "Valable 10 minutes, pour un seul PC.",
+      "none": "Aucun PC connecté pour l'instant.",
+      "lastSeen": "Utilisé {when}",
+      "neverSeen": "Pas encore connecté",
+      "newCode": "Nouveau code",
+      "revoke": "Déconnecter",
+      "revokeConfirm": "Déconnecter {name} ? Il cessera de fonctionner immédiatement.",
+      "revoked": "PC déconnecté",
+      "download": "Télécharger Sarfli POS (Windows)",
+      "steps": "1. Téléchargez et ouvrez Sarfli POS sur le PC. 2. Obtenez un code ici. 3. Tapez-le dans l'application.",
+      "dailyLimit": "Limite par jour",
+      "dailyLimitHint": "Le maximum que ce PC peut dépenser par jour (recharges + internet), remis à zéro à minuit. Vide = pas de limite.",
+      "dailyLimitNone": "Pas de limite par jour",
+      "dailyLimitValue": "Limite par jour <amount></amount>",
+      "spentToday": "Dépensé aujourd'hui <amount></amount>",
+      "saveLimit": "Enregistrer",
+      "limitSaved": "Limite par jour enregistrée"
+    },
+    "resell": {
+      "link": "Revendre mon crédit à d'autres acheteurs",
+      "title": "Revendre mon crédit",
+      "subtitle": "Mettez votre solde en vente à votre prix. Les acheteurs commandent, vous paient directement, et vous confirmez le paiement.",
+      "rules": "Votre crédit est réservé dès qu'une commande arrive. Si elle est annulée, il revient dans votre solde. Sarfli prend sa commission sur le crédit de l'acheteur à chaque vente.",
+      "available": "<amount></amount> disponibles",
+      "none": "Vous n'avez pas encore de crédit à revendre.",
+      "balance": "Votre solde"
+    },
+    "sarfliUse": "Vous êtes admin : les recharges et forfaits sont payés avec le crédit de Sarfli. Les montants affichés sont ce que Sarfli peut dépenser (crédit des téléphones moins les ventes non confirmées et ce qui appartient à d'autres)."
   }
 }

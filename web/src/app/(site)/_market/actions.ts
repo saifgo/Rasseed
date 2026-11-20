@@ -12,6 +12,7 @@ import {
   confirmPayment,
   createOrder,
   flagToAdmin,
+  getOrderForUser,
   rateSeller,
   refuseExcess,
   reportNotPaid,
@@ -20,18 +21,34 @@ import {
   upsertListing,
   type ListingInput,
 } from "@/lib/engine/market";
+import { canSpend } from "@/lib/engine/sarfli-credit";
+import { createPosPairing, revokePosTerminal, setPosDailyLimit } from "@/lib/engine/pos";
+import { parseDinars } from "@/lib/money";
 import { cancelRecharge, createRecharge, type RechargeInput } from "@/lib/engine/recharge";
 import { getCurrentUser } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
-import { saveProof } from "@/lib/storage";
+import { deleteProof, saveProof } from "@/lib/storage";
+
+const MAX_PROOF_FILES = 5;
+const MAX_PROOFS_PER_ORDER = 20;
 
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: string };
 
-/** Runs an engine call for a signed-in user who may use the marketplace, then refreshes the given pages. */
-async function run<T>(fn: (userId: string) => Promise<T>, paths: string[] = []): Promise<ActionResult<T>> {
+/**
+ * Runs an engine call for a signed-in user, then refreshes the given pages. Starting new work (orders,
+ * listings, recharges) needs marketplace access; finishing what is already open never does, so turning
+ * the switch off cannot freeze orders or reserved credit. The engine checks that the user is a party.
+ */
+async function run<T>(
+  fn: (userId: string) => Promise<T>,
+  paths: string[] = [],
+  opts: { newWork?: boolean; spending?: boolean } = {},
+): Promise<ActionResult<T>> {
   const user = await getCurrentUser();
-  if (!user) return { ok: false, error: "not_found" };
-  if (!canUseMarketplace(user, await getSettings())) return { ok: false, error: "marketplace_closed" };
+  if (!user || user.blocked) return { ok: false, error: "not_found" };
+  // Spending (recharges, shop PCs) is also open to admins (Sarfli's credit); the rest needs the marketplace.
+  const allowed = opts.spending ? await canSpend(user) : canUseMarketplace(user, await getSettings());
+  if (opts.newWork && !allowed) return { ok: false, error: "marketplace_closed" };
   try {
     const data = await fn(user.id);
     for (const p of paths) revalidatePath(p);
@@ -49,7 +66,7 @@ const orderPaths = (id: string) => [`/orders/${id}`, "/buy", "/selling"];
 // Buyer ----------------------------------------------------------------------
 
 export async function createOrderAction(input: { listingId: string; amountMillimes: number }) {
-  return run((userId) => createOrder(userId, input), ["/buy", "/selling"]);
+  return run((userId) => createOrder(userId, input), ["/buy", "/selling"], { newWork: true });
 }
 
 export async function takePartialAction(orderId: string) {
@@ -70,12 +87,23 @@ export async function uploadProofsAction(formData: FormData) {
   const files = formData.getAll("files").filter((f): f is File => f instanceof File && f.size > 0);
   return run(async (userId) => {
     if (files.length === 0) throw new EngineError("proof_required");
-    const saved = [];
-    for (const f of files) {
-      const { proofPath, proofMime } = await saveProof(f);
-      saved.push({ path: proofPath, mime: proofMime });
+    if (files.length > MAX_PROOF_FILES) throw new EngineError("too_many_files");
+    // Check before writing anything to disk; addPaymentProofs re-checks under the order lock.
+    const found = /^[0-9a-f-]{36}$/i.test(orderId) ? await getOrderForUser(userId, orderId) : null;
+    if (!found || found.order.buyerId !== userId) throw new EngineError("not_found");
+    if (!["funded", "proof_uploaded", "admin_review"].includes(found.order.status)) throw new EngineError("invalid_state");
+    if (found.proofs.length + files.length > MAX_PROOFS_PER_ORDER) throw new EngineError("too_many_files");
+    const saved: { path: string; mime: string }[] = [];
+    try {
+      for (const f of files) {
+        const { proofPath, proofMime } = await saveProof(f);
+        saved.push({ path: proofPath, mime: proofMime });
+      }
+      await addPaymentProofs(userId, orderId, saved);
+    } catch (e) {
+      await Promise.all(saved.map((s) => deleteProof(s.path).catch(() => {})));
+      throw e;
     }
-    await addPaymentProofs(userId, orderId, saved);
   }, orderPaths(orderId));
 }
 
@@ -94,7 +122,7 @@ export async function rateSellerAction(orderId: string, stars: number, comment: 
 // Seller ---------------------------------------------------------------------
 
 export async function upsertListingAction(input: ListingInput) {
-  return run((userId) => upsertListing(userId, input), ["/selling", "/buy/sellers"]);
+  return run((userId) => upsertListing(userId, input), ["/selling", "/buy/sellers", "/buy/resell"], { newWork: true });
 }
 
 export async function confirmPaymentAction(orderId: string) {
@@ -120,9 +148,35 @@ export async function sellStockAction(operatorCode: string, amountMillimes: numb
 // Recharges ------------------------------------------------------------------
 
 export async function createRechargeAction(input: RechargeInput) {
-  return run((userId) => createRecharge(userId, input), ["/buy/recharge", "/buy"]);
+  return run((userId) => createRecharge(userId, input), ["/buy/recharge", "/buy"], { newWork: true, spending: true });
 }
 
 export async function cancelRechargeAction(rechargeId: string) {
   return run((userId) => cancelRecharge(userId, rechargeId), ["/buy/recharge", "/buy"]);
+}
+
+// POS terminals -------------------------------------------------------------
+
+/** New terminal (name) or a fresh code for an existing one (terminalId). Returns the 6-digit code. */
+export async function createPosPairingAction(input: { name?: string; terminalId?: string }) {
+  return run(async (userId) => {
+    const r = await createPosPairing(userId, input);
+    return { code: r.code, expiresAt: r.expiresAt.toISOString() };
+  }, ["/buy/pos"], { newWork: true, spending: true });
+}
+
+export async function revokePosTerminalAction(terminalId: string) {
+  return run((userId) => revokePosTerminal(userId, terminalId), ["/buy/pos"]);
+}
+
+/** The owner's daily spending limit for one PC, in DT; empty clears it. */
+export async function setPosDailyLimitAction(terminalId: string, dinars: string) {
+  return run(async (userId) => {
+    let millimes: number | null = null;
+    if (dinars.trim()) {
+      millimes = parseDinars(dinars);
+      if (!millimes) throw new EngineError("invalid_amount");
+    }
+    await setPosDailyLimit(userId, terminalId, millimes);
+  }, ["/buy/pos"]);
 }
