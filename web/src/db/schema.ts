@@ -8,6 +8,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -37,6 +38,8 @@ export const users = pgTable("users", {
   image: text("image"),
   role: text("role", { enum: ["seller", "manager", "admin"] }).notNull().default("seller"),
   blocked: boolean("blocked").notNull().default(false),
+  // Buyer marketplace is opened to a few trusted users first (admin ticks this per user).
+  marketplaceAccess: boolean("marketplace_access").notNull().default(false),
   createdAt: ts("created_at").notNull().defaultNow(),
 });
 
@@ -101,6 +104,13 @@ export const operators = pgTable("operators", {
   // Regex with named group `amount` (and optional `unit`) applied to the balance USSD reply.
   balanceRegex: text("balance_regex").notNull(),
   balanceUnit: text("balance_unit", { enum: ["auto", "millimes", "dinars"] }).notNull().default("auto"),
+  // USSD our agent phones dial to send credit to a customer (buyer recharges). Placeholders: {number} {millimes} {dinars}.
+  // Empty = recharges for this operator are off until the real operator dialog is configured.
+  rechargeUssdTemplate: text("recharge_ussd_template"),
+  // Replies typed into the following USSD menu pages, in order (same placeholders), e.g. ["{millimes}", "1"].
+  rechargeUssdSteps: jsonb("recharge_ussd_steps").$type<string[]>().notNull().default([]),
+  // Largest plain ("Light") recharge one POS sale may send, in millimes. Null = no cap. Packages are not capped.
+  posMaxRechargeMillimes: integer("pos_max_recharge_millimes"),
   updatedAt: ts("updated_at").notNull().defaultNow(),
 });
 
@@ -153,6 +163,8 @@ export const sims = pgTable(
     balanceMillimes: millimes("balance_millimes"),
     balanceCheckedAt: ts("balance_checked_at"),
     heldByTxId: uuid("held_by_tx_id"),
+    // Set while this SIM sends a buyer recharge; the SIM takes no sale meanwhile.
+    heldByRechargeId: uuid("held_by_recharge_id"),
     cooldownUntil: ts("cooldown_until"),
     lastAssignedAt: ts("last_assigned_at"),
     consecutiveFailures: integer("consecutive_failures").notNull().default(0),
@@ -163,11 +175,20 @@ export const sims = pgTable(
     uniqueIndex("sims_device_slot_idx").on(t.deviceId, t.slotIndex),
     uniqueIndex("sims_msisdn_idx").on(t.msisdn),
     uniqueIndex("sims_held_by_idx").on(t.heldByTxId),
+    uniqueIndex("sims_held_by_recharge_idx").on(t.heldByRechargeId),
   ],
 );
 
 export type CommandStatus = "pending" | "sent" | "succeeded" | "failed" | "timeout";
-export type CommandPurpose = "baseline" | "verify" | "poll" | "manual";
+export type CommandPurpose =
+  | "baseline"
+  | "verify"
+  | "poll"
+  | "manual"
+  // Buyer recharges: balance before, the send itself, balance after.
+  | "recharge_baseline"
+  | "recharge_send"
+  | "recharge_verify";
 
 export const deviceCommands = pgTable(
   "device_commands",
@@ -179,10 +200,13 @@ export const deviceCommands = pgTable(
     simId: uuid("sim_id")
       .notNull()
       .references(() => sims.id, { onDelete: "cascade" }),
-    type: text("type", { enum: ["ussd_balance"] }).notNull(),
+    type: text("type", { enum: ["ussd_balance", "ussd_send"] }).notNull(),
     ussdCode: text("ussd_code").notNull(),
+    // ussd_send only: replies to type into the following menu pages.
+    steps: jsonb("steps").$type<string[]>().notNull().default([]),
     purpose: text("purpose").$type<CommandPurpose>().notNull(),
     txId: uuid("tx_id"),
+    rechargeId: uuid("recharge_id"),
     status: text("status").$type<CommandStatus>().notNull().default("pending"),
     // Not delivered to the device before this time (used for verification retries).
     notBefore: ts("not_before").notNull().defaultNow(),
@@ -328,6 +352,8 @@ export const transactions = pgTable(
     payoutDetails: jsonb("payout_details").$type<Record<string, string>>(),
     payoutFeeMillimes: millimes("payout_fee_millimes").notNull().default(0),
     status: text("status").$type<TxStatus>().notNull(),
+    // Set when the seller deposits this transfer to a buyer's order instead of selling it to Sarfli.
+    orderId: uuid("order_id"),
     simId: uuid("sim_id").references(() => sims.id),
     assignedMsisdn: text("assigned_msisdn"),
     baselineBalanceMillimes: millimes("baseline_balance_millimes"),
@@ -354,6 +380,7 @@ export const transactions = pgTable(
   (t) => [
     index("transactions_user_idx").on(t.userId, t.createdAt),
     index("transactions_status_idx").on(t.status, t.operatorCode, t.queuedAt),
+    index("transactions_order_idx").on(t.orderId),
   ],
 );
 
@@ -405,7 +432,8 @@ export const payouts = pgTable("payouts", {
 // Seller account balance (wallet) & withdrawals
 // ---------------------------------------------------------------------------
 
-export const WALLET_ENTRY_KINDS = ["sale", "withdrawal", "withdrawal_refund", "adjustment"] as const;
+// stock_sale: credit from a cancelled order or kept stock that the seller sold to Sarfli.
+export const WALLET_ENTRY_KINDS = ["sale", "withdrawal", "withdrawal_refund", "adjustment", "stock_sale"] as const;
 export type WalletEntryKind = (typeof WALLET_ENTRY_KINDS)[number];
 
 // Append-only ledger. The balance of a user is the sum of their entries.
@@ -468,3 +496,278 @@ export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: jsonb("value").notNull(),
 });
+
+// ---------------------------------------------------------------------------
+// Buyer marketplace: credit ledger, listings, orders, reputation, recharges
+// ---------------------------------------------------------------------------
+
+/**
+ * Where a piece of phone credit (on Sarfli's SIMs) belongs:
+ * - order: held for an open (or just-cancelled) order
+ * - seller_stock: kept by a seller, per operator, used first on his next orders
+ * - buyer: a buyer's spendable balance, per operator
+ * - recharge: reserved from a buyer balance while a recharge is being sent
+ * - sarfli: Sarfli's own credit (sales to Sarfli, commission)
+ * - external: outside Sarfli's SIMs (credit coming in from sellers, going out to customers)
+ * Every movement writes entries that sum to zero, so credit is never created or lost.
+ */
+export const CREDIT_BUCKETS = ["order", "seller_stock", "buyer", "recharge", "sarfli", "external"] as const;
+export type CreditBucket = (typeof CREDIT_BUCKETS)[number];
+
+export const creditEntries = pgTable(
+  "credit_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Entries of one movement share this id and sum to zero.
+    movementId: uuid("movement_id").notNull(),
+    kind: text("kind").notNull(),
+    bucket: text("bucket").$type<CreditBucket>().notNull(),
+    operatorCode: text("operator_code")
+      .notNull()
+      .references(() => operators.code),
+    // Owner for seller_stock and buyer buckets.
+    userId: text("user_id").references(() => users.id),
+    orderId: uuid("order_id"),
+    rechargeId: uuid("recharge_id"),
+    txId: uuid("tx_id"),
+    // Signed millimes of credit: positive = into this bucket.
+    amountMillimes: millimes("amount_millimes").notNull(),
+    note: text("note"),
+    createdBy: text("created_by").references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("credit_entries_owner_idx").on(t.bucket, t.userId, t.operatorCode),
+    index("credit_entries_order_idx").on(t.orderId),
+    index("credit_entries_movement_idx").on(t.movementId),
+    index("credit_entries_recharge_idx").on(t.rechargeId),
+  ],
+);
+
+/** A seller's price for one operator. sellerId null = Sarfli's own listing. */
+export const listings = pgTable(
+  "listings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sellerId: text("seller_id").references(() => users.id),
+    operatorCode: text("operator_code")
+      .notNull()
+      .references(() => operators.code),
+    // What the buyer pays for 1 TND of credit, in basis points (8000 = 0.8 TND).
+    priceBps: integer("price_bps").notNull(),
+    // How buyers pay this seller (D17 number, Flouci, ...). Copied onto every order.
+    paymentInfo: text("payment_info").notNull().default(""),
+    active: boolean("active").notNull().default(true),
+    // transfers = the seller sends credit to Sarfli's phones for each order;
+    // balance = a buyer resells his own balance: orders are funded from it at once.
+    source: text("source", { enum: ["transfers", "balance"] }).notNull().default("transfers"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [unique("listings_seller_operator_source_key").on(t.sellerId, t.operatorCode, t.source).nullsNotDistinct()],
+);
+
+export const ORDER_STATUSES = ["funding", "funded", "proof_uploaded", "admin_review", "released", "cancelled"] as const;
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+export const OPEN_ORDER_STATUSES: OrderStatus[] = ["funding", "funded", "proof_uploaded", "admin_review"];
+
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ref: text("ref").notNull().unique(),
+    buyerId: text("buyer_id")
+      .notNull()
+      .references(() => users.id),
+    // Null = Sarfli's own listing.
+    sellerId: text("seller_id").references(() => users.id),
+    listingId: uuid("listing_id").references(() => listings.id),
+    operatorCode: text("operator_code")
+      .notNull()
+      .references(() => operators.code),
+    // Locked when the order is placed.
+    priceBps: integer("price_bps").notNull(),
+    commissionBps: integer("commission_bps").notNull(),
+    paymentInfo: text("payment_info").notNull().default(""),
+    requestedMillimes: millimes("requested_millimes").notNull(),
+    // Current order amount (reduced by a partial order, raised when the buyer accepts extra credit).
+    amountMillimes: millimes("amount_millimes").notNull(),
+    // Credit held for this order (mirror of the ledger, for display and quick checks).
+    fundedMillimes: millimes("funded_millimes").notNull().default(0),
+    // Received beyond the order amount, waiting for the buyer to accept or refuse it.
+    excessMillimes: millimes("excess_millimes").notNull().default(0),
+    status: text("status").$type<OrderStatus>().notNull(),
+    // Credit that reached the buyer and Sarfli's commission, set on release.
+    releasedMillimes: millimes("released_millimes"),
+    commissionMillimes: millimes("commission_millimes"),
+    cancelledBy: text("cancelled_by", { enum: ["buyer", "seller", "admin"] }),
+    cancelReason: text("cancel_reason"),
+    buyerBadMark: boolean("buyer_bad_mark").notNull().default(false),
+    // Resale: the seller is a buyer reselling his balance (funded from it at once, refunded to it on cancel).
+    resale: boolean("resale").notNull().default(false),
+    // After a cancellation with credit already on our SIMs: amount waiting for the seller's choice, and the choice.
+    leftoverMillimes: millimes("leftover_millimes").notNull().default(0),
+    leftoverChoice: text("leftover_choice", { enum: ["stock", "sarfli"] }),
+    disputeReason: text("dispute_reason"),
+    disputedBy: text("disputed_by", { enum: ["buyer", "seller"] }),
+    adminNote: text("admin_note"),
+    fundedAt: ts("funded_at"),
+    proofUploadedAt: ts("proof_uploaded_at"),
+    completedAt: ts("completed_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("orders_buyer_idx").on(t.buyerId, t.createdAt),
+    index("orders_seller_idx").on(t.sellerId, t.status, t.createdAt),
+    index("orders_status_idx").on(t.status, t.createdAt),
+  ],
+);
+
+export const orderProofs = pgTable(
+  "order_proofs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    path: text("path").notNull(),
+    mime: text("mime").notNull(),
+    uploadedBy: text("uploaded_by").references(() => users.id),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("order_proofs_order_idx").on(t.orderId)],
+);
+
+export const orderEvents = pgTable(
+  "order_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    type: text("type").notNull(),
+    actor: text("actor", { enum: ["system", "buyer", "seller", "admin", "device"] }).notNull(),
+    data: jsonb("data").$type<Record<string, unknown>>().notNull().default({}),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("order_events_order_idx").on(t.orderId, t.createdAt)],
+);
+
+export const sellerRatings = pgTable(
+  "seller_ratings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .unique()
+      .references(() => orders.id),
+    buyerId: text("buyer_id")
+      .notNull()
+      .references(() => users.id),
+    // Null = Sarfli.
+    sellerId: text("seller_id").references(() => users.id),
+    stars: integer("stars").notNull(),
+    comment: text("comment"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("seller_ratings_seller_idx").on(t.sellerId)],
+);
+
+/** Data packages buyers can activate for a customer, paid from their balance. Kept by admins. */
+export const dataPackages = pgTable(
+  "data_packages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    operatorCode: text("operator_code")
+      .notNull()
+      .references(() => operators.code),
+    name: text("name").notNull(),
+    // Deducted from the buyer's balance, and what the agent SIM's balance must drop by.
+    priceMillimes: millimes("price_millimes").notNull(),
+    // USSD dialled by the agent phone. Placeholders: {number} {millimes} {dinars}.
+    ussdTemplate: text("ussd_template").notNull(),
+    ussdSteps: jsonb("ussd_steps").$type<string[]>().notNull().default([]),
+    active: boolean("active").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [index("data_packages_operator_idx").on(t.operatorCode, t.sortOrder)],
+);
+
+/** A buyer's Windows POS terminal, paired with a short code and then using a bearer token. */
+export const posTerminals = pgTable(
+  "pos_terminals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    name: text("name").notNull(),
+    deviceName: text("device_name"),
+    tokenHash: text("token_hash").unique(),
+    pairingCode: text("pairing_code"),
+    pairingExpiresAt: ts("pairing_expires_at"),
+    lastSeenAt: ts("last_seen_at"),
+    lastIp: text("last_ip"),
+    // Set by the owner: most this PC may spend per day (Tunisia time), recharges + packages. Null = no limit.
+    dailyLimitMillimes: integer("daily_limit_millimes"),
+    revokedAt: ts("revoked_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("pos_terminals_user_idx").on(t.userId)],
+);
+
+export const RECHARGE_STATUSES = ["queued", "sending", "succeeded", "failed", "review"] as const;
+export type RechargeStatus = (typeof RECHARGE_STATUSES)[number];
+export const ACTIVE_RECHARGE_STATUSES: RechargeStatus[] = ["queued", "sending"];
+
+/** A buyer spends his balance: an agent phone sends credit to a customer number by USSD. */
+export const recharges = pgTable(
+  "recharges",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ref: text("ref").notNull().unique(),
+    buyerId: text("buyer_id")
+      .notNull()
+      .references(() => users.id),
+    operatorCode: text("operator_code")
+      .notNull()
+      .references(() => operators.code),
+    msisdn: text("msisdn").notNull(),
+    amountMillimes: millimes("amount_millimes").notNull(),
+    // Data package (null = plain recharge). Name and USSD are copied at submit time.
+    packageId: uuid("package_id").references(() => dataPackages.id),
+    packageName: text("package_name"),
+    ussdTemplate: text("ussd_template"),
+    ussdSteps: jsonb("ussd_steps").$type<string[]>(),
+    // Sent from a POS terminal; clientRef makes retries of the same sale return the same recharge.
+    posTerminalId: uuid("pos_terminal_id").references(() => posTerminals.id),
+    clientRef: text("client_ref"),
+    // balance = paid from the buyer's credit balance; sarfli = an admin spending Sarfli's own credit (POS / web).
+    funding: text("funding", { enum: ["balance", "sarfli"] }).notNull().default("balance"),
+    status: text("status").$type<RechargeStatus>().notNull(),
+    simId: uuid("sim_id").references(() => sims.id),
+    baselineBalanceMillimes: millimes("baseline_balance_millimes"),
+    baselineAt: ts("baseline_at"),
+    sendCommandId: uuid("send_command_id"),
+    // What the phone reported for the send (null = no answer), and its raw reply.
+    sendOk: boolean("send_ok"),
+    sendResponse: text("send_response"),
+    sendError: text("send_error"),
+    afterBalanceMillimes: millimes("after_balance_millimes"),
+    verifyAttempts: integer("verify_attempts").notNull().default(0),
+    reviewReason: text("review_reason"),
+    resolvedBy: text("resolved_by").references(() => users.id),
+    note: text("note"),
+    completedAt: ts("completed_at"),
+    createdAt: ts("created_at").notNull().defaultNow(),
+    updatedAt: ts("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("recharges_buyer_idx").on(t.buyerId, t.createdAt),
+    uniqueIndex("recharges_buyer_client_ref_key").on(t.buyerId, t.clientRef),
+    index("recharges_status_idx").on(t.status, t.operatorCode, t.createdAt),
+  ],
+);

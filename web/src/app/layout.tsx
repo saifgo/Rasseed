@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Analytics } from "@/components/app/analytics";
 import { Clarity } from "@/components/app/clarity";
 import { CONFIDENTIAL_INIT } from "@/components/app/confidential";
@@ -17,13 +17,34 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const arabic = IBM_Plex_Sans_Arabic({ subsets: ["arabic"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-mono" });
 
-export const metadata: Metadata = {
-  title: { default: brand.name, template: `%s · ${brand.name}` },
-  description: brand.tagline.fr,
-  applicationName: brand.name,
-  appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default" },
-  icons: { apple: "/icons/apple-touch-icon.png" },
-};
+const OG_LOCALE = { fr: "fr_TN", ar: "ar_TN", en: "en_US" } as const;
+
+// Read per request so link previews use the public address from AUTH_URL, and the visitor's language.
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const lang = (locale === "ar" || locale === "en" ? locale : "fr") as keyof typeof OG_LOCALE;
+  const t = await getTranslations({ locale, namespace: "landing.hero" });
+  const title = `${brand.name} · ${brand.tagline[lang]}`;
+  const description = t("sub");
+  return {
+    metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3100"),
+    title: { default: title, template: `%s · ${brand.name}` },
+    description,
+    applicationName: brand.name,
+    appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default" },
+    icons: { apple: "/icons/apple-touch-icon.png" },
+    openGraph: {
+      type: "website",
+      siteName: brand.name,
+      title,
+      description,
+      url: "/",
+      locale: OG_LOCALE[lang],
+      alternateLocale: Object.values(OG_LOCALE).filter((l) => l !== OG_LOCALE[lang]),
+    },
+    twitter: { card: "summary_large_image", title, description },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#ffffff",

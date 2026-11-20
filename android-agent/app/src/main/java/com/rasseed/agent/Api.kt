@@ -16,6 +16,8 @@ data class Command(
     val slotIndex: Int,
     /** Operator's balance pattern; null on older servers. */
     val balanceRegex: String? = null,
+    /** ussd_send only: replies to type, in order, into the following USSD menu pages. */
+    val steps: List<String> = emptyList(),
 )
 
 /** Minimal JSON-over-HTTP client for the server's /api/device endpoints. */
@@ -59,9 +61,11 @@ class Api(private val baseUrl: String, private val token: String?) {
         val arr = post("/api/device/sync", body).optJSONArray("commands") ?: JSONArray()
         return (0 until arr.length()).map {
             val c = arr.getJSONObject(it)
+            val steps = c.optJSONArray("steps")
             Command(
                 c.getString("id"), c.getString("type"), c.getString("ussd"), c.getInt("subscriptionId"), c.getInt("slotIndex"),
                 if (c.isNull("balanceRegex")) null else c.optString("balanceRegex").ifEmpty { null },
+                steps?.let { a -> (0 until a.length()).map { i -> a.getString(i) } } ?: emptyList(),
             )
         }
     }

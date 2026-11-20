@@ -6,13 +6,16 @@ import { SalesTable } from "@/components/admin/sales-table";
 import { TimeAgo } from "@/components/admin/time-ago";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardDescription, CardHeader, CardPanel, CardTitle } from "@/components/ui/card";
 import { Frame } from "@/components/ui/frame";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { WalletEntryKind, WithdrawalStatus } from "@/db/schema";
+import { OperatorName } from "@/components/app/operator-badge";
 import { getUserDetail, listSales } from "@/lib/admin-queries";
+import { getUserMarket } from "@/lib/market-admin-queries";
+import { listOperators } from "@/lib/queries";
 import { requireStaff } from "@/lib/session";
-import { AdjustBalanceButton, BlockButton, RoleSelect } from "../user-actions";
+import { AdjustBalanceButton, BlockButton, MarketplaceAccessSwitch, RoleSelect } from "../user-actions";
 import { Secret } from "@/components/app/confidential";
 
 export const metadata = { title: "User" };
@@ -22,6 +25,7 @@ const kindLabel: Record<WalletEntryKind, string> = {
   withdrawal: "Withdrawal requested",
   withdrawal_refund: "Withdrawal rejected — refund",
   adjustment: "Manual adjustment",
+  stock_sale: "Credit sold to Sarfli (marketplace stock)",
 };
 const statusVariant: Record<WithdrawalStatus, "warning" | "success" | "error"> = { pending: "warning", paid: "success", rejected: "error" };
 
@@ -32,7 +36,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const detail = await getUserDetail(id);
   if (!detail) notFound();
   const { user, entries, withdrawals, balanceMillimes } = detail;
-  const sales = await listSales({ userId: user.id, limit: 50 });
+  const [sales, market, ops] = await Promise.all([listSales({ userId: user.id, limit: 50 }), getUserMarket(user.id), listOperators()]);
   const admin = me.role === "admin";
   const self = user.id === me.id;
 
@@ -77,6 +81,57 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           </CardHeader>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Marketplace</CardTitle>
+          <CardDescription>
+            Credit this user owns on Sarfli's SIMs, per operator. Bad marks: <Badge variant={market.badMarks > 0 ? "error" : "secondary"}>{market.badMarks}</Badge>
+            {" · "}Seller rating: {market.rating ? `★ ${market.rating.avg.toFixed(1)} (${market.rating.count})` : "none yet"}
+          </CardDescription>
+          <CardAction>
+            {admin ? (
+              <MarketplaceAccessSwitch userId={user.id} access={user.marketplaceAccess} label="Marketplace access" />
+            ) : (
+              <Badge variant={user.marketplaceAccess ? "success" : "secondary"}>{user.marketplaceAccess ? "Has access" : "No access"}</Badge>
+            )}
+          </CardAction>
+        </CardHeader>
+        <CardPanel className="flex flex-col gap-4">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Operator</TableHead>
+                <TableHead className="text-right">Buyer balance</TableHead>
+                <TableHead className="text-right">Seller stock</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ops.map((op) => (
+                <TableRow key={op.code}>
+                  <TableCell>
+                    <OperatorName name={op.name} color={op.color} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Dt millimes={market.buyer[op.code] ?? 0} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Dt millimes={market.stock[op.code] ?? 0} />
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" render={<Link href={`/admin/market/orders?tab=all&user=${user.id}`} />}>
+              Orders ({market.buyerOrders} as buyer · {market.sellerOrders} as seller)
+            </Button>
+            <Button size="sm" variant="outline" render={<Link href={`/admin/market/recharges?tab=all&user=${user.id}`} />}>
+              Recharges ({market.recharges})
+            </Button>
+          </div>
+        </CardPanel>
+      </Card>
 
       <section className="flex flex-col gap-3">
         <h2 className="font-medium">Withdrawals</h2>

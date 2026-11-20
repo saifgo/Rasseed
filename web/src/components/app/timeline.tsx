@@ -27,16 +27,29 @@ const tone: Record<string, string> = {
   rejected: "bg-destructive",
   expired: "bg-muted-foreground",
   cancelled: "bg-muted-foreground",
+  // Marketplace orders
+  funded: "bg-success",
+  released: "bg-success",
+  reported_not_paid: "bg-warning",
+  flagged_to_admin: "bg-warning",
+  admin_cancelled: "bg-muted-foreground",
 };
 
 function params(data: Record<string, unknown>) {
   const dt = (k: string) => (typeof data[k] === "number" ? formatDinars(data[k] as number) : "");
-  return {
+  const out: Record<string, string> = {
     amount: dt("amountMillimes"),
     missing: dt("missingMillimes"),
     net: dt("netMillimes"),
     msisdn: typeof data.msisdn === "string" ? formatMsisdn(data.msisdn) : "",
   };
+  // Any other "xxxMillimes" amount is available as {xxx}, plain numbers as themselves (e.g. {stars}).
+  for (const [k, v] of Object.entries(data)) {
+    if (typeof v !== "number") continue;
+    if (k.endsWith("Millimes")) out[k.slice(0, -"Millimes".length)] ??= formatDinars(v);
+    else out[k] ??= String(v);
+  }
+  return out;
 }
 
 // Messages use plain {placeholders}, so the values are swapped for markers, then each marker is
@@ -59,9 +72,17 @@ function withSecrets(translate: (values: Record<string, string>) => string, valu
     });
 }
 
-/** Seller-facing timeline. With `showInternal`, also lists raw internal events (admin view). */
-export function Timeline({ events, showInternal = false }: { events: TimelineEvent[]; showInternal?: boolean }) {
-  const t = useTranslations("events");
+/** Seller-facing timeline. With `showInternal`, also lists raw internal events (admin view). `namespace` holds the event texts. */
+export function Timeline({
+  events,
+  showInternal = false,
+  namespace = "events",
+}: {
+  events: TimelineEvent[];
+  showInternal?: boolean;
+  namespace?: string;
+}) {
+  const t = useTranslations(namespace);
   const format = useFormatter();
   const visible = events.filter((e) => showInternal || (!e.internal && t.has(e.type)));
   return (

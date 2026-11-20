@@ -29,6 +29,27 @@
       "when": 1793452870556,
       "tag": "0003_withdrawal_send_amount",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794308840394,
+      "tag": "0004_buyer_marketplace",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794692688829,
+      "tag": "0005_buyer_spending_resale_sarfli_use",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1795177886324,
+      "tag": "0006_pos_limits",
+      "breakpoints": true
     }
   ]
 }

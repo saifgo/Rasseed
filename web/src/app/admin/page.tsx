@@ -69,6 +69,32 @@ export default async function AdminOverview() {
         />
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Orders in admin review"
+          value={<Secret>{counts.orderReview}</Secret>}
+          hint={counts.orderReview > 0 ? <Link className="underline" href="/admin/market/orders?tab=admin_review">Decide disputes</Link> : "No dispute"}
+        />
+        <StatCard
+          label="Sarfli orders to confirm"
+          value={<Secret>{counts.sarfliAwaiting}</Secret>}
+          hint={
+            counts.sarfliAwaiting > 0 ? (
+              <Link className="underline" href="/admin/market/orders?tab=attention">
+                Check payments and release
+              </Link>
+            ) : (
+              "No payment waiting"
+            )
+          }
+        />
+        <StatCard
+          label="Recharges in review"
+          value={<Secret>{counts.rechargeReview}</Secret>}
+          hint={counts.rechargeReview > 0 ? <Link className="underline" href="/admin/market/recharges?tab=review">Resolve recharges</Link> : "Nothing to resolve"}
+        />
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>

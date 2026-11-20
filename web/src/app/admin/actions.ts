@@ -2,7 +2,9 @@
 
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { devLoginEnabled, signOut } from "@/auth";
 import { db } from "@/db";
+import { resetAndSeed } from "@/db/seed-data";
 import { devices, operators, payoutMethods, USER_ROLES, users, type UserRole } from "@/db/schema";
 import {
   applyCredit,
@@ -15,6 +17,9 @@ import {
 } from "@/lib/engine/admin";
 import { EngineError } from "@/lib/engine/core";
 import { createPairingCode } from "@/lib/engine/device";
+import { adjustSarfliCredit, adminCancel, adminRelease, upsertSarfliListing } from "@/lib/engine/market";
+import { createPackage, updatePackage } from "@/lib/engine/packages";
+import { resolveRecharge } from "@/lib/engine/recharge";
 import { adjustBalance, attachWithdrawalProof, markWithdrawalPaid, rejectWithdrawal, setWithdrawalNote } from "@/lib/engine/wallet";
 import { parseDinars, parsePercent, parseRate } from "@/lib/money";
 import { parseBalance, parseCreditSms } from "@/lib/parsers";
@@ -130,6 +135,58 @@ export async function setUserBlockedAction(userId: string, blocked: boolean) {
   });
 }
 
+export async function setMarketplaceAccessAction(userId: string, access: boolean) {
+  return admin(async () => {
+    await db.update(users).set({ marketplaceAccess: access }).where(eq(users.id, userId));
+    return null;
+  });
+}
+
+// --- Marketplace -------------------------------------------------------------
+
+export async function releaseOrderAction(orderId: string, note: string) {
+  return staff(async (id) => {
+    await adminRelease(id, orderId, note);
+    return null;
+  });
+}
+
+export async function cancelOrderAction(orderId: string, note: string) {
+  return staff(async (id) => {
+    await adminCancel(id, orderId, note);
+    return null;
+  });
+}
+
+export async function resolveRechargeAction(rechargeId: string, outcome: "succeeded" | "failed", note: string) {
+  return staff(async (id) => {
+    if (outcome !== "succeeded" && outcome !== "failed") throw new EngineError("invalid_state");
+    await resolveRecharge(id, rechargeId, outcome, note);
+    return null;
+  });
+}
+
+/** Signed amount in DT ("-12.5" removes credit). Admin only: it creates or removes Sarfli credit in the ledger. */
+export async function adjustSarfliCreditAction(operatorCode: string, amountDinars: string, note: string) {
+  return admin(async (id) => {
+    const s = amountDinars.trim().replace(/\s/g, "");
+    const negative = s.startsWith("-");
+    const amount = parseDinars(s.replace(/^[+-]/, ""));
+    if (!amount) throw new EngineError("invalid_amount");
+    await adjustSarfliCredit(id, operatorCode, negative ? -amount : amount, note);
+    return null;
+  });
+}
+
+export async function saveSarfliListingAction(operatorCode: string, values: { price: string; paymentInfo: string; active: boolean }) {
+  return admin(async () => {
+    const priceBps = parseRate(values.price);
+    if (!priceBps) throw new EngineError("invalid_rate");
+    await upsertSarfliListing({ operatorCode, priceBps, paymentInfo: values.paymentInfo, active: values.active });
+    return null;
+  });
+}
+
 // --- Credits -----------------------------------------------------------------
 
 export async function applyCreditAction(creditId: string, txRef: string) {
@@ -215,9 +272,25 @@ export async function updateOperatorAction(
     creditSmsSenders: string;
     balanceRegex: string;
     balanceUnit: "auto" | "millimes" | "dinars";
+    rechargeUssdTemplate: string;
+    rechargeUssdSteps: string;
   },
 ) {
   return admin(async () => {
+    // Recharge USSD: empty template = recharges off. Otherwise the dialog must carry the number and the amount.
+    const rechargeTemplate = values.rechargeUssdTemplate.trim();
+    const rechargeSteps = rechargeTemplate
+      ? values.rechargeUssdSteps
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .slice(0, 10)
+      : [];
+    if (rechargeTemplate) {
+      const all = [rechargeTemplate, ...rechargeSteps].join("\n");
+      if (!all.includes("{number}")) throw new EngineError("recharge_needs_number");
+      if (!all.includes("{millimes}") && !all.includes("{dinars}")) throw new EngineError("recharge_needs_amount");
+    }
     for (const re of [values.creditSmsRegex, values.balanceRegex]) {
       try {
         new RegExp(re, "iu");
@@ -244,6 +317,8 @@ export async function updateOperatorAction(
           .filter(Boolean),
         balanceRegex: values.balanceRegex,
         balanceUnit: values.balanceUnit,
+        rechargeUssdTemplate: rechargeTemplate || null,
+        rechargeUssdSteps: rechargeSteps,
         updatedAt: new Date(),
       })
       .where(eq(operators.code, code));
@@ -281,6 +356,26 @@ export async function saveSettingsAction(values: Partial<AppSettings>) {
   });
 }
 
+/** Per-operator cap on one plain (Light) recharge sent from a POS. Empty = no cap. Values in DT. */
+export async function savePosRechargeLimitsAction(values: Record<string, string>) {
+  return admin(async () => {
+    const parsed: [string, number | null][] = [];
+    for (const [code, raw] of Object.entries(values)) {
+      if (!raw.trim()) {
+        parsed.push([code, null]);
+        continue;
+      }
+      const millimes = parseDinars(raw);
+      if (!millimes) throw new EngineError("invalid_amount");
+      parsed.push([code, millimes]);
+    }
+    for (const [code, millimes] of parsed) {
+      await db.update(operators).set({ posMaxRechargeMillimes: millimes, updatedAt: new Date() }).where(eq(operators.code, code));
+    }
+    return null;
+  });
+}
+
 export async function updatePayoutMethodAction(
   code: string,
   values: { active: boolean; feeType: "fixed" | "percent"; fee: string },
@@ -299,4 +394,57 @@ export async function updatePayoutMethodAction(
     await db.update(payoutMethods).set({ active: values.active, feeMillimes, feeBps }).where(eq(payoutMethods.code, code));
     return null;
   });
+}
+
+// --- Data packages (admin) ----------------------------------------------------
+
+export type PackageFormValues = {
+  name: string;
+  price: string;
+  ussdTemplate: string;
+  ussdSteps: string;
+  active: boolean;
+  sortOrder: string;
+};
+
+function packageInput(v: PackageFormValues) {
+  const priceMillimes = parseDinars(v.price);
+  if (!priceMillimes) throw new EngineError("invalid_amount");
+  return {
+    name: v.name,
+    priceMillimes,
+    ussdTemplate: v.ussdTemplate,
+    ussdSteps: v.ussdSteps.split("\n").map((l) => l.trim()),
+    active: v.active,
+    sortOrder: Number.parseInt(v.sortOrder, 10) || 0,
+  };
+}
+
+export async function createPackageAction(operatorCode: string, values: PackageFormValues) {
+  return admin(async () => createPackage({ operatorCode, ...packageInput(values) }));
+}
+
+export async function updatePackageAction(id: string, values: PackageFormValues) {
+  return admin(async () => {
+    await updatePackage(id, packageInput(values));
+    return null;
+  });
+}
+
+// --- Dev tools ---------------------------------------------------------------
+
+/** Dev only (same switch as the password-less login): wipes the database, seeds demo data and signs out. */
+export async function devResetDatabaseAction(): Promise<AdminResult> {
+  if (!devLoginEnabled) return { ok: false, error: "forbidden" };
+  const user = await getCurrentUser();
+  if (!user || !isAdmin(user)) return { ok: false, error: "forbidden" };
+  try {
+    await resetAndSeed();
+  } catch (e) {
+    console.error("[dev reset]", e);
+    return { ok: false, error: "unknown" };
+  }
+  // Every user (and so this session's user) was deleted: log in again with the dev login.
+  await signOut({ redirectTo: "/login" });
+  return { ok: true, data: null };
 }

@@ -7,7 +7,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
+import android.os.SystemClock
 import android.provider.Settings
 import android.telecom.PhoneAccount
 import android.telecom.PhoneAccountHandle
@@ -17,6 +20,7 @@ import android.telephony.TelephonyManager
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import java.text.Normalizer
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -27,6 +31,9 @@ import java.util.concurrent.TimeUnit
  * The code is dialled like a normal call on the right SIM; this service reads the popup text and
  * presses Cancel to close the session. When the balance isn't on the page but the menu offers a next
  * page ("01:Page suivante"), it types that option, sends it and reads the following page too.
+ *
+ * Scripted mode (credit sends): instead of the next-page logic, each new page gets the next scripted
+ * reply typed and sent; the page after the last reply is recorded and the session closed.
  */
 class UssdAccessibilityService : AccessibilityService() {
 
@@ -41,37 +48,96 @@ class UssdAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {}
 
+    private val handler = Handler(Looper.getMainLooper())
+
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         val capture = pending ?: return
         val pkg = event.packageName?.toString() ?: return
         if (!USSD_PACKAGES.any { pkg.contains(it) }) return
         val root = rootInActiveWindow ?: event.source ?: return
+        val text = pageText(root) ?: return
+        if (text == capture.lastPage) return // previous page still on screen after we pressed Send
+        // A new page fires several events while the dialog is still being rebuilt (on Ooredoo the
+        // reply field is reset after the text shows). Answering on the first one typed into a field
+        // that was then cleared, so the second reply went out empty: wait until the page is stable.
+        handler.removeCallbacksAndMessages(capture)
+        handler.postAtTime({ onPageSettled(capture) }, capture, SystemClock.uptimeMillis() + SETTLE_MS)
+    }
+
+    private fun onPageSettled(capture: Capture) {
+        if (pending !== capture) return
+        val root = rootInActiveWindow ?: return
+        val pkg = root.packageName?.toString() ?: return
+        if (!USSD_PACKAGES.any { pkg.contains(it) }) return
+        val text = pageText(root) ?: return
+        if (text == capture.lastPage) return
+        capture.lastPage = text
+        capture.pages += text
+        val script = capture.replies
+        if (script != null) {
+            // "?text" steps check this page before anything is typed into it, e.g. Ooredoo only lists
+            // "4:Flexi 30J et plus" for numbers that can take the package. No match: close, buy nothing.
+            while (script.peek()?.startsWith(CHECK_PREFIX) == true) {
+                val expected = script.poll()!!.removePrefix(CHECK_PREFIX)
+                if (!pageHas(text, expected)) {
+                    capture.error = MENU_CHECK_FAILED
+                    return finish(capture, root)
+                }
+            }
+            val next = script.poll() ?: return finish(capture, root) // final page: record and close
+            if (reply(root, next)) return // wait for the next page
+            capture.error = "reply_failed_at_step_${capture.stepCount - script.size}"
+            return finish(capture, root)
+        }
+        val option = if (capture.pages.size < MAX_PAGES) nextPageOption(capture.allText(), text, capture.balance) else null
+        if (option != null && reply(root, option)) return // wait for the next page
+        finish(capture, root)
+    }
+
+    /** The popup's message text, or null while it is empty or still "USSD code running…". */
+    private fun pageText(root: AccessibilityNodeInfo): String? {
         val texts = mutableListOf<String>()
         collectTexts(root, texts)
         val text = texts.joinToString("\n").trim()
-        if (text.length < 5 || PROGRESS.containsMatchIn(text)) return // "USSD code running…"
-        if (text == capture.lastPage) return // previous page still on screen after we pressed Send
-        capture.lastPage = text
-        capture.pages += text
-        val option = if (capture.pages.size < MAX_PAGES) nextPageOption(capture.allText(), text, capture.balance) else null
-        if (option != null && reply(root, option)) return // wait for the next page
+        return if (text.length < 5 || PROGRESS.containsMatchIn(text)) null else text
+    }
+
+    private fun finish(capture: Capture, root: AccessibilityNodeInfo) {
+        handler.removeCallbacksAndMessages(capture)
         pending = null
         dismiss(root)
         capture.finish()
     }
 
-    /** Types [option] (e.g. "01") into the USSD popup and presses Send. */
+    /**
+     * Types [option] (e.g. "01") into the USSD popup and presses Send. Never presses Send unless the
+     * field really holds [option]: an empty reply would move the operator menu on with no answer.
+     */
     private fun reply(root: AccessibilityNodeInfo, option: String): Boolean {
-        val input = findEditable(root) ?: return false
         val args = Bundle().apply {
             putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, option)
         }
-        if (!input.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)) return false
+        var typed = false
+        for (attempt in 0 until 3) {
+            if (attempt > 0) {
+                Thread.sleep(250) // field still being rebuilt: give it a moment
+                root.refresh()
+            }
+            val input = findEditable(root) ?: continue
+            input.performAction(AccessibilityNodeInfo.ACTION_FOCUS)
+            input.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
+            input.refresh()
+            if (input.text?.toString()?.trim() == option) {
+                typed = true
+                break
+            }
+        }
+        if (!typed) return false
         for (label in SEND_LABELS) {
             for (node in root.findAccessibilityNodeInfosByText(label)) {
                 var n: AccessibilityNodeInfo? = node
                 while (n != null && !n.isClickable) n = n.parent
-                if (n != null && n.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
+                if (n != null && n.isEnabled && n.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
             }
         }
         return false
@@ -99,7 +165,11 @@ class UssdAccessibilityService : AccessibilityService() {
         performGlobalAction(GLOBAL_ACTION_BACK)
     }
 
-    private class Capture(val balance: Regex?) {
+    /** [replies] is non-null in scripted mode: what to type into each following page, in order. */
+    private class Capture(val balance: Regex?, steps: List<String>? = null) {
+        val replies = steps?.let { ConcurrentLinkedQueue(it) }
+        val stepCount = steps?.size ?: 0
+        @Volatile var error: String? = null
         val latch = CountDownLatch(1)
         // Written on the main thread, read by the waiting worker on timeout.
         val pages = CopyOnWriteArrayList<String>()
@@ -128,6 +198,22 @@ class UssdAccessibilityService : AccessibilityService() {
             RegexOption.IGNORE_CASE,
         )
         private const val MAX_PAGES = 4
+        /** A scripted step starting with this is a check on the page, not a reply. */
+        private const val CHECK_PREFIX = "?"
+        /** Error when a check step failed. The session was closed before any purchase. */
+        const val MENU_CHECK_FAILED = "menu_check_failed"
+
+        /** [expected] is on [page], ignoring case, accents and spacing ("4: Flexi 30J" = "4:Flexi 30j"). */
+        fun pageHas(page: String, expected: String): Boolean {
+            fun squash(s: String) = Normalizer.normalize(s, Normalizer.Form.NFD)
+                .replace(Regex("\\p{M}+"), "")
+                .replace(Regex("\\s+"), "")
+                .lowercase()
+            val want = squash(expected)
+            return want.isNotEmpty() && squash(page).contains(want)
+        }
+        /** Quiet time after the last popup change before a page is read and answered. */
+        private const val SETTLE_MS = 700L
 
         /** Compiles the operator's balance pattern (server sends the JS regex; the syntax used is Java-compatible). */
         fun balancePattern(regex: String?): Regex? = try {
@@ -149,6 +235,9 @@ class UssdAccessibilityService : AccessibilityService() {
         /** True when the service is actually connected, not just switched on in Settings. */
         fun isRunning() = instance != null
 
+        /** Like [isRunning], but gives Android a few seconds to (re)bind the service first. */
+        fun awaitRunning(waitMs: Long = 5000) = awaitInstance(waitMs) != null
+
         /**
          * The connected service, waiting briefly in case Android is still (re)binding it. Null when the
          * toggle is on but the service never connected (typical after an app update or a battery kill).
@@ -164,7 +253,11 @@ class UssdAccessibilityService : AccessibilityService() {
             return enabled.split(':').any { it.startsWith(context.packageName + "/") }
         }
 
-        /** Dials the USSD on the given SIM and returns the popup text, or an error code. Not on the main thread. */
+        /**
+         * Dials the USSD on the given SIM and returns the popup text, or an error code. Not on the main thread.
+         * With [replies] (scripted mode, may be empty) it types them into the following pages instead of
+         * looking for the balance, and any incomplete run is reported as a failure with the text seen.
+         */
         @SuppressLint("MissingPermission")
         fun run(
             context: Context,
@@ -172,12 +265,13 @@ class UssdAccessibilityService : AccessibilityService() {
             code: String,
             balanceRegex: String? = null,
             timeoutSeconds: Long = 60,
+            replies: List<String>? = null,
         ): Telephony.UssdResult {
             val service = awaitInstance()
                 ?: return Telephony.UssdResult(false, null, "accessibility_not_running")
             val handle = phoneAccountFor(context, subscriptionId)
                 ?: return Telephony.UssdResult(false, null, "no_phone_account_for_sim")
-            val capture = Capture(balancePattern(balanceRegex))
+            val capture = if (replies != null) Capture(null, replies) else Capture(balancePattern(balanceRegex))
             pending = capture
             // The popup may not render while the screen is off.
             @Suppress("DEPRECATION")
@@ -196,6 +290,15 @@ class UssdAccessibilityService : AccessibilityService() {
             } finally {
                 pending = null
                 if (wake.isHeld) wake.release()
+            }
+            if (replies != null) {
+                // Scripted: only a run that reached its final page counts as done.
+                val seen = capture.allText().ifEmpty { null }
+                return when {
+                    capture.error != null -> Telephony.UssdResult(false, seen, capture.error)
+                    capture.result == null -> Telephony.UssdResult(false, seen, "popup_timeout")
+                    else -> Telephony.UssdResult(true, capture.result, null)
+                }
             }
             // Timed out waiting for a later page: report the pages read so far.
             val text = capture.result

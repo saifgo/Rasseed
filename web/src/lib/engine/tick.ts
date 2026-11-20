@@ -4,6 +4,7 @@ import { deviceCommands, sims, transactions } from "@/db/schema";
 import { getSettings } from "@/lib/settings";
 import { enqueueBalanceCheck, finalize, lockSim, lockTx, logEvent, releaseSim, updateTx } from "./core";
 import { onCommandFailure } from "./device";
+import { assignRecharges } from "./recharge";
 import { assignQueued } from "./sales";
 
 /** Time-based work. Safe to run concurrently: every step locks the rows it changes. */
@@ -13,21 +14,32 @@ export async function tick() {
 
   // 1. USSD commands that never came back.
   const timeoutBefore = new Date(now.getTime() - settings.commandTimeoutSeconds * 1000);
+  // A recharge send can walk several USSD pages, each up to the phone's own 90 s: give it longer.
+  const sendTimeoutBefore = new Date(now.getTime() - Math.max(settings.commandTimeoutSeconds * 4, 360) * 1000);
+  const expired = sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.notBefore}) < case when ${deviceCommands.type} = 'ussd_send' then ${sendTimeoutBefore.toISOString()}::timestamptz else ${timeoutBefore.toISOString()}::timestamptz end`;
   const stale = await db
     .select({ id: deviceCommands.id })
     .from(deviceCommands)
     .where(
       and(
         inArray(deviceCommands.status, ["pending", "sent"]),
-        lt(sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.notBefore})`, timeoutBefore.toISOString()),
+        expired,
       ),
     );
   for (const { id } of stale) {
+    // One bad command must never stop the rest of the tick (expiries, polling, assignment).
     await db.transaction(async (t) => {
       const [cmd] = await t
         .select()
         .from(deviceCommands)
-        .where(and(eq(deviceCommands.id, id), inArray(deviceCommands.status, ["pending", "sent"])))
+        .where(
+          and(
+            eq(deviceCommands.id, id),
+            inArray(deviceCommands.status, ["pending", "sent"]),
+            // Re-check the age under the lock: the phone may have just picked it up.
+            expired,
+          ),
+        )
         .for("update", { skipLocked: true });
       if (!cmd) return;
       await t
@@ -36,7 +48,7 @@ export async function tick() {
         .where(eq(deviceCommands.id, cmd.id));
       const sim = await lockSim(t, cmd.simId);
       if (sim) await onCommandFailure(t, cmd, sim, settings);
-    });
+    }).catch((err) => console.error("[tick] command timeout failed", id, err));
   }
 
   // 2. Hold window over.
@@ -104,4 +116,7 @@ export async function tick() {
 
   // 5. Fill free numbers.
   await assignQueued();
+
+  // 6. Buyer recharges waiting for a SIM.
+  await assignRecharges();
 }

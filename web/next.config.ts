@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["postgres"],
   // Payment proofs (images/PDF up to 5 MB) are uploaded through a server action.
   experimental: { serverActions: { bodySizeLimit: "6mb" } },
+  // The marketplace moved: buyers live under /buy, sellers under /selling, orders under /orders.
+  async redirects() {
+    return [
+      { source: "/market", destination: "/buy", permanent: false },
+      { source: "/market/recharge", destination: "/buy/recharge", permanent: false },
+      { source: "/market/selling", destination: "/selling", permanent: false },
+      { source: "/market/orders/:id", destination: "/orders/:id", permanent: false },
+    ];
+  },
   // Browsers must always re-check the service worker so updates reach installed apps.
   async headers() {
     return [

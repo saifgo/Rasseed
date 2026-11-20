@@ -27,6 +27,19 @@ const messages: Record<string, string> = {
   unsupported_file_type: "Proof must be a JPG, PNG, WEBP or PDF.",
   file_too_large: "Proof file is larger than 5 MB.",
   file_missing: "Choose a file first.",
+  recharge_needs_number: "The recharge USSD (template or replies) must contain {number}.",
+  recharge_needs_amount: "The recharge USSD (template or replies) must contain {millimes} or {dinars}.",
+  payment_info_required: "Write the payment instructions before activating the listing.",
+  operator_unavailable: "Unknown or disabled operator.",
+  sarfli_credit_insufficient: "Sarfli's credit for this operator would go below zero.",
+  insufficient_credit: "Not enough credit in the ledger for this.",
+  order_not_balanced: "The order's funded amount does not match its amount — check the ledger before releasing.",
+  cannot_cancel: "This order can no longer be cancelled.",
+  name_required: "Write a name first.",
+  command_outstanding: "A phone still holds a command for this recharge. Wait for its result (or timeout), then decide.",
+  ussd_required: "Write the USSD code first.",
+  package_needs_number: "The package USSD (code or replies) must contain {number}.",
+  empty_menu_check: "A ? line needs the text the menu page must contain, e.g. ?4:Flexi 30J et plus.",
 };
 
 export function errorMessage(code: string) {

@@ -7,7 +7,9 @@ import { OperatorLogo } from "@/components/app/operator-badge";
 import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
+import { fundableOrders } from "@/lib/engine/market";
 import { getBalance } from "@/lib/engine/wallet";
+import { hasMarketAccess } from "@/lib/market-queries";
 import { grossPayout } from "@/lib/money";
 import { getOngoingSale, listOperators } from "@/lib/queries";
 import { requireUser } from "@/lib/session";
@@ -16,11 +18,27 @@ import { SellForm } from "./sell-form";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Sell" };
 
-export default async function SellPage({ searchParams }: { searchParams: Promise<{ op?: string }> }) {
+export default async function SellPage({ searchParams }: { searchParams: Promise<{ op?: string; order?: string }> }) {
   const user = await requireUser();
   const t = await getTranslations("sell");
-  const { op } = await searchParams;
-  const [ops, balance, ongoing] = await Promise.all([listOperators(), getBalance(db, user.id), getOngoingSale(user.id)]);
+  const tm = await getTranslations("market");
+  const { op, order } = await searchParams;
+  const [ops, balance, ongoing, market] = await Promise.all([
+    listOperators(),
+    getBalance(db, user.id),
+    getOngoingSale(user.id),
+    hasMarketAccess(user),
+  ]);
+  // Buyer orders waiting for this seller's credit (marketplace).
+  const orders = market
+    ? (await fundableOrders(user.id)).map((o) => ({
+        id: o.id,
+        ref: o.ref,
+        operatorCode: o.operatorCode,
+        missingMillimes: Math.max(0, o.amountMillimes - o.fundedMillimes),
+      }))
+    : [];
+  const initialOrder = orders.find((o) => o.id === order);
 
   // Only one sale at a time: send the seller back to the one in progress.
   if (ongoing) {
@@ -43,14 +61,18 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
               <div className="flex flex-wrap items-baseline gap-x-2">
                 <Dt compact millimes={tx.declaredMillimes} className="font-semibold text-lg" />
                 <ArrowRightIcon aria-hidden="true" className="size-4 self-center text-muted-foreground rtl:rotate-180" />
-                <Dt
-                  compact
-                  millimes={grossPayout(tx.declaredMillimes, tx.rateBps)}
-                  className="font-bold text-emerald-700 text-lg dark:text-emerald-400"
-                />
+                {tx.orderId ? (
+                  <span className="font-semibold text-muted-foreground">{tm("toBuyerOrder")}</span>
+                ) : (
+                  <Dt
+                    compact
+                    millimes={grossPayout(tx.declaredMillimes, tx.rateBps)}
+                    className="font-bold text-emerald-700 text-lg dark:text-emerald-400"
+                  />
+                )}
               </div>
               <div>
-                <StatusBadge status={tx.status} />
+                <StatusBadge status={tx.status} toOrder={Boolean(tx.orderId)} />
               </div>
             </div>
           </Link>
@@ -69,7 +91,9 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
       <SellForm
         operators={ops.map((o) => ({ code: o.code, name: o.name, color: o.color, rateBps: o.rateBps, active: o.active }))}
         balanceMillimes={balance}
-        initialOp={op}
+        initialOp={initialOrder?.operatorCode ?? op}
+        orders={orders}
+        initialOrderId={initialOrder?.id}
       />
     </div>
   );

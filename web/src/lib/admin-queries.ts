@@ -20,12 +20,13 @@ import {
   type TxStatus,
   type WithdrawalStatus,
 } from "@/db/schema";
+import { getMarketCounts } from "@/lib/market-admin-queries";
 import { getSettings } from "@/lib/settings";
 
 export async function getAdminCounts() {
   const settings = await getSettings();
   const onlineSince = new Date(Date.now() - settings.deviceOfflineSeconds * 1000);
-  const [[review], [pay], [cred], [simAlerts]] = await Promise.all([
+  const [[review], [pay], [cred], [simAlerts], market] = await Promise.all([
     db.select({ n: count() }).from(transactions).where(eq(transactions.status, "review")),
     db.select({ n: count() }).from(withdrawals).where(eq(withdrawals.status, "pending")),
     db.select({ n: count() }).from(credits).where(inArray(credits.status, ["late", "unmatched"])),
@@ -44,8 +45,17 @@ export async function getAdminCounts() {
           ),
         ),
       ),
+    getMarketCounts(),
   ]);
-  return { review: review.n, withdrawals: pay.n, credits: cred.n, numbersAlert: simAlerts.n };
+  return {
+    review: review.n,
+    withdrawals: pay.n,
+    credits: cred.n,
+    numbersAlert: simAlerts.n,
+    // Orders waiting for an admin: disputes and Sarfli-listing payments to confirm.
+    marketOrders: market.orderReview + market.sarfliAwaiting,
+    ...market,
+  };
 }
 
 export async function getOverview() {

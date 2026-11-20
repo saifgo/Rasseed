@@ -13,8 +13,8 @@ import { formatDt, formatPercent, grossPayout } from "@/lib/money";
 import { listOperators, listPayoutMethods } from "@/lib/queries";
 import { getCurrentUser } from "@/lib/session";
 import { getSettings } from "@/lib/settings";
-import notes10 from "../../../public/landing/10-dinars.jpg";
-import notes5 from "../../../public/landing/5-dinars.jpg";
+import note100 from "../../../public/landing/monopoly-100.jpg";
+import note500 from "../../../public/landing/monopoly-500.jpg";
 import coins from "../../../public/landing/coins.jpg";
 import laPoste from "../../../public/landing/la-poste.jpg";
 import taxiphone from "../../../public/landing/taxiphone.jpg";
@@ -32,11 +32,10 @@ function inkFor(hex: string) {
   return (1.05 / (lum + 0.05)) >= 4.5 ? "#ffffff" : "#111111";
 }
 
-const PAYOUT_LOGOS: Record<string, string> = { d17: "/payout/d17.png", flouci: "/payout/flouci.svg" };
+const PAYOUT_LOGOS: Record<string, string> = { d17: "/payout/d17.png", flouci: "/payout/flouci.svg", izi: "/payout/izi.svg" };
 
 const CREDITS = [
-  { title: "10 Dinars TND Tawhida Ben Cheikh", by: "DrRachT", licence: "CC BY-SA 4.0", href: "https://commons.wikimedia.org/w/index.php?curid=122516725" },
-  { title: "5 Dinars, Aqueducs de Zaghouan", by: "DrRachT", licence: "CC BY-SA 4.0", href: "https://commons.wikimedia.org/w/index.php?curid=122516726" },
+  { title: "Monopolygeld (latere variant)", by: "Pat boen", licence: "CC BY-SA 4.0", href: "https://commons.wikimedia.org/wiki/File:Monopolygeld_(latere_variant).jpg" },
   { title: "Plaque montrant un Taxiphone", by: "Sami Mlouhi", licence: "CC BY-SA 4.0", href: "https://commons.wikimedia.org/w/index.php?curid=50384136" },
   { title: "File d’attente, La Poste tunisienne, Sayada", by: "Habib M’henni", licence: "CC BY-SA 4.0", href: "https://commons.wikimedia.org/w/index.php?curid=61969825" },
   { title: "Tunisian Dinars", by: "josbert.lonnee", licence: "public domain", href: "https://www.flickr.com/photos/98552965@N05/27209936693" },
@@ -166,8 +165,8 @@ export default async function HomePage() {
 
         <div className="lp-notes" data-chapter="green">
           <figure className="lp-notes__fig" aria-label={t("hero.notesAlt")}>
-            <Image src={notes10} alt="" className="lp-notes__a" data-drift="-1" sizes="(max-width: 700px) 80vw, 46vw" priority />
-            <Image src={notes5} alt="" className="lp-notes__b" data-drift="1" sizes="(max-width: 700px) 70vw, 40vw" />
+            <Image src={note500} alt="" className="lp-notes__a" data-drift="-1" sizes="(max-width: 700px) 80vw, 46vw" priority />
+            <Image src={note100} alt="" className="lp-notes__b" data-drift="1" sizes="(max-width: 700px) 70vw, 40vw" />
           </figure>
         </div>
 

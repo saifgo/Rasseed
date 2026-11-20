@@ -4,6 +4,7 @@ import { AdminSidebar } from "@/components/admin/admin-nav";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { getAdminCounts } from "@/lib/admin-queries";
 import { requireStaff } from "@/lib/session";
+import { testPhoneEnabled } from "@/lib/test-phone";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: { default: "Admin", template: "%s · Admin" } };
@@ -16,7 +17,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div dir="ltr" lang="en" className="contents">
       <SidebarProvider>
-        <AdminSidebar counts={counts} role={user.role} name={user.name ?? user.email ?? ""} />
+        <AdminSidebar
+          counts={counts}
+          role={user.role}
+          name={user.name ?? user.email ?? ""}
+          showTestPhone={user.role === "admin" && testPhoneEnabled()}
+        />
         <SidebarInset>
           <header className="flex h-12 items-center gap-2 border-b px-4 md:hidden">
             <SidebarTrigger />

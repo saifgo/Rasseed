@@ -4,6 +4,7 @@ import {
   ACTIVE_TX_STATUSES,
   devices,
   operators,
+  orders,
   sims,
   transactions,
 } from "@/db/schema";
@@ -22,6 +23,8 @@ export type CreateSaleInput = {
   operatorCode: string;
   amountMillimes: number;
   senderMsisdn: string;
+  /** Deposit this transfer to one of the seller's open buyer orders instead of selling it to Sarfli. */
+  orderId?: string | null;
 };
 
 export async function createSale(userId: string, input: CreateSaleInput) {
@@ -53,6 +56,13 @@ export async function createSale(userId: string, input: CreateSaleInput) {
       .where(and(eq(transactions.senderMsisdn, sender), inArray(transactions.status, ACTIVE_TX_STATUSES)));
     if (busy.length > 0) throw new EngineError("sender_busy");
 
+    if (input.orderId) {
+      const [order] = await t.select().from(orders).where(eq(orders.id, input.orderId));
+      if (!order || order.sellerId !== userId) throw new EngineError("not_found");
+      if (order.status !== "funding") throw new EngineError("order_not_funding");
+      if (order.operatorCode !== op.code) throw new EngineError("order_operator_mismatch");
+    }
+
     const [row] = await t
       .insert(transactions)
       .values({
@@ -63,11 +73,13 @@ export async function createSale(userId: string, input: CreateSaleInput) {
         senderMsisdn: sender,
         rateBps: op.rateBps,
         status: "queued",
+        orderId: input.orderId ?? null,
       })
       .returning({ id: transactions.id });
     await logEvent(t, row.id, "created", "seller", {
       declaredMillimes: input.amountMillimes,
       rateBps: op.rateBps,
+      ...(input.orderId ? { orderId: input.orderId } : {}),
     });
     return row.id;
   });
@@ -108,6 +120,7 @@ export async function assignQueued(operatorCode?: string) {
               eq(sims.status, "active"),
               eq(sims.operatorCode, code),
               isNull(sims.heldByTxId),
+              isNull(sims.heldByRechargeId),
               or(isNull(sims.cooldownUntil), lt(sims.cooldownUntil, new Date())),
               lt(sims.consecutiveFailures, settings.maxSimFailures),
               gt(sims.lastReportedAt, onlineSince),

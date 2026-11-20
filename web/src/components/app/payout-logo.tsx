@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 const logos: Record<string, { src: string; tile: string; img: string }> = {
   d17: { src: "/payout/d17.png", tile: "bg-[#0b2447]", img: "w-[84%]" },
   flouci: { src: "/payout/flouci.svg", tile: "bg-white", img: "size-full" },
+  izi: { src: "/payout/izi.svg", tile: "bg-white ring-1 ring-border ring-inset", img: "w-[78%]" },
 };
 
 /** Square logo tile for a withdrawal method (D17, Flouci, postal money order…). */

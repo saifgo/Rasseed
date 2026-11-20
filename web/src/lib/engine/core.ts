@@ -1,10 +1,11 @@
-import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 import type { DbTx } from "@/db";
 import {
   balanceSnapshots,
   credits,
   deviceCommands,
   operators,
+  recharges,
   sims,
   transactionEvents,
   transactions,
@@ -12,6 +13,7 @@ import {
 } from "@/db/schema";
 import { grossPayout } from "@/lib/money";
 import type { AppSettings } from "@/lib/settings";
+import { fundOrderFromTransfer, recordSaleToSarfli } from "./market";
 import { addEntry } from "./wallet";
 
 export class EngineError extends Error {
@@ -96,7 +98,8 @@ export async function finalize(
   actor: "system" | "seller" | "admin",
   reason: string,
 ) {
-  const gross = grossPayout(finalMillimes, tx.rateBps);
+  // A transfer deposited to a buyer's order funds the order; the seller is paid by the buyer, not by Sarfli.
+  const gross = tx.orderId ? 0 : grossPayout(finalMillimes, tx.rateBps);
   await updateTx(db, tx.id, {
     status: "confirmed",
     finalMillimes,
@@ -105,8 +108,13 @@ export async function finalize(
     completedAt: new Date(),
     reviewReason: null,
   });
-  if (gross > 0) {
-    await addEntry(db, { userId: tx.userId, kind: "sale", amountMillimes: gross, txId: tx.id });
+  if (tx.orderId) {
+    await fundOrderFromTransfer(db, tx, finalMillimes, actor);
+  } else {
+    if (gross > 0) {
+      await addEntry(db, { userId: tx.userId, kind: "sale", amountMillimes: gross, txId: tx.id });
+    }
+    await recordSaleToSarfli(db, tx, finalMillimes);
   }
   await releaseSim(db, tx.simId, settings);
   await logEvent(db, tx.id, "confirmed", actor, { finalMillimes, grossMillimes: gross, netMillimes: gross, reason });
@@ -211,7 +219,19 @@ export async function recordSnapshot(db: DbTx, sim: Sim, balance: number, comman
       .select({ total: sql<string>`coalesce(sum(${credits.amountMillimes}), 0)` })
       .from(credits)
       .where(and(eq(credits.simId, sim.id), gte(credits.receivedAt, prev.takenAt)));
-    discrepancy = balance - (prev.balanceMillimes + Number(total));
+    // Recharges sent from this SIM since then took credit out (failed ones did not).
+    const [{ out }] = await db
+      .select({ out: sql<string>`coalesce(sum(${recharges.amountMillimes}), 0)` })
+      .from(recharges)
+      .innerJoin(deviceCommands, eq(deviceCommands.id, recharges.sendCommandId))
+      .where(
+        and(
+          eq(recharges.simId, sim.id),
+          ne(recharges.status, "failed"),
+          gte(sql`coalesce(${deviceCommands.sentAt}, ${deviceCommands.createdAt})`, prev.takenAt.toISOString()),
+        ),
+      );
+    discrepancy = balance - (prev.balanceMillimes + Number(total) - Number(out));
   }
   await db.insert(balanceSnapshots).values({ simId: sim.id, balanceMillimes: balance, commandId, discrepancyMillimes: discrepancy });
   await db

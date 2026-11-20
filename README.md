@@ -4,7 +4,7 @@
 
 Sellers send phone credit (Ooredoo, Orange, Tunisie Telecom) to one of your SIMs. Each confirmed transfer adds
 `amount × daily rate` to the seller's **account balance**; the seller withdraws the balance whenever they want
-(in full or in part) by D17, Flouci or postal money order. Every transfer is confirmed **twice**: by the
+(in full or in part) by D17, Flouci, Izi, Wafacash or postal money order. Every transfer is confirmed **twice**: by the
 operator's SMS *and* by the SIM balance read over USSD.
 
 The brand name lives in one place: `web/src/config/brand.ts` (and `android-agent/app/src/main/res/values/strings.xml`).
@@ -99,7 +99,7 @@ docker compose up -d db              # PostgreSQL only, on localhost:5433
 cd web
 cp .env.example .env                 # then edit it (see below)
 pnpm install
-pnpm db:migrate && pnpm db:seed      # tables + 3 operators + D17 / Flouci / mandate (5 DT fee)
+pnpm db:migrate && pnpm db:seed      # tables + 3 operators + D17 / Flouci / Izi / Wafacash / mandate (5 DT fee)
 pnpm dev                             # http://localhost:3100
 pnpm worker                          # second terminal: expiries, timeouts, balance polling
 ```
@@ -140,6 +140,9 @@ pnpm test:e2e    # 14 end-to-end scenarios (sales, balance, withdrawals) against
 Build: `cd android-agent && ./gradlew assembleRelease` → `app/build/outputs/apk/release/app-release.apk`
 (copy it to `web/public/downloads/sarfli-agent.apk` before `docker compose up --build` so phones can download it from `http://<server>:3100/downloads/sarfli-agent.apk`).
 The release APK is signed with the debug key for side-loading — use your own keystore for wider distribution.
+
+Shop PC app: `cd windows-pos && dotnet build -c Release` → copy `bin/Release/net452/SarfliPOS.exe` to `web/public/downloads/sarfli-pos.exe`;
+buyers download it from the **Shop PCs** page (`/downloads/sarfli-pos.exe`).
 
 Per phone (Android 7.1+ / SDK 25+, dual-SIM supported — both SIMs join the pool).
 On Android 7.x the Accessibility step is required: balance checks can only be read from the dialer popup there.

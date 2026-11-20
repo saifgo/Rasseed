@@ -55,7 +55,7 @@ export function MarkPaidButton({
           <DialogPanel className="flex flex-col gap-4">
             <Field name="reference">
               <FieldLabel>Transaction reference (optional)</FieldLabel>
-              <Input type="text" name="reference" placeholder="D17 / Flouci / mandate number" />
+              <Input type="text" name="reference" placeholder="D17 / Flouci / Izi / Wafacash / mandate number" />
             </Field>
             <Field name="note">
               <FieldLabel>Note to seller (optional)</FieldLabel>

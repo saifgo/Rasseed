@@ -88,6 +88,8 @@ export default async function OperatorsPage() {
             creditSmsSenders: op.creditSmsSenders.join(", "),
             balanceRegex: op.balanceRegex,
             balanceUnit: op.balanceUnit,
+            rechargeUssdTemplate: op.rechargeUssdTemplate ?? "",
+            rechargeUssdSteps: op.rechargeUssdSteps.join("\n"),
           }}
           sampleReply={recentReplies.find((r) => r.operatorCode === op.code)?.raw ?? ""}
           sampleSms={recentSms.find((r) => r.operatorCode === op.code && r.classification !== "ignored") ?? null}

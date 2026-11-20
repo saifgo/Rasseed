@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   ACTIVE_TX_STATUSES,
   operators,
+  orders,
   payoutMethods,
   payouts,
   savedPayoutDetails,
@@ -57,6 +58,9 @@ export async function getSaleView(id: string, userId: string | null) {
     .where(userId ? and(eq(transactionEvents.txId, tx.id), eq(transactionEvents.internal, false)) : eq(transactionEvents.txId, tx.id))
     .orderBy(asc(transactionEvents.createdAt));
 
+  // A transfer deposited to a buyer's order (marketplace) pays no cash: it funds the order.
+  const [order] = tx.orderId ? await db.select({ id: orders.id, ref: orders.ref }).from(orders).where(eq(orders.id, tx.orderId)) : [];
+
   const showNumber = ["awaiting_transfer", "verifying", "partial"].includes(tx.status) && tx.assignedMsisdn;
   const remaining = Math.max(0, tx.declaredMillimes - tx.confirmedMillimes);
 
@@ -78,6 +82,7 @@ export async function getSaleView(id: string, userId: string | null) {
     method: method ? { code: method.code, name: method.name, fields: method.fields } : null,
     payoutDetails: tx.payoutDetails ?? {},
     partialChoice: tx.partialChoice,
+    order: order ?? null,
     reviewReason: userId ? null : tx.reviewReason,
     assignedMsisdn: showNumber ? tx.assignedMsisdn : null,
     transferUssd: showNumber ? renderTransferUssd(op.transferUssdTemplate, tx.assignedMsisdn!, remaining) : null,
@@ -103,7 +108,7 @@ export async function getSaleView(id: string, userId: string | null) {
       : null,
     events: events.map((e) => ({
       id: e.id,
-      type: e.type,
+      type: order && e.type === "confirmed" ? "confirmed_order" : e.type,
       actor: e.actor,
       data: e.data,
       internal: e.internal,

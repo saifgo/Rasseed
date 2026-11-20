@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { OperatorName } from "@/components/app/operator-badge";
 import { useAdminAction } from "@/components/admin/use-admin-action";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangleIcon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardPanel, CardTitle } from "@/components/ui/card";
@@ -56,6 +57,8 @@ type OpConfig = {
   creditSmsSenders: string;
   balanceRegex: string;
   balanceUnit: "auto" | "millimes" | "dinars";
+  rechargeUssdTemplate: string;
+  rechargeUssdSteps: string;
 };
 
 const smsUnits = [
@@ -160,6 +163,49 @@ export function OperatorEditor({
               </SelectPopup>
             </Select>
           </Field>
+        </div>
+
+        <div className="flex flex-col gap-4 rounded-xl border border-destructive/32 bg-destructive/4 p-4 lg:order-last lg:col-span-2">
+          <h3 className="font-medium text-sm">Buyer recharges (USSD sent from Sarfli's SIMs)</h3>
+          <Alert variant="error">
+            <AlertTriangleIcon />
+            <AlertTitle>This USSD sends real credit from Sarfli's SIMs</AlertTitle>
+            <AlertDescription>
+              Copy the operator's real transfer dialog step by step from a phone — never guess it. Test first with a small amount to your own
+              number and check both balances. Leave the code empty to turn recharges off for {op.name}.
+            </AlertDescription>
+          </Alert>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field>
+              <FieldLabel>Recharge USSD code</FieldLabel>
+              <Input
+                type="text"
+                className="font-mono"
+                value={v.rechargeUssdTemplate}
+                onChange={(e) => set("rechargeUssdTemplate", e.target.value)}
+                placeholder="empty = recharges off"
+              />
+              <FieldDescription>
+                Placeholders: {"{number}"} {"{millimes}"} {"{dinars}"}.
+                {v.rechargeUssdTemplate.trim() && (
+                  <>
+                    {" "}Example for 5 DT to 22123456:{" "}
+                    <span className="font-mono">{renderTransferUssd(v.rechargeUssdTemplate.trim(), "22123456", 5000)}</span>
+                  </>
+                )}
+              </FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel>Replies to the following menu pages</FieldLabel>
+              <Textarea
+                className="font-mono text-xs"
+                value={v.rechargeUssdSteps}
+                onChange={(e) => set("rechargeUssdSteps", e.target.value)}
+                placeholder={"{number}\n{dinars}\n1"}
+              />
+              <FieldDescription>One reply per line, in order, same placeholders. Leave empty if the code does everything at once.</FieldDescription>
+            </Field>
+          </div>
         </div>
 
         <div className="flex flex-col gap-4 rounded-xl border bg-muted/40 p-4">

@@ -23,7 +23,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { USER_ROLES, type UserRole } from "@/db/schema";
 
 const roleItems = USER_ROLES.map((r) => ({ value: r, label: r.charAt(0).toUpperCase() + r.slice(1) }));
-import { adjustBalanceAction, setUserBlockedAction, setUserRoleAction } from "../actions";
+import { adjustBalanceAction, setMarketplaceAccessAction, setUserBlockedAction, setUserRoleAction } from "../actions";
+import { Switch } from "@/components/ui/switch";
+
+/** Admin only: lets a user buy, sell and recharge on the marketplace (when the global switch is on). */
+export function MarketplaceAccessSwitch({ userId, access, label }: { userId: string; access: boolean; label?: string }) {
+  const { pending, run } = useAdminAction();
+  return (
+    <Label className="flex items-center gap-2 text-sm">
+      <Switch
+        checked={access}
+        disabled={pending}
+        aria-label="Marketplace access"
+        onCheckedChange={(c) => run(() => setMarketplaceAccessAction(userId, c), { success: c ? "Marketplace access given" : "Marketplace access removed" })}
+      />
+      {label}
+    </Label>
+  );
+}
 
 /** Admin only: change the role of another user. */
 export function RoleSelect({ userId, role, disabled }: { userId: string; role: UserRole; disabled?: boolean }) {

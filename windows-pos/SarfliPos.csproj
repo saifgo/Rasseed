@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net452</TargetFramework>
+    <AssemblyName>SarfliPOS</AssemblyName>
+    <RootNamespace>SarfliPos</RootNamespace>
+    <LangVersion>7.3</LangVersion>
+    <Product>Sarfli POS</Product>
+    <Company>Sarfli</Company>
+    <AssemblyTitle>Sarfli POS</AssemblyTitle>
+    <Version>1.0.0</Version>
+    <Deterministic>true</Deterministic>
+    <!-- Keep the output to a single .exe: no .pdb, no generated .exe.config. -->
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
+    <GenerateSupportedRuntime>false</GenerateSupportedRuntime>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Sarfli app icon from assets/brand (app-icon-512.png), 16-256 px. -->
+    <ApplicationIcon>sarfli.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+</Project>
