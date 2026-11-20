@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ACTIVE_RECHARGE_STATUSES } from "@/db/schema";
 import { listPackages } from "@/lib/engine/packages";
 import { listBuyerRecharges } from "@/lib/engine/recharge";
-import { requireSpender, spendableByOperator } from "@/lib/market-queries";
+import { requireSpender, spendableByOperator, spendingOffer } from "@/lib/market-queries";
 import { formatMsisdn } from "@/lib/phone";
 import { NUMBER_NOT_COMPATIBLE } from "@/lib/recharge-outcome";
 import { listOperators } from "@/lib/queries";
@@ -25,18 +25,22 @@ export default async function RechargePage({ searchParams }: { searchParams: Pro
   const t = await getTranslations("market");
   const format = await getFormatter();
   const { op: wanted } = await searchParams;
-  const [ops, recharges, packages] = await Promise.all([listOperators(), listBuyerRecharges(user.id), listPackages({ activeOnly: true })]);
-  const { balances } = await spendableByOperator(user, ops.map((o) => o.code));
+  const [ops, recharges, allPackages] = await Promise.all([listOperators(), listBuyerRecharges(user.id), listPackages({ activeOnly: true })]);
+  const [{ balances, dataBalances }, { rechargeEnabled, packages }] = await Promise.all([
+    spendableByOperator(user, ops.map((o) => o.code)),
+    spendingOffer(ops, allPackages),
+  ]);
   const opBy = Object.fromEntries(ops.map((o) => [o.code, o]));
-  // Only operators whose recharge code is set up by our team, or that have data packages.
+  // Only operators that offer credit recharges or data packages now (code set up and a SIM allowed to send).
   const usable = ops
-    .filter((o) => o.active && (o.rechargeUssdTemplate || packages.some((p) => p.operatorCode === o.code)))
+    .filter((o) => o.active && (rechargeEnabled(o) || packages.some((p) => p.operatorCode === o.code)))
     .map((o) => ({
       code: o.code,
       name: o.name,
       color: o.color,
       balanceMillimes: balances[o.code] ?? 0,
-      rechargeEnabled: Boolean(o.rechargeUssdTemplate),
+      dataBalanceMillimes: dataBalances[o.code] ?? 0,
+      rechargeEnabled: rechargeEnabled(o),
     }));
   const usablePackages = packages
     .filter((p) => usable.some((o) => o.code === p.operatorCode))

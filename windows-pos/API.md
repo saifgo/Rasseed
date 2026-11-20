@@ -30,7 +30,7 @@ POST /pair            (no auth)
   "source": "sarfli",
   "operators": [
     { "code": "ooredoo", "name": "Ooredoo", "color": "#e30613",
-      "balanceMillimes": 12000, "rechargeEnabled": true, "maxRechargeMillimes": 20000 }
+      "balanceMillimes": 12000, "dataBalanceMillimes": 12000, "rechargeEnabled": true, "maxRechargeMillimes": 20000 }
   ],
   "packages": [
     { "id": "uuid", "operatorCode": "ooredoo", "name": "Pass 1 Go - 7 days", "priceMillimes": 5000 }
@@ -41,13 +41,13 @@ POST /pair            (no auth)
 - `"sarfli"`: the terminal belongs to an **admin**. Recharges and packages are paid from Sarfli's own credit, and this works even when the marketplace is off. `balanceMillimes` per operator is what Sarfli can spend now: the real credit on Sarfli's phones (last balance readings), minus credit from unconfirmed sales, unmatched credits, credit owned by marketplace users, and recharges still in progress.
 - `"balance"`: a marketplace buyer spending his own balance.
 
-`balanceMillimes` is only for greying out what cannot be paid. The app never shows it to the cashier.
+`balanceMillimes` is what can be spent on Light recharges, `dataBalanceMillimes` on Internet packages. For a buyer both are his balance. For Sarfli each is also capped by the credit on the SIMs allowed to send that kind (each SIM is set to accept credit, send credit and/or send data in Admin → Numbers). Both are only for greying out what cannot be paid. The app never shows them to the cashier.
 
 Limits (the server enforces both on `POST /recharges`; the app uses them to grey out what would be refused):
 - `maxRechargeMillimes`: an admin setting (Admin → Settings → SarfliPOS recharge limit), the largest plain (Light) recharge one POS sale can send for that operator. `null` = no cap. Packages and recharges from the website are not capped.
 - `terminal.dailyLimitMillimes`: set by the owner on sarfli.com (Buy → Shop PCs), the most this PC can spend per day, recharges and packages together. `null` = no limit. `spentTodayMillimes` counts this PC's recharges since midnight Tunisia time that are queued, sending, succeeded or in review (failed and cancelled ones were refunded and do not count).
 
-`rechargeEnabled = false` means plain recharges for that operator are not configured yet; packages may still exist. Only active packages are listed.
+`rechargeEnabled = false` means plain recharges for that operator are not available: not configured yet, or no SIM of that operator is allowed to send credit. Packages may still exist. Only active packages are listed, and only for operators with a SIM allowed to send data.
 
 ### `POST /recharges`
 A plain recharge:

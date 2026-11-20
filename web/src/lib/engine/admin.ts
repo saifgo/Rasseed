@@ -6,6 +6,7 @@ import { normalizeMsisdn } from "@/lib/phone";
 import { getSettings } from "@/lib/settings";
 import { EngineError, enqueueBalanceCheck, finalize, lockSim, lockTx, logEvent, releaseSim, updateTx } from "./core";
 import { fundOrderFromTransfer, recordSaleToSarfli } from "./market";
+import { assignRecharges } from "./recharge";
 import { assignQueued } from "./sales";
 import { addEntry } from "./wallet";
 
@@ -87,7 +88,13 @@ export async function setRate(adminId: string, operatorCode: string, rateBps: nu
 
 export async function configureSim(
   simId: string,
-  input: { operatorCode: string | null; msisdn: string | null; status: "unconfigured" | "active" | "disabled" },
+  input: {
+    operatorCode: string | null;
+    msisdn: string | null;
+    status: "unconfigured" | "active" | "disabled";
+    /** What the SIM may be used for; omitted = unchanged. */
+    uses?: { acceptCredit: boolean; sendCredit: boolean; sendData: boolean };
+  },
 ) {
   const msisdn = input.msisdn ? normalizeMsisdn(input.msisdn) : null;
   if (input.msisdn && !msisdn) throw new EngineError("invalid_msisdn");
@@ -107,6 +114,10 @@ export async function configureSim(
         operatorCode: input.operatorCode,
         msisdn,
         status: input.status,
+        // A use turned off does not stop a sale or recharge already on this SIM; it only stops new ones.
+        ...(input.uses
+          ? { canAcceptCredit: input.uses.acceptCredit, canSendCredit: input.uses.sendCredit, canSendData: input.uses.sendData }
+          : {}),
         // After a configuration change the SIM gets a clean slate.
         ...(identityChanged ? { balanceMillimes: null, balanceCheckedAt: null, consecutiveFailures: 0 } : {}),
       })
@@ -116,7 +127,9 @@ export async function configureSim(
       await enqueueBalanceCheck(t, fresh, "manual", null);
     }
   });
+  // A SIM may have just been allowed something: hand it waiting sales and recharges.
   await assignQueued();
+  await assignRecharges();
 }
 
 export async function requestBalanceCheck(simId: string) {

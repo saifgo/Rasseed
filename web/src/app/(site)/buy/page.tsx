@@ -16,7 +16,7 @@ import { balancesByOperator } from "@/lib/engine/ledger";
 import { listBuyerOrders, orderPrice } from "@/lib/engine/market";
 import { listPackages } from "@/lib/engine/packages";
 import { listBuyerRecharges } from "@/lib/engine/recharge";
-import { buyerNextStep, ratedOrderIds, rateableStatus, requireMarketUser, userNames } from "@/lib/market-queries";
+import { buyerNextStep, ratedOrderIds, rateableStatus, requireMarketUser, spendingOffer, userNames } from "@/lib/market-queries";
 import { formatDt } from "@/lib/money";
 import { formatMsisdn } from "@/lib/phone";
 import { listOperators } from "@/lib/queries";
@@ -31,16 +31,17 @@ export default async function BuyPage() {
   const { user } = await requireMarketUser();
   const t = await getTranslations("market");
   const format = await getFormatter();
-  const [ops, balances, orders, recharges, packages] = await Promise.all([
+  const [ops, balances, orders, recharges, allPackages] = await Promise.all([
     listOperators(),
     balancesByOperator(db, "buyer", user.id),
     listBuyerOrders(user.id),
     listBuyerRecharges(user.id),
     listPackages({ activeOnly: true }),
   ]);
-  const [names, rated] = await Promise.all([
+  const [names, rated, { rechargeEnabled, packages }] = await Promise.all([
     userNames(orders.map((o) => o.sellerId)),
     ratedOrderIds(orders.filter(rateableStatus).map((o) => o.id)),
+    spendingOffer(ops, allPackages),
   ]);
   const activeOps = ops.filter((o) => o.active);
   const opBy = Object.fromEntries(ops.map((o) => [o.code, o]));
@@ -69,7 +70,7 @@ export default async function BuyPage() {
           {activeOps.map((o) => {
             const balance = balances[o.code] ?? 0;
             // Credit recharges or data packages: either one makes the balance spendable.
-            const offersSpending = Boolean(o.rechargeUssdTemplate) || packages.some((p) => p.operatorCode === o.code);
+            const offersSpending = rechargeEnabled(o) || packages.some((p) => p.operatorCode === o.code);
             const canRecharge = offersSpending && balance > 0;
             return (
               <li key={o.code} className="flex items-center gap-4 p-4">

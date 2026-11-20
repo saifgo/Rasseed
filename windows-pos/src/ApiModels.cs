@@ -46,6 +46,8 @@ namespace SarfliPos
         [DataMember(Name = "color")] public string Color;
         /// <summary>Used only to grey out what cannot be paid. Never shown to the cashier.</summary>
         [DataMember(Name = "balanceMillimes")] public long BalanceMillimes;
+        /// <summary>Same as BalanceMillimes, for Internet packages (SIMs may be allowed Light only, or Internet only). Null on older servers.</summary>
+        [DataMember(Name = "dataBalanceMillimes")] public long? DataBalanceMillimes;
         [DataMember(Name = "rechargeEnabled")] public bool RechargeEnabled;
         /// <summary>Admin cap on one Light recharge for this operator. Null = no cap.</summary>
         [DataMember(Name = "maxRechargeMillimes")] public long? MaxRechargeMillimes;

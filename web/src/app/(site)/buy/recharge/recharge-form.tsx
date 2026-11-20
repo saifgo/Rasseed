@@ -16,7 +16,8 @@ import { formatMsisdn, normalizeMsisdn } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { cancelRechargeAction, createRechargeAction } from "../../_market/actions";
 
-type Op = { code: string; name: string; color: string; balanceMillimes: number; rechargeEnabled: boolean };
+// balanceMillimes = spendable on credit recharges, dataBalanceMillimes = on data packages.
+type Op = { code: string; name: string; color: string; balanceMillimes: number; dataBalanceMillimes: number; rechargeEnabled: boolean };
 type Pkg = { id: string; operatorCode: string; name: string; priceMillimes: number };
 
 export function RechargeForm({ operators, packages, initialOp }: { operators: Op[]; packages: Pkg[]; initialOp?: string }) {
@@ -43,7 +44,7 @@ export function RechargeForm({ operators, packages, initialOp }: { operators: Op
     effectiveMode === "package"
       ? !pkg
         ? t("packageRequired")
-        : op && pkg.priceMillimes > op.balanceMillimes
+        : op && pkg.priceMillimes > op.dataBalanceMillimes
           ? t("aboveBalance")
           : null
       : !credit

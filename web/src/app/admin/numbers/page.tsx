@@ -156,6 +156,11 @@ export default async function NumbersPage({ searchParams }: { searchParams: Prom
                               {failing && <Badge variant="error">USSD failing</Badge>}
                               {cooling && !tx?.id && <Badge variant="info">cooldown</Badge>}
                             </div>
+                            <div className="mt-1 text-muted-foreground text-xs">
+                              {[sim.canAcceptCredit && "accept", sim.canSendCredit && "send credit", sim.canSendData && "send data"]
+                                .filter(Boolean)
+                                .join(" · ") || "no use"}
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             <Dt millimes={sim.balanceMillimes} className="font-medium" />
@@ -174,7 +179,14 @@ export default async function NumbersPage({ searchParams }: { searchParams: Prom
                           </TableCell>
                           <TableCell className="text-right">
                             <SimActions
-                              sim={{ id: sim.id, operatorCode: sim.operatorCode, msisdn: sim.msisdn, status: sim.status, slot: sim.slotIndex + 1 }}
+                              sim={{
+                                id: sim.id,
+                                operatorCode: sim.operatorCode,
+                                msisdn: sim.msisdn,
+                                status: sim.status,
+                                slot: sim.slotIndex + 1,
+                                uses: { acceptCredit: sim.canAcceptCredit, sendCredit: sim.canSendCredit, sendData: sim.canSendData },
+                              }}
                               operators={opList}
                               failing={failing}
                             />

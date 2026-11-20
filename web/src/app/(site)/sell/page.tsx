@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/app/status-badge";
 import { Button } from "@/components/ui/button";
 import { db } from "@/db";
 import { fundableOrders } from "@/lib/engine/market";
+import { operatorsWithUse } from "@/lib/engine/sim-uses";
 import { getBalance } from "@/lib/engine/wallet";
 import { hasMarketAccess } from "@/lib/market-queries";
 import { grossPayout } from "@/lib/money";
@@ -23,11 +24,13 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
   const t = await getTranslations("sell");
   const tm = await getTranslations("market");
   const { op, order } = await searchParams;
-  const [ops, balance, ongoing, market] = await Promise.all([
+  const [ops, balance, ongoing, market, accepting] = await Promise.all([
     listOperators(),
     getBalance(db, user.id),
     getOngoingSale(user.id),
     hasMarketAccess(user),
+    // Selling an operator is closed while none of its SIMs accepts credit.
+    operatorsWithUse("accept"),
   ]);
   // Buyer orders waiting for this seller's credit (marketplace).
   const orders = market
@@ -89,7 +92,7 @@ export default async function SellPage({ searchParams }: { searchParams: Promise
     <div className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-8">
       <h1 className="mx-auto w-full max-w-xl font-heading font-bold text-3xl tracking-tight">{t("title")}</h1>
       <SellForm
-        operators={ops.map((o) => ({ code: o.code, name: o.name, color: o.color, rateBps: o.rateBps, active: o.active }))}
+        operators={ops.map((o) => ({ code: o.code, name: o.name, color: o.color, rateBps: o.rateBps, active: o.active && accepting.has(o.code) }))}
         balanceMillimes={balance}
         initialOp={initialOrder?.operatorCode ?? op}
         orders={orders}
