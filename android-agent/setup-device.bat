@@ -9,7 +9,8 @@ rem    3. grants SMS + phone permissions
 rem    4. enables the USSD balance reader (accessibility service)
 rem    5. bot mode: never sleeps, screen on while charging, no lock screen,
 rem       no doze / battery saver, agent never put to sleep or killed
-rem    6. checks the SIM is registered on the network, optional USSD test
+rem    6. checks the SIM is registered on the network
+rem    7. optional kiosk mode (phone runs only the agent), optional USSD test
 rem
 rem  Usage:  setup-device.bat              (one device connected)
 rem          setup-device.bat SERIAL       (several devices: pick one, see "adb devices")
@@ -75,7 +76,7 @@ if %SDK% LSS 25 (
 echo.
 
 rem ------------------------------------------- 1. Sunmi phone & SMS switch
-echo [1/6] Phone ^& SMS function
+echo [1/7] Phone ^& SMS function
 call :setting secure is_open_phone_sms BEFORE
 %A% shell settings put secure is_open_phone_sms 1
 call :setting secure is_open_phone_sms AFTER
@@ -86,7 +87,7 @@ if "%AFTER%"=="1" (
 )
 
 rem ------------------------------------------------------- 2. install the APK
-echo [2/6] Agent app
+echo [2/7] Agent app
 set "APK=%~2"
 if not defined APK if exist "%HERE%sarfli-agent.apk" set "APK=%HERE%sarfli-agent.apk"
 if not defined APK if exist "%HERE%..\web\public\downloads\sarfli-agent.apk" set "APK=%HERE%..\web\public\downloads\sarfli-agent.apk"
@@ -104,7 +105,7 @@ if errorlevel 1 (
 )
 
 rem ---------------------------------------------------------- 3. permissions
-echo [3/6] Permissions
+echo [3/7] Permissions
 for %%p in (RECEIVE_SMS READ_SMS CALL_PHONE READ_PHONE_STATE) do (
     %A% shell pm grant %PKG% android.permission.%%p
     if errorlevel 1 ( echo [WARN] could not grant %%p ) else ( echo       %%p granted )
@@ -115,7 +116,7 @@ if %SDK% GEQ 33 (
 )
 
 rem -------------------------------------------- 4. accessibility (USSD reader)
-echo [4/6] Balance reader ^(accessibility^)
+echo [4/7] Balance reader ^(accessibility^)
 call :setting secure enabled_accessibility_services CUR
 set "NEW="
 if "%CUR%"=="" set "NEW=%SVC%"
@@ -135,7 +136,7 @@ if errorlevel 1 (
 )
 
 rem ------------------------------------------------------- 5. bot mode
-echo [5/6] Bot mode ^(never sleep, agent never killed^)
+echo [5/7] Bot mode ^(never sleep, agent never killed^)
 rem battery: no doze, no app standby, no battery saver
 %A% shell dumpsys deviceidle whitelist +%PKG% >nul 2>&1
 %A% shell dumpsys deviceidle disable >nul 2>&1
@@ -186,7 +187,7 @@ if defined KILLER (
 )
 
 rem ------------------------------------------------------ 6. SIM and network
-echo [6/6] SIM and network
+echo [6/7] SIM and network
 call :prop gsm.sim.state SIMSTATE
 call :prop gsm.sim.operator.alpha SIMOP
 call :prop gsm.network.type NETTYPE
@@ -199,6 +200,28 @@ if errorlevel 1 (
 ) else (
     echo       registered - calls and USSD can go out
     set "NETOK=1"
+)
+
+rem ------------------------------------------------------- 7. kiosk mode
+echo [7/7] Kiosk mode ^(optional^)
+echo       The phone then runs ONLY Sarfli Agent: other apps frozen, no notifications,
+echo       no Home/Recents/status bar. Leaving it needs a PIN chosen in the app.
+set "KOWNER="
+%A% shell dumpsys device_policy | findstr /c:"KioskAdmin" >nul
+if not errorlevel 1 (
+    echo       already set up ^(Sarfli Agent is device owner^)
+    set "KOWNER=1"
+) else (
+    set "KIOSK="
+    set /p "KIOSK=      Make this phone a kiosk? [y/N]: "
+    if /i "!KIOSK!"=="y" call :makeowner
+)
+if defined KOWNER (
+    %A% shell cmd notification allow_dnd %PKG% >nul 2>&1
+    echo       Do Not Disturb allowed for the agent
+    %A% shell am start -n %PKG%/.MainActivity >nul 2>&1
+    echo [TODO] On the device: Sarfli Agent ^> Kiosk mode ^> "Turn on kiosk mode", choose a PIN.
+    echo     Forgot the PIN? Connect the phone and run kiosk-reset.bat.
 )
 
 echo.
@@ -226,6 +249,28 @@ pause
 exit /b 1
 
 rem ------------------------------------------------------------------ helpers
+rem :makeowner  -> makes the agent device owner (needed for kiosk); sets KOWNER on success
+:makeowner
+set "DPMOUT=%TEMP%\sarfli-dpm.txt"
+%A% shell dpm set-device-owner %PKG%/.KioskAdmin > "%DPMOUT%" 2>&1
+findstr /c:"Success" "%DPMOUT%" >nul
+if errorlevel 1 (
+    echo [WARN] Could not make Sarfli Agent the device owner:
+    findstr /c:"Exception" /c:"Error" "%DPMOUT%"
+    echo     Android refuses while ANY account is on the phone. Accounts found:
+    %A% shell dumpsys account | findstr /c:"Account {"
+    echo     - Google / Samsung / Xiaomi / itel...: Settings ^> Accounts ^> remove.
+    echo     - "USIM Account" / "SIM Account": SIM contact lists. Power off, take the SIMs out,
+    echo       power on, run this again, then put the SIMs back. Kiosk stays on after that.
+    echo     - Google Meet ^(tachyon^): adb shell pm clear com.google.android.apps.tachyon
+    echo     Still failing: factory reset WITHOUT SIMs and without adding any account, then run this.
+) else (
+    echo       Sarfli Agent is now device owner
+    set "KOWNER=1"
+)
+del "%DPMOUT%" >nul 2>&1
+exit /b 0
+
 rem :prop NAME VAR  -> reads a system property into VAR
 :prop
 set "%2="

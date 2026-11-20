@@ -138,10 +138,10 @@ pnpm test:e2e    # 14 end-to-end scenarios (sales, balance, withdrawals) against
 ## The agent phones
 
 Build: `cd android-agent && ./gradlew assembleRelease` → `app/build/outputs/apk/release/app-release.apk`
-(copy it to `web/public/downloads/sarfli-agent.apk` before `docker compose up --build` so phones can download it from `http://<server>:3100/downloads/sarfli-agent.apk`).
+(copy it to `web/public/downloads/sarfli-agent.apk` and commit it — the server builds from git — so phones can download it from `http://<server>:3100/downloads/sarfli-agent.apk`).
 The release APK is signed with the debug key for side-loading — use your own keystore for wider distribution.
 
-Shop PC app: `cd windows-pos && dotnet build -c Release` → copy `bin/Release/net452/SarfliPOS.exe` to `web/public/downloads/sarfli-pos.exe`;
+Shop PC app: `cd windows-pos && dotnet build -c Release` → copy `bin/Release/net452/SarfliPOS.exe` to `web/public/downloads/sarfli-pos.exe` and commit it;
 buyers download it from the **Shop PCs** page (`/downloads/sarfli-pos.exe`).
 
 Per phone (Android 7.1+ / SDK 25+, dual-SIM supported — both SIMs join the pool).

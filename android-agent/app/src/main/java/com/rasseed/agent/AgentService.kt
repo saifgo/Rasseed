@@ -231,5 +231,13 @@ class AgentService : Service() {
 class BootReceiver : android.content.BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (Prefs(context).paired) AgentService.start(context)
+        if (Kiosk.isOn(context)) {
+            Kiosk.apply(context)
+            // After an app update the locked screen is gone: bring it back (after a reboot it starts as home).
+            try {
+                context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            } catch (_: Exception) {
+            }
+        }
     }
 }

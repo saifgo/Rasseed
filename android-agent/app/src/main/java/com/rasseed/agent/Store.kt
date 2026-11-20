@@ -29,6 +29,18 @@ class Prefs(context: Context) {
         get() = p.getString("lastError", "") ?: ""
         set(v) = p.edit().putString("lastError", v).apply()
 
+    /** Kiosk mode wanted (only effective while the app is device owner, see [Kiosk]). */
+    var kioskOn: Boolean
+        get() = p.getBoolean("kioskOn", false)
+        set(v) = p.edit().putBoolean("kioskOn", v).commit().let {}
+    var kioskPinHash: String?
+        get() = p.getString("kioskPin", null)
+        set(v) = p.edit().putString("kioskPin", v).commit().let {}
+    /** Apps kiosk mode suspended, so exactly those are restored when it is turned off. */
+    var kioskSuspended: Set<String>
+        get() = p.getStringSet("kioskSuspended", emptySet()).orEmpty().toSet()
+        set(v) = p.edit().putStringSet("kioskSuspended", v).commit().let {}
+
     val paired get() = token != null && serverUrl.isNotEmpty()
 }
 
